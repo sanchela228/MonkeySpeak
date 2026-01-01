@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window Title="MonkeySpeak">
+    <Rect Width="200" Height="180" Color="Red"/>
+    
+    <Scene1/>
+    <DemoTestTemplate/>
+</Window>
