@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Raylib_cs;
@@ -46,8 +46,8 @@ public class Scene : Node
             Raylib.DrawRectangle(
                 (int)ComputedPosition.X,
                 (int)ComputedPosition.Y,
-                (int)Width,
-                (int)Height,
+                (int)ComputedWidth,
+                (int)ComputedHeight,
                 BackgroundColor.Value
             );
         }
@@ -60,10 +60,15 @@ public class Scene : Node
     
     public override void MeasureSize()
     {
+        float parentWidth = Parent?.ComputedWidth ?? 800;
+        float parentHeight = Parent?.ComputedHeight ?? 600;
+        
+        ResolveSize(parentWidth, parentHeight);
+        
         foreach (var child in _children)
             child.MeasureSize();
         
-        if (Width == 0 || Height == 0)
+        if (Width.IsZero || Height.IsZero)
         {
             float totalWidth = 0;
             float totalHeight = 0;
@@ -74,8 +79,8 @@ public class Scene : Node
             {
                 if (child.PositionMode == PositionMode.Relative)
                 {
-                    var childW = child.MarginLeft + child.Width + child.MarginRight;
-                    var childH = child.MarginTop + child.Height + child.MarginBottom;
+                    var childW = child.ComputedMarginLeft + child.ComputedWidth + child.ComputedMarginRight;
+                    var childH = child.ComputedMarginTop + child.ComputedHeight + child.ComputedMarginBottom;
                     
                     if (Layout == LayoutMode.Vertical)
                     {
@@ -92,13 +97,13 @@ public class Scene : Node
             
             if (Layout == LayoutMode.Vertical)
             {
-                if (Width == 0) Width = maxWidth;
-                if (Height == 0) Height = totalHeight;
+                if (Width.IsZero) ComputedWidth = maxWidth;
+                if (Height.IsZero) ComputedHeight = totalHeight;
             }
             else if (Layout == LayoutMode.Horizontal)
             {
-                if (Width == 0) Width = totalWidth;
-                if (Height == 0) Height = maxHeight;
+                if (Width.IsZero) ComputedWidth = totalWidth;
+                if (Height.IsZero) ComputedHeight = maxHeight;
             }
         }
     }
@@ -113,16 +118,16 @@ public class Scene : Node
             {
                 if (child.PositionMode == PositionMode.Absolute)
                 {
-                    child.ComputedPosition = ComputedPosition + child.Position;
+                    child.ComputedPosition = ComputedPosition + child.Position + new Vector2(child.ComputedMarginLeft, child.ComputedMarginTop);
                 }
                 else
                 {
-                    currentY += child.MarginTop;
+                    currentY += child.ComputedMarginTop;
                     child.ComputedPosition = new Vector2(
-                        ComputedPosition.X + child.MarginLeft + child.Position.X,
+                        ComputedPosition.X + child.ComputedMarginLeft + child.Position.X,
                         ComputedPosition.Y + currentY + child.Position.Y
                     );
-                    currentY += child.Height + child.MarginBottom;
+                    currentY += child.ComputedHeight + child.ComputedMarginBottom;
                 }
                 
                 child.ArrangeChildren();
@@ -136,16 +141,16 @@ public class Scene : Node
             {
                 if (child.PositionMode == PositionMode.Absolute)
                 {
-                    child.ComputedPosition = ComputedPosition + child.Position;
+                    child.ComputedPosition = ComputedPosition + child.Position + new Vector2(child.ComputedMarginLeft, child.ComputedMarginTop);
                 }
                 else
                 {
-                    currentX += child.MarginLeft;
+                    currentX += child.ComputedMarginLeft;
                     child.ComputedPosition = new Vector2(
                         ComputedPosition.X + currentX + child.Position.X,
-                        ComputedPosition.Y + child.MarginTop + child.Position.Y
+                        ComputedPosition.Y + child.ComputedMarginTop + child.Position.Y
                     );
-                    currentX += child.Width + child.MarginRight;
+                    currentX += child.ComputedWidth + child.ComputedMarginRight;
                 }
                 
                 child.ArrangeChildren();
@@ -155,7 +160,7 @@ public class Scene : Node
         {
             foreach (var child in _children)
             {
-                child.ComputedPosition = ComputedPosition + child.Position;
+                child.ComputedPosition = ComputedPosition + child.Position + new Vector2(child.ComputedMarginLeft, child.ComputedMarginTop);
                 child.ArrangeChildren();
             }
         }

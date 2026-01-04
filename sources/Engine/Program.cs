@@ -1,3 +1,4 @@
-﻿
-var w = new Engine.Window();
+﻿using Engine;
+
+var w = new Window();
 w.Run();

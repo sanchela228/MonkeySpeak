@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using System.Reflection;
+using Engine.Types;
 using Raylib_cs;
 using Engine.UI;
 
@@ -17,6 +18,7 @@ public static class XmlLoader
     static XmlLoader()
     {
         RegisterElement<Rect>("Rect");
+        RegisterElement<Circle>("Circle");
         RegisterElement<Scene>("Scene");
     }
     
@@ -199,6 +201,9 @@ public static class XmlLoader
     
     private static object? ConvertValue(string value, Type targetType)
     {
+        if (targetType == typeof(DynamicFloat))
+            return DynamicFloat.Parse(value);
+        
         if (targetType == typeof(float))
             return float.Parse(value);
         

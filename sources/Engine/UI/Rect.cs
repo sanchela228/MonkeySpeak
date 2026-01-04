@@ -1,4 +1,4 @@
-﻿using Raylib_cs;
+using Raylib_cs;
 
 namespace Engine.UI;
 
@@ -12,7 +12,7 @@ public class Rect : Node
 
     public override void Draw()
     {
-        Raylib.DrawRectangle((int)ComputedPosition.X, (int)ComputedPosition.Y, (int)Width, (int)Height, Color);
+        Raylib.DrawRectangle((int)ComputedPosition.X, (int)ComputedPosition.Y, (int)ComputedWidth, (int)ComputedHeight, Color);
     }
 
     public override void Dispose()

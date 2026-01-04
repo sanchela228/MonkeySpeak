@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Raylib_cs;
@@ -39,6 +39,9 @@ public class Window
         Raylib.InitAudioDevice();
         if (!Raylib.IsAudioDeviceReady())
             return;
+        
+        _rootScene.Width = 800;
+        _rootScene.Height = 600;
         
         _rootScene.CalculateLayout();
         

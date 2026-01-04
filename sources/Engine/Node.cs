@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Numerics;
+using Engine.Types;
 
 namespace Engine;
 
@@ -18,7 +19,14 @@ public abstract class Node
     
     public Vector2 Position { get; set; } = Vector2.Zero;
     public Vector2 ComputedPosition { get; set; } = Vector2.Zero;
-    public Vector2 Size { get; set; } = Vector2.Zero;
+    
+    // Размеры с поддержкой DynamicFloat
+    public DynamicFloat Width { get; set; } = new(0);
+    public DynamicFloat Height { get; set; } = new(0);
+    
+    // Вычисленные размеры (после Resolve)
+    public float ComputedWidth { get; protected set; }
+    public float ComputedHeight { get; protected set; }
     
     public float X
     {
@@ -32,24 +40,19 @@ public abstract class Node
         set => Position = new Vector2(Position.X, value);
     }
     
-    public float Width
-    {
-        get => Size.X;
-        set => Size = new Vector2(value, Size.Y);
-    }
+    // Margins с поддержкой DynamicFloat
+    public DynamicFloat MarginTop { get; set; } = new(0);
+    public DynamicFloat MarginBottom { get; set; } = new(0);
+    public DynamicFloat MarginLeft { get; set; } = new(0);
+    public DynamicFloat MarginRight { get; set; } = new(0);
     
-    public float Height
-    {
-        get => Size.Y;
-        set => Size = new Vector2(Size.X, value);
-    }
+    // Вычисленные margins
+    public float ComputedMarginTop { get; protected set; }
+    public float ComputedMarginBottom { get; protected set; }
+    public float ComputedMarginLeft { get; protected set; }
+    public float ComputedMarginRight { get; protected set; }
     
-    public float MarginTop { get; set; } = 0;
-    public float MarginBottom { get; set; } = 0;
-    public float MarginLeft { get; set; } = 0;
-    public float MarginRight { get; set; } = 0;
-    
-    public float Margin
+    public DynamicFloat Margin
     {
         set
         {
@@ -142,12 +145,28 @@ public abstract class Node
         Dispose();
     }
     
+    protected void ResolveSize(float parentWidth, float parentHeight)
+    {
+        ComputedWidth = Width.Resolve(parentWidth);
+        ComputedHeight = Height.Resolve(parentHeight);
+        
+        ComputedMarginTop = MarginTop.Resolve(parentHeight);
+        ComputedMarginBottom = MarginBottom.Resolve(parentHeight);
+        ComputedMarginLeft = MarginLeft.Resolve(parentWidth);
+        ComputedMarginRight = MarginRight.Resolve(parentWidth);
+    }
+    
     public virtual void MeasureSize()
     {
+        float parentWidth = _parent?.ComputedWidth ?? 800;
+        float parentHeight = _parent?.ComputedHeight ?? 600;
+        
+        ResolveSize(parentWidth, parentHeight);
+        
         foreach (var child in _children)
             child.MeasureSize();
         
-        if (Width == 0 || Height == 0)
+        if (Width.IsZero || Height.IsZero)
         {
             float totalHeight = 0;
             float maxWidth = 0;
@@ -156,14 +175,14 @@ public abstract class Node
             {
                 if (child.PositionMode == PositionMode.Relative)
                 {
-                    totalHeight += child.MarginTop + child.Height + child.MarginBottom;
-                    var w = child.MarginLeft + child.Width + child.MarginRight;
+                    totalHeight += child.ComputedMarginTop + child.ComputedHeight + child.ComputedMarginBottom;
+                    var w = child.ComputedMarginLeft + child.ComputedWidth + child.ComputedMarginRight;
                     if (w > maxWidth) maxWidth = w;
                 }
             }
             
-            if (Width == 0) Width = maxWidth;
-            if (Height == 0) Height = totalHeight;
+            if (Width.IsZero) ComputedWidth = maxWidth;
+            if (Height.IsZero) ComputedHeight = totalHeight;
         }
     }
     
@@ -175,16 +194,16 @@ public abstract class Node
         {
             if (child.PositionMode == PositionMode.Absolute)
             {
-                child.ComputedPosition = ComputedPosition + child.Position;
+                child.ComputedPosition = ComputedPosition + child.Position + new Vector2(child.ComputedMarginLeft, child.ComputedMarginTop);
             }
             else
             {
-                currentY += child.MarginTop;
+                currentY += child.ComputedMarginTop;
                 child.ComputedPosition = new Vector2(
-                    ComputedPosition.X + child.MarginLeft + child.Position.X,
+                    ComputedPosition.X + child.ComputedMarginLeft + child.Position.X,
                     ComputedPosition.Y + currentY + child.Position.Y
                 );
-                currentY += child.Height + child.MarginBottom;
+                currentY += child.ComputedHeight + child.ComputedMarginBottom;
             }
             
             child.ArrangeChildren();
