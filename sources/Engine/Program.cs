@@ -1,4 +1,4 @@
 ﻿using Engine;
 
-var w = new Window();
-w.Run();
+Window.Init();
+Window.Run();
