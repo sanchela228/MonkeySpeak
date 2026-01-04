@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using System.Reflection;
+using Engine.Binding;
 using Engine.Types;
 using Raylib_cs;
 using Engine.UI;
@@ -161,6 +162,11 @@ public static class XmlLoader
         }
     }
     
+    private static readonly HashSet<string> _eventProperties = new()
+    {
+        "OnPressed", "OnPress", "OnRelease", "OnHover", "OnHoverExit"
+    };
+    
     private static void SetProperty(Node node, string propertyName, string value)
     {
         var type = node.GetType();
@@ -190,6 +196,23 @@ public static class XmlLoader
         
         try
         {
+            if (_eventProperties.Contains(propertyName))
+            {
+                prop.SetValue(node, value);
+                return;
+            }
+            
+            if (BindingResolver.IsBinding(value))
+            {
+                var result = BindingResolver.ExecuteWithReturn(value, node);
+                if (result != null)
+                {
+                    var convertedResult = ConvertValue(result.ToString()!, prop.PropertyType);
+                    prop.SetValue(node, convertedResult);
+                }
+                return;
+            }
+            
             var convertedValue = ConvertValue(value, prop.PropertyType);
             prop.SetValue(node, convertedValue);
         }

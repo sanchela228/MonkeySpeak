@@ -12,7 +12,13 @@ public class Rect : Node
 
     public override void Draw()
     {
-        Raylib.DrawRectangle((int)ComputedPosition.X, (int)ComputedPosition.Y, (int)ComputedWidth, (int)ComputedHeight, Color);
+        Raylib.DrawRectangleLines(
+            (int)ComputedPosition.X, 
+            (int)ComputedPosition.Y, 
+            (int)ComputedWidth, 
+            (int)ComputedHeight, 
+            Color
+        );
     }
 
     public override void Dispose()

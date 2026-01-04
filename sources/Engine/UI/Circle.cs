@@ -12,13 +12,22 @@ public class Circle : Node
 
     public override void Draw()
     {
-        var radius = ComputedWidth / 2;
-        Raylib.DrawCircle(
-            (int)(ComputedPosition.X + radius),
-            (int)(ComputedPosition.Y + radius),
-            radius,
-            Color
-        );
+        float radius = 0;
+        
+        if (ComputedWidth > 0)
+            radius = ComputedWidth / 2;
+        else if ( ComputedHeight > 0)
+            radius = ComputedHeight / 2;
+
+        if (radius > 0)
+        {
+            Raylib.DrawCircle(
+                (int)(ComputedPosition.X + radius),
+                (int)(ComputedPosition.Y + radius),
+                radius,
+                Color
+            );
+        }
     }
 
     public override void Dispose()

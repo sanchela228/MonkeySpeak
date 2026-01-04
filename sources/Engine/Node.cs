@@ -1,6 +1,8 @@
 using System;
 using System.Numerics;
+using Engine.Binding;
 using Engine.Types;
+using Raylib_cs;
 
 namespace Engine;
 
@@ -15,16 +17,24 @@ public abstract class Node
     public string Id { get; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = "";
     
+    public string? OnPressed { get; set; }
+    public string? OnPress { get; set; }
+    public string? OnRelease { get; set; }
+    public string? OnHover { get; set; }
+    public string? OnHoverExit { get; set; }
+    
+    private bool _isHovered = false;
+    private bool _wasHovered = false;
+    public bool IsHovered => _isHovered;
+    
     public PositionMode PositionMode { get; set; } = PositionMode.Relative;
     
     public Vector2 Position { get; set; } = Vector2.Zero;
     public Vector2 ComputedPosition { get; set; } = Vector2.Zero;
     
-    // Размеры с поддержкой DynamicFloat
     public DynamicFloat Width { get; set; } = new(0);
     public DynamicFloat Height { get; set; } = new(0);
     
-    // Вычисленные размеры (после Resolve)
     public float ComputedWidth { get; protected set; }
     public float ComputedHeight { get; protected set; }
     
@@ -40,13 +50,11 @@ public abstract class Node
         set => Position = new Vector2(Position.X, value);
     }
     
-    // Margins с поддержкой DynamicFloat
     public DynamicFloat MarginTop { get; set; } = new(0);
     public DynamicFloat MarginBottom { get; set; } = new(0);
     public DynamicFloat MarginLeft { get; set; } = new(0);
     public DynamicFloat MarginRight { get; set; } = new(0);
     
-    // Вычисленные margins
     public float ComputedMarginTop { get; protected set; }
     public float ComputedMarginBottom { get; protected set; }
     public float ComputedMarginLeft { get; protected set; }
@@ -146,6 +154,7 @@ public abstract class Node
     public void RootUpdate(float deltaTime)
     {
         if (!IsActive) return;
+        ProcessMouseEvents();
         Update(deltaTime);
         foreach (var child in _children)
             child.RootUpdate(deltaTime);
@@ -278,6 +287,40 @@ public abstract class Node
     {
         MeasureSize();
         ArrangeChildren();
+    }
+    
+    protected void ProcessMouseEvents()
+    {
+        var mousePos = Raylib.GetMousePosition();
+        
+        _wasHovered = _isHovered;
+        _isHovered = mousePos.X >= ComputedPosition.X 
+                  && mousePos.X <= ComputedPosition.X + ComputedWidth
+                  && mousePos.Y >= ComputedPosition.Y 
+                  && mousePos.Y <= ComputedPosition.Y + ComputedHeight;
+        
+        // OnHover
+        if (_isHovered && !_wasHovered && OnHover != null)
+            BindingResolver.Execute(OnHover, this);
+        
+        // OnHoverExit
+        if (!_isHovered && _wasHovered && OnHoverExit != null)
+            BindingResolver.Execute(OnHoverExit, this);
+        
+        if (_isHovered)
+        {
+            // OnPressed
+            if (Raylib.IsMouseButtonPressed(MouseButton.Left) && OnPressed != null)
+                BindingResolver.Execute(OnPressed, this);
+            
+            // OnPress
+            if (Raylib.IsMouseButtonDown(MouseButton.Left) && OnPress != null)
+                BindingResolver.Execute(OnPress, this);
+            
+            // OnRelease
+            if (Raylib.IsMouseButtonReleased(MouseButton.Left) && OnRelease != null)
+                BindingResolver.Execute(OnRelease, this);
+        }
     }
     
     public abstract void Update(float deltaTime);

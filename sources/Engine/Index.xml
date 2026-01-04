@@ -3,9 +3,31 @@
     <Rect Width="50%" Height="50%" MarginLeft="Auto" MarginRight="Auto" Color="Red">
         <Rect Width="50%" Height="100%" Color="Blue" MarginLeft="25%"/>
     </Rect>
-    <Circle MarginLeft="Auto" MarginRight="Auto" Width="100" Height="100" PositionMode="1" Order="200" Color="Green"/>
-    <Circle MarginTop="25%" Width="130" Height="130" PositionMode="1" Color="Blue"/>
-    
+    <Circle MarginLeft="Auto" 
+            MarginRight="Auto"
+            MarginTop="50%"
+            Width="100" 
+            Height="100" 
+            PositionMode="1"
+            OnRelease="{TestLog('GREEN ___')}"
+            Order="200" 
+            Lines="5"
+            LinesColor="Red"
+            Color="Green"
+    />
+    <Circle MarginTop="55%"
+            MarginLeft="Auto"
+            MarginRight="Auto"
+            Width="200" 
+            Height="200" 
+            OnRelease="{WindowHandler.TestWindowLog()}"
+            OnPressed="{TestLog('OnPressed')}"
+            OnPress="{TestLog('OnPress')}"
+            OnHover="{TestLog('OnHover')}"
+            OnHoverExit="{TestLog('OnHoverExit')}"
+            PositionMode="1" 
+            Color="Blue"
+    />
     <Scene1/>
     <DemoTestTemplate/>
 </Window>
