@@ -210,8 +210,8 @@ public abstract class Node
         Controller?.OnDispose();
         Dispose();
     }
-    
-    protected void ResolveSize(float parentWidth, float parentHeight)
+
+    public void ResolveSize(float parentWidth, float parentHeight)
     {
         ComputedWidth = Width.Resolve(parentWidth);
         ComputedHeight = Height.Resolve(parentHeight);
@@ -251,7 +251,7 @@ public abstract class Node
         foreach (var child in _children)
             child.MeasureSize();
         
-        if (Width.IsZero || Height.IsZero)
+        if (Width.IsAuto || Height.IsAuto)
         {
             float totalHeight = 0;
             float maxWidth = 0;
@@ -266,8 +266,8 @@ public abstract class Node
                 }
             }
             
-            if (Width.IsZero) ComputedWidth = maxWidth;
-            if (Height.IsZero) ComputedHeight = totalHeight;
+            if (Width.IsAuto) ComputedWidth = maxWidth;
+            if (Height.IsAuto) ComputedHeight = totalHeight;
         }
     }
     

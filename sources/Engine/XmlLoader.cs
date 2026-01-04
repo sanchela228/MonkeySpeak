@@ -21,6 +21,7 @@ public static class XmlLoader
         RegisterElement<Rect>("Rect");
         RegisterElement<Circle>("Circle");
         RegisterElement<Scene>("Scene");
+        RegisterElement<Grid>("Grid");
     }
     
     public static void RegisterElement<T>(string tagName) where T : Node, new()

@@ -37,8 +37,13 @@ public static class Window
     private static Vector2 _restorePosition;
     private static Vector2 _restoreSize;
     
+    private static bool _isDragging = false;
+    private static Vector2 _dragStartMouse;
+    private static Vector2 _dragStartPos;
+    
     public static Scene RootScene => _rootScene;
     public static bool IsMaximized => _isMaximized;
+    public static bool IsDragging => _isDragging;
     
     public static void Init(string path = "Index.xml")
     {
@@ -233,6 +238,33 @@ public static class Window
         Raylib.CloseWindow();
     }
     
+    public static void Drag()
+    {
+        if (_isMaximized) return;
+        
+        var globalMouse = Mouse.GetCursorPos();
+        _isDragging = true;
+        _dragStartMouse = new Vector2(globalMouse.X, globalMouse.Y);
+        _dragStartPos = Raylib.GetWindowPosition();
+    }
+    
+    private static void HandleDrag()
+    {
+        if (!_isDragging) return;
+        
+        if (Raylib.IsMouseButtonReleased(MouseButton.Left))
+        {
+            _isDragging = false;
+            return;
+        }
+        
+        var globalMouse = Mouse.GetCursorPos();
+        var mousePos = new Vector2(globalMouse.X, globalMouse.Y);
+        Vector2 delta = mousePos - _dragStartMouse;
+        Vector2 newPos = _dragStartPos + delta;
+        Raylib.SetWindowPosition((int)newPos.X, (int)newPos.Y);
+    }
+    
     public static void Run()
     {
         Raylib.SetConfigFlags(ConfigFlags.UndecoratedWindow | ConfigFlags.Msaa4xHint);
@@ -254,6 +286,7 @@ public static class Window
             float deltaTime = Raylib.GetFrameTime();
             
             HandleResize();
+            HandleDrag();
             _rootScene.RootUpdate(deltaTime);
             
             Raylib.BeginDrawing();

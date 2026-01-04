@@ -76,7 +76,7 @@ public class Scene : Node
         foreach (var child in _children)
             child.MeasureSize();
         
-        if (Width.IsZero || Height.IsZero)
+        if (Width.IsAuto || Height.IsAuto)
         {
             float totalWidth = 0;
             float totalHeight = 0;
@@ -105,13 +105,13 @@ public class Scene : Node
             
             if (Layout == LayoutMode.Vertical)
             {
-                if (Width.IsZero) ComputedWidth = maxWidth;
-                if (Height.IsZero) ComputedHeight = totalHeight;
+                if (Width.IsAuto) ComputedWidth = maxWidth;
+                if (Height.IsAuto) ComputedHeight = totalHeight;
             }
             else if (Layout == LayoutMode.Horizontal)
             {
-                if (Width.IsZero) ComputedWidth = totalWidth;
-                if (Height.IsZero) ComputedHeight = maxHeight;
+                if (Width.IsAuto) ComputedWidth = totalWidth;
+                if (Height.IsAuto) ComputedHeight = maxHeight;
             }
         }
     }

@@ -1,25 +1,41 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Window Title="MonkeySpeak">
-    <Scene Layout="Horizontal" PositionMode="Absolute" MarginTop="10" MarginRight="10" MarginLeft="Auto">
-        <Circle 
-            Width="30"
-            Height="30" 
-            OnRelease="{Window.Minimize()}"
-            Color="Yellow"
-        />
-        <Circle 
-            Width="30"
-            Height="30"
-            MarginLeft="10"
-            OnRelease="{Window.ToggleMaximize()}"
-            Color="Green"
-        />
-        <Circle 
-            Width="30"
-            Height="30"
-            MarginLeft="10"
-            OnRelease="{Window.Close()}"
-            Color="Red"
-        />
-    </Scene>
+    <Rect Width="100%" Height="40"
+          Color="#333333" OnPress="{Window.Drag()}">
+        <Grid Columns="3" MarginLeft="Auto" Gap="10" Height="100%" Width="120">
+            <Circle MarginTop="Auto" MarginBottom="Auto"
+                    Width="30"
+                    Height="30"
+                    OnRelease="{Window.Minimize()}"
+                    Color="Yellow"
+            />
+            <Circle MarginTop="Auto" MarginBottom="Auto"
+                    Width="30"
+                    Height="30"
+                    OnRelease="{Window.ToggleMaximize()}"
+                    Color="Green"
+            />
+            <Circle MarginTop="Auto" MarginBottom="Auto"
+                    Width="30"
+                    Height="30"
+                    OnRelease="{Window.Close()}"
+                    Color="Red"
+            />
+        </Grid>
+    </Rect>
+    
+    <Grid Columns="3" Gap="10" Width="100%" Height="Auto" MarginTop="50" Padding="10">
+        <Rect Width="100%" Height="80" Color="Red"/>
+        <Rect Width="100%" Height="80" Color="Green"/>
+        <Rect Width="100%" Height="80" Color="Blue"/>
+        <Rect Width="100%" Height="60" Color="Yellow"/>
+        <Rect Width="100%" Height="100" Color="Orange"/>
+        <Rect Width="100%" Height="40" Color="Purple"/>
+    </Grid>
+    
+    <Grid Columns="1fr 10fr 1fr" ColumnGap="5" Width="100%" Height="100" MarginTop="10" Padding="10">
+        <Rect Width="100%" Height="100%" Color="Red"/>
+        <Rect Width="100%" Height="100%" Color="Blue"/>
+        <Rect Width="100%" Height="100%" Color="Red"/>
+    </Grid>
 </Window>
