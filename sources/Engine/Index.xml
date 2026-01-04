@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Window Title="MonkeySpeak">
-    <Rect Width="50%" Height="50%" MarginLeft="Auto" MarginRight="Auto" Color="Red">
-        <Rect Width="50%" Height="100%" Color="Blue" MarginLeft="25%"/>
+    <Rect Width="50%" Border="5" Rounded="0,7" Padding="40" Height="50%" MarginLeft="Auto" MarginRight="Auto" Color="Red">
+        <Rect Width="Auto" Border="15" Height="100%" BorderColor="Green" Color="Blue"/>
     </Rect>
     <Circle MarginLeft="Auto" 
             MarginRight="Auto"

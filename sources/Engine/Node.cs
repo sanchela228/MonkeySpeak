@@ -71,6 +71,31 @@ public abstract class Node
         }
     }
     
+    public float BorderTop { get; set; } = 0;
+    public float BorderBottom { get; set; } = 0;
+    public float BorderLeft { get; set; } = 0;
+    public float BorderRight { get; set; } = 0;
+    
+    public float ComputedBorderTop { get; protected set; }
+    public float ComputedBorderBottom { get; protected set; }
+    public float ComputedBorderLeft { get; protected set; }
+    public float ComputedBorderRight { get; protected set; }
+
+    private float _border = 0;
+    public float Border
+    {
+        set
+        {
+            _border = value;
+            
+            BorderTop = value;
+            BorderBottom = value;
+            BorderLeft = value;
+            BorderRight = value;
+        }
+        get => _border;
+    }
+    
     public DynamicFloat PaddingTop { get; set; } = new(0);
     public DynamicFloat PaddingBottom { get; set; } = new(0);
     public DynamicFloat PaddingLeft { get; set; } = new(0);
@@ -185,6 +210,11 @@ public abstract class Node
         ComputedMarginLeft = MarginLeft.IsAuto ? 0 : MarginLeft.Resolve(parentWidth);
         ComputedMarginRight = MarginRight.IsAuto ? 0 : MarginRight.Resolve(parentWidth);
         
+        ComputedBorderTop = BorderTop;
+        ComputedBorderBottom = BorderBottom;
+        ComputedBorderLeft = BorderLeft;
+        ComputedBorderRight = BorderRight;
+        
         ComputedPaddingTop = PaddingTop.Resolve(ComputedHeight);
         ComputedPaddingBottom = PaddingBottom.Resolve(ComputedHeight);
         ComputedPaddingLeft = PaddingLeft.Resolve(ComputedWidth);
@@ -195,6 +225,15 @@ public abstract class Node
     {
         float parentWidth = _parent?.ComputedWidth ?? 800;
         float parentHeight = _parent?.ComputedHeight ?? 600;
+        
+        // Учитываем border и padding родителя для content area
+        if (_parent != null)
+        {
+            parentWidth -= _parent.ComputedBorderLeft + _parent.ComputedBorderRight 
+                         + _parent.ComputedPaddingLeft + _parent.ComputedPaddingRight;
+            parentHeight -= _parent.ComputedBorderTop + _parent.ComputedBorderBottom 
+                          + _parent.ComputedPaddingTop + _parent.ComputedPaddingBottom;
+        }
         
         ResolveSize(parentWidth, parentHeight);
         
@@ -223,9 +262,11 @@ public abstract class Node
     
     public virtual void ArrangeChildren()
     {
-        float currentY = ComputedPaddingTop;
-        float contentWidth = ComputedWidth - ComputedPaddingLeft - ComputedPaddingRight;
-        float contentHeight = ComputedHeight - ComputedPaddingTop - ComputedPaddingBottom;
+        float offsetX = ComputedBorderLeft + ComputedPaddingLeft;
+        float offsetY = ComputedBorderTop + ComputedPaddingTop;
+        float currentY = offsetY;
+        float contentWidth = ComputedWidth - ComputedBorderLeft - ComputedBorderRight - ComputedPaddingLeft - ComputedPaddingRight;
+        float contentHeight = ComputedHeight - ComputedBorderTop - ComputedBorderBottom - ComputedPaddingTop - ComputedPaddingBottom;
         
         foreach (var child in _children)
         {
@@ -234,13 +275,13 @@ public abstract class Node
             if (child.PositionMode == PositionMode.Absolute)
             {
                 child.ComputedPosition = ComputedPosition + child.Position 
-                    + new Vector2(ComputedPaddingLeft + child.ComputedMarginLeft, ComputedPaddingTop + child.ComputedMarginTop);
+                    + new Vector2(offsetX + child.ComputedMarginLeft, offsetY + child.ComputedMarginTop);
             }
             else
             {
                 currentY += child.ComputedMarginTop;
                 child.ComputedPosition = new Vector2(
-                    ComputedPosition.X + ComputedPaddingLeft + child.ComputedMarginLeft + child.Position.X,
+                    ComputedPosition.X + offsetX + child.ComputedMarginLeft + child.Position.X,
                     ComputedPosition.Y + currentY + child.Position.Y
                 );
                 currentY += child.ComputedHeight + child.ComputedMarginBottom;

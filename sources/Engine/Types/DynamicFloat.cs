@@ -23,6 +23,7 @@ public struct DynamicFloat
         return Type switch
         {
             ValueType.Percent => parentSize * Value / 100f,
+            ValueType.Auto => parentSize,
             _ => Value
         };
     }
