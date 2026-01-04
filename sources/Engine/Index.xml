@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Window Title="MonkeySpeak">
-    <Rect Width="50%" Border="5" Rounded="0,7" Padding="40" Height="50%" MarginLeft="Auto" MarginRight="Auto" Color="Red">
+    <Rect Width="50%" Border="5" Rounded="0.4" Padding="40" Height="50%" MarginLeft="Auto" MarginRight="Auto" Color="Red">
         <Rect Width="Auto" Border="15" Height="100%" BorderColor="Green" Color="Blue"/>
     </Rect>
-    <Circle MarginLeft="Auto" 
+    <Circle Bind="Engine.Demo.TestControllerForNode"
+            MarginLeft="Auto" 
             MarginRight="Auto"
             MarginTop="50%"
             Width="100" 
             Height="100" 
             PositionMode="1"
-            OnRelease="{TestLog('GREEN ___')}"
+            OnRelease="{TestDe()}"
             Order="200" 
             Lines="5"
             LinesColor="Red"
@@ -21,10 +22,6 @@
             Width="200" 
             Height="200" 
             OnRelease="{WindowHandler.TestWindowLog()}"
-            OnPressed="{TestLog('OnPressed')}"
-            OnPress="{TestLog('OnPress')}"
-            OnHover="{TestLog('OnHover')}"
-            OnHoverExit="{TestLog('OnHoverExit')}"
             PositionMode="1" 
             Color="Blue"
     />

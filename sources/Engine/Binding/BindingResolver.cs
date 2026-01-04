@@ -145,25 +145,50 @@ public static class BindingResolver
     
     private static object? ExecuteOnHierarchy(string methodName, object?[] args, Node context)
     {
-        var method = FindMethod(context.GetType(), methodName, args);
-        if (method != null)
-            return InvokeMethod(method, context, args);
+        // 1. Controller
+        if (context.Controller != null)
+        {
+            var method = FindMethod(context.Controller.GetType(), methodName, args);
+            if (method != null)
+                return InvokeMethod(method, context.Controller, args);
+        }
         
+        // 2. Node
+        var nodeMethod = FindMethod(context.GetType(), methodName, args);
+        if (nodeMethod != null)
+            return InvokeMethod(nodeMethod, context, args);
+        
+        // 3. Parent hierarchy (check Controller first, then Node)
         var parent = context.Parent;
         while (parent != null)
         {
-            method = FindMethod(parent.GetType(), methodName, args);
-            if (method != null)
-                return InvokeMethod(method, parent, args);
+            if (parent.Controller != null)
+            {
+                var method = FindMethod(parent.Controller.GetType(), methodName, args);
+                if (method != null)
+                    return InvokeMethod(method, parent.Controller, args);
+            }
+            
+            var parentMethod = FindMethod(parent.GetType(), methodName, args);
+            if (parentMethod != null)
+                return InvokeMethod(parentMethod, parent, args);
             parent = parent.Parent;
         }
         
+        // 4. ParentScene (check Controller first, then Scene)
         var scene = context.ParentScene;
         if (scene != null && scene != context)
         {
-            method = FindMethod(scene.GetType(), methodName, args);
-            if (method != null)
-                return InvokeMethod(method, scene, args);
+            if (scene.Controller != null)
+            {
+                var method = FindMethod(scene.Controller.GetType(), methodName, args);
+                if (method != null)
+                    return InvokeMethod(method, scene.Controller, args);
+            }
+            
+            var sceneMethod = FindMethod(scene.GetType(), methodName, args);
+            if (sceneMethod != null)
+                return InvokeMethod(sceneMethod, scene, args);
         }
         
         Console.WriteLine($"Method '{methodName}' not found in hierarchy");

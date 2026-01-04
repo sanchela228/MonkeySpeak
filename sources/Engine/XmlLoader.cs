@@ -169,6 +169,23 @@ public static class XmlLoader
     
     private static void SetProperty(Node node, string propertyName, string value)
     {
+        // Handle Bind/Controller before property lookup
+        if (propertyName == "Controller" || propertyName == "Bind")
+        {
+            var controllerType = FindControllerType(value);
+            if (controllerType != null)
+            {
+                var controller = (NodeController?)Activator.CreateInstance(controllerType);
+                if (controller != null)
+                    node.SetController(controller);
+            }
+            else
+            {
+                Console.WriteLine($"Controller type '{value}' not found");
+            }
+            return;
+        }
+        
         var type = node.GetType();
         var prop = type.GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
         
@@ -226,9 +243,12 @@ public static class XmlLoader
     {
         if (targetType == typeof(DynamicFloat))
             return DynamicFloat.Parse(value);
-        
+
         if (targetType == typeof(float))
+        {
+            if (value.Contains('.')) return float.Parse(value.Replace('.', ','));
             return float.Parse(value);
+        }
         
         if (targetType == typeof(int))
             return int.Parse(value);
@@ -249,6 +269,50 @@ public static class XmlLoader
             return Enum.Parse(targetType, value, ignoreCase: true);
         
         return Convert.ChangeType(value, targetType);
+    }
+    
+    private static readonly Dictionary<string, Type> _controllerTypeCache = new();
+    private static bool _controllerTypesScanned = false;
+    
+    private static Type? FindControllerType(string name)
+    {
+        if (_controllerTypeCache.TryGetValue(name, out var cached))
+            return cached;
+        
+        if (!_controllerTypesScanned)
+            ScanControllerTypes();
+        
+        return _controllerTypeCache.GetValueOrDefault(name);
+    }
+    
+    private static void ScanControllerTypes()
+    {
+        _controllerTypesScanned = true;
+        
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            try
+            {
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (typeof(NodeController).IsAssignableFrom(type) && !type.IsAbstract)
+                    {
+                        _controllerTypeCache[type.Name] = type;
+                        if (type.FullName != null)
+                            _controllerTypeCache[type.FullName] = type;
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+    }
+    
+    public static void RegisterController<T>(string? alias = null) where T : NodeController
+    {
+        var type = typeof(T);
+        _controllerTypeCache[alias ?? type.Name] = type;
     }
     
     private static Color ParseColor(string value)

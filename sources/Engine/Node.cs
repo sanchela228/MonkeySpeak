@@ -17,6 +17,15 @@ public abstract class Node
     public string Id { get; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = "";
     
+    public NodeController? Controller { get; private set; }
+    
+    public void SetController(NodeController controller)
+    {
+        Controller = controller;
+        Controller.Node = this;
+        Controller.OnBind();
+    }
+    
     public string? OnPressed { get; set; }
     public string? OnPress { get; set; }
     public string? OnRelease { get; set; }
@@ -180,6 +189,7 @@ public abstract class Node
     {
         if (!IsActive) return;
         ProcessMouseEvents();
+        Controller?.OnUpdate(deltaTime);
         Update(deltaTime);
         foreach (var child in _children)
             child.RootUpdate(deltaTime);
@@ -197,6 +207,7 @@ public abstract class Node
     {
         foreach (var child in _children.ToList())
             child.RootDispose();
+        Controller?.OnDispose();
         Dispose();
     }
     
