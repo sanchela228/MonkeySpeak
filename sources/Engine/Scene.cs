@@ -110,21 +110,27 @@ public class Scene : Node
     
     public override void ArrangeChildren()
     {
+        float contentWidth = ComputedWidth - ComputedPaddingLeft - ComputedPaddingRight;
+        float contentHeight = ComputedHeight - ComputedPaddingTop - ComputedPaddingBottom;
+        
         if (Layout == LayoutMode.Vertical)
         {
-            float currentY = 0;
+            float currentY = ComputedPaddingTop;
             
             foreach (var child in _children)
             {
+                ResolveAutoMargins(child, contentWidth, contentHeight);
+                
                 if (child.PositionMode == PositionMode.Absolute)
                 {
-                    child.ComputedPosition = ComputedPosition + child.Position + new Vector2(child.ComputedMarginLeft, child.ComputedMarginTop);
+                    child.ComputedPosition = ComputedPosition + child.Position 
+                        + new Vector2(ComputedPaddingLeft + child.ComputedMarginLeft, ComputedPaddingTop + child.ComputedMarginTop);
                 }
                 else
                 {
                     currentY += child.ComputedMarginTop;
                     child.ComputedPosition = new Vector2(
-                        ComputedPosition.X + child.ComputedMarginLeft + child.Position.X,
+                        ComputedPosition.X + ComputedPaddingLeft + child.ComputedMarginLeft + child.Position.X,
                         ComputedPosition.Y + currentY + child.Position.Y
                     );
                     currentY += child.ComputedHeight + child.ComputedMarginBottom;
@@ -135,20 +141,23 @@ public class Scene : Node
         }
         else if (Layout == LayoutMode.Horizontal)
         {
-            float currentX = 0;
+            float currentX = ComputedPaddingLeft;
             
             foreach (var child in _children)
             {
+                ResolveAutoMargins(child, contentWidth, contentHeight);
+                
                 if (child.PositionMode == PositionMode.Absolute)
                 {
-                    child.ComputedPosition = ComputedPosition + child.Position + new Vector2(child.ComputedMarginLeft, child.ComputedMarginTop);
+                    child.ComputedPosition = ComputedPosition + child.Position 
+                        + new Vector2(ComputedPaddingLeft + child.ComputedMarginLeft, ComputedPaddingTop + child.ComputedMarginTop);
                 }
                 else
                 {
                     currentX += child.ComputedMarginLeft;
                     child.ComputedPosition = new Vector2(
                         ComputedPosition.X + currentX + child.Position.X,
-                        ComputedPosition.Y + child.ComputedMarginTop + child.Position.Y
+                        ComputedPosition.Y + ComputedPaddingTop + child.ComputedMarginTop + child.Position.Y
                     );
                     currentX += child.ComputedWidth + child.ComputedMarginRight;
                 }
@@ -160,7 +169,9 @@ public class Scene : Node
         {
             foreach (var child in _children)
             {
-                child.ComputedPosition = ComputedPosition + child.Position + new Vector2(child.ComputedMarginLeft, child.ComputedMarginTop);
+                ResolveAutoMargins(child, contentWidth, contentHeight);
+                child.ComputedPosition = ComputedPosition + child.Position 
+                    + new Vector2(ComputedPaddingLeft + child.ComputedMarginLeft, ComputedPaddingTop + child.ComputedMarginTop);
                 child.ArrangeChildren();
             }
         }

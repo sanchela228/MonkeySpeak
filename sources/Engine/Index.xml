@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Window Title="MonkeySpeak">
-    <Rect Width="100%" Height="50%" Color="Red">
+    <Rect Width="50%" Height="50%" MarginLeft="Auto" MarginRight="Auto" Color="Red">
         <Rect Width="50%" Height="100%" Color="Blue" MarginLeft="25%"/>
     </Rect>
-    <Circle MarginTop="25%" Width="100" Height="100" PositionMode="1" Order="200" Color="Green"/>
+    <Circle MarginLeft="Auto" MarginRight="Auto" Width="100" Height="100" PositionMode="1" Order="200" Color="Green"/>
     <Circle MarginTop="25%" Width="130" Height="130" PositionMode="1" Color="Blue"/>
     
     <Scene1/>

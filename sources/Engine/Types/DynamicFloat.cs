@@ -5,7 +5,8 @@ public struct DynamicFloat
     public enum ValueType
     {
         Absolute,
-        Percent
+        Percent,
+        Auto
     }
     
     public float Value { get; set; }
@@ -26,8 +27,9 @@ public struct DynamicFloat
         };
     }
     
-    public bool IsZero => Value == 0;
+    public bool IsZero => Value == 0 && Type != ValueType.Auto;
     public bool IsPercent => Type == ValueType.Percent;
+    public bool IsAuto => Type == ValueType.Auto;
     
     public static DynamicFloat Parse(string input)
     {
@@ -35,6 +37,9 @@ public struct DynamicFloat
             return new DynamicFloat(0, ValueType.Absolute);
         
         input = input.Trim();
+        
+        if (input.Equals("Auto", StringComparison.OrdinalIgnoreCase))
+            return new DynamicFloat(0, ValueType.Auto);
         
         if (input.EndsWith("%"))
         {
@@ -51,5 +56,10 @@ public struct DynamicFloat
     
     public static implicit operator DynamicFloat(float value) => new(value, ValueType.Absolute);
     
-    public override string ToString() => Type == ValueType.Percent ? $"{Value}%" : Value.ToString();
+    public override string ToString() => Type switch
+    {
+        ValueType.Percent => $"{Value}%",
+        ValueType.Auto => "Auto",
+        _ => Value.ToString()
+    };
 }

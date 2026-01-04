@@ -63,6 +63,27 @@ public abstract class Node
         }
     }
     
+    public DynamicFloat PaddingTop { get; set; } = new(0);
+    public DynamicFloat PaddingBottom { get; set; } = new(0);
+    public DynamicFloat PaddingLeft { get; set; } = new(0);
+    public DynamicFloat PaddingRight { get; set; } = new(0);
+    
+    public float ComputedPaddingTop { get; protected set; }
+    public float ComputedPaddingBottom { get; protected set; }
+    public float ComputedPaddingLeft { get; protected set; }
+    public float ComputedPaddingRight { get; protected set; }
+    
+    public DynamicFloat Padding
+    {
+        set
+        {
+            PaddingTop = value;
+            PaddingBottom = value;
+            PaddingLeft = value;
+            PaddingRight = value;
+        }
+    }
+    
     private Node? _parent = null;
     protected List<Node> _children = new();
     private int _order = 100;
@@ -150,10 +171,15 @@ public abstract class Node
         ComputedWidth = Width.Resolve(parentWidth);
         ComputedHeight = Height.Resolve(parentHeight);
         
-        ComputedMarginTop = MarginTop.Resolve(parentHeight);
-        ComputedMarginBottom = MarginBottom.Resolve(parentHeight);
-        ComputedMarginLeft = MarginLeft.Resolve(parentWidth);
-        ComputedMarginRight = MarginRight.Resolve(parentWidth);
+        ComputedMarginTop = MarginTop.IsAuto ? 0 : MarginTop.Resolve(parentHeight);
+        ComputedMarginBottom = MarginBottom.IsAuto ? 0 : MarginBottom.Resolve(parentHeight);
+        ComputedMarginLeft = MarginLeft.IsAuto ? 0 : MarginLeft.Resolve(parentWidth);
+        ComputedMarginRight = MarginRight.IsAuto ? 0 : MarginRight.Resolve(parentWidth);
+        
+        ComputedPaddingTop = PaddingTop.Resolve(ComputedHeight);
+        ComputedPaddingBottom = PaddingBottom.Resolve(ComputedHeight);
+        ComputedPaddingLeft = PaddingLeft.Resolve(ComputedWidth);
+        ComputedPaddingRight = PaddingRight.Resolve(ComputedWidth);
     }
     
     public virtual void MeasureSize()
@@ -188,25 +214,63 @@ public abstract class Node
     
     public virtual void ArrangeChildren()
     {
-        float currentY = 0;
+        float currentY = ComputedPaddingTop;
+        float contentWidth = ComputedWidth - ComputedPaddingLeft - ComputedPaddingRight;
+        float contentHeight = ComputedHeight - ComputedPaddingTop - ComputedPaddingBottom;
         
         foreach (var child in _children)
         {
+            ResolveAutoMargins(child, contentWidth, contentHeight);
+            
             if (child.PositionMode == PositionMode.Absolute)
             {
-                child.ComputedPosition = ComputedPosition + child.Position + new Vector2(child.ComputedMarginLeft, child.ComputedMarginTop);
+                child.ComputedPosition = ComputedPosition + child.Position 
+                    + new Vector2(ComputedPaddingLeft + child.ComputedMarginLeft, ComputedPaddingTop + child.ComputedMarginTop);
             }
             else
             {
                 currentY += child.ComputedMarginTop;
                 child.ComputedPosition = new Vector2(
-                    ComputedPosition.X + child.ComputedMarginLeft + child.Position.X,
+                    ComputedPosition.X + ComputedPaddingLeft + child.ComputedMarginLeft + child.Position.X,
                     ComputedPosition.Y + currentY + child.Position.Y
                 );
                 currentY += child.ComputedHeight + child.ComputedMarginBottom;
             }
             
             child.ArrangeChildren();
+        }
+    }
+    
+    protected void ResolveAutoMargins(Node child, float contentWidth, float contentHeight)
+    {
+        if (child.MarginLeft.IsAuto && child.MarginRight.IsAuto)
+        {
+            float freeSpace = contentWidth - child.ComputedWidth;
+            child.ComputedMarginLeft = freeSpace / 2;
+            child.ComputedMarginRight = freeSpace / 2;
+        }
+        else if (child.MarginLeft.IsAuto)
+        {
+            child.ComputedMarginLeft = contentWidth - child.ComputedWidth - child.ComputedMarginRight;
+        }
+        else if (child.MarginRight.IsAuto)
+        {
+            child.ComputedMarginRight = contentWidth - child.ComputedWidth - child.ComputedMarginLeft;
+        }
+        
+        if (child.MarginTop.IsAuto && child.MarginBottom.IsAuto)
+        {
+            float freeSpace = contentHeight - child.ComputedHeight;
+            child.ComputedMarginTop = freeSpace / 2;
+            child.ComputedMarginBottom = freeSpace / 2;
+        }
+        else if (child.MarginTop.IsAuto)
+        {
+            child.ComputedMarginTop = contentHeight - child.ComputedHeight - child.ComputedMarginBottom;
+        }
+        else if (child.MarginBottom.IsAuto)
+        {
+            child.ComputedMarginBottom = contentHeight - child.ComputedHeight - child.ComputedMarginTop;
         }
     }
     
