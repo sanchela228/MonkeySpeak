@@ -244,7 +244,9 @@ public static class Window
     
     public static void Drag()
     {
-        if (_isMaximized) return;
+        if (_isMaximized)
+            Restore();
+        
         if (_isDragging) return;
         if (_isResizing) return;
         

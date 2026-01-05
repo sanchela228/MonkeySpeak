@@ -20,15 +20,7 @@
             />
         </Grid>
     </Rect>
-    
-    <Grid Columns="3" Gap="10" Width="100%" Height="Auto" MarginTop="50" Padding="10">
-        <Rect Width="100%" Height="80" Color="Red"/>
-        <Rect Width="100%" Height="80" Color="Green"/>
-        <Rect Width="100%" Height="80" Color="Blue"/>
-        <Rect Width="100%" Height="60" Color="Yellow"/>
-        <Rect Width="100%" Height="100" Color="Orange"/>
-        <Rect Width="100%" Height="40" Color="Purple"/>
-    </Grid>
+    <Text>Testing text</Text>
     
     <Grid Columns="1fr 1fr 1fr" ColumnGap="5" Width="100%" Height="100" MarginTop="10" Padding="10">
         <Rect Width="100%" Height="100%" Color="Red"/>

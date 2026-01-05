@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Rect Width="100%" Height="100%" Color="White">
+    <Rect Width="100" Height="40%" Margin="10"
+          Border="12" BorderColor="Blue" Padding="10" Color="Red">
+        <Rect Bind="TestControllerForNode" Width="100%"
+              Height="100%"
+              OnRelease="{TestDe()}"
+              Color="Green"/>
+    </Rect>
+</Rect>
+
