@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Window Title="MonkeySpeak">
+    <Include Source="Fonts.xml"/>
     <Rect Width="100%" Height="45" MarginLeft="6" MarginRight="6" MarginTop="6"
           Color="Blue" OnPress="{Window.Drag()}">
         <Grid Columns="3" MarginLeft="Auto" Gap="10" MarginRight="15" Height="100%" Width="Auto">
@@ -20,11 +21,19 @@
             />
         </Grid>
     </Rect>
-    <Text>Testing text</Text>
-    
-    <Grid Columns="1fr 1fr 1fr" ColumnGap="5" Width="100%" Height="100" MarginTop="10" Padding="10">
-        <Rect Width="100%" Height="100%" Color="Red"/>
-        <Rect Width="100%" Height="100%" Color="Blue"/>
-        <Rect Width="100%" Height="100%" Color="Red"/>
-    </Grid>
+    <Text Content="Hello World!"
+          FontFamily="JET"
+          Wrap="true"
+          ClampDots="true"
+          Width="Auto"
+          Height="Auto"/>
+    <Rect Width="100%" Height="Auto" Color="Blue">
+        <Text Content="long text long text long text long text long text long text long text long text long text long text long text long text long text long text long text"
+              FontFamily="JET"
+              Height="Auto"
+              Align="Left"
+              ClampDots="true"
+              Wrap="True"
+        />
+    </Rect>
 </Window>

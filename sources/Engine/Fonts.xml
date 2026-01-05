@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Fragment>
+    <FontFamily Name="JET"
+                Font="JetBrainsMonoNL-Regular_2.ttf"
+                Size="22"
+                Color="White"
+                Spacing="1"
+    />
+</Fragment>

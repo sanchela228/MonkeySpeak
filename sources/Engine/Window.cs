@@ -46,21 +46,31 @@ public static class Window
     public static bool IsMaximized => _isMaximized;
     public static bool IsDragging => _isDragging;
     
+    private static string _xmlPath = "Index.xml";
+    
     public static void Init(string path = "Index.xml")
     {
+        _xmlPath = path;
         _rootScene = new Scene { Name = "RootScene" };
-        LoadFromXml(path);
     }
     
-    public static void LoadFromXml(string xmlPath)
+    private static void ReloadXml()
     {
-        var (title, children) = XmlLoader.LoadFromFile(xmlPath);
+        _rootScene.ClearChildren();
+        var (title, children) = XmlLoader.LoadFromFile(_xmlPath);
         _title = title;
+        Raylib.SetWindowTitle(_title);
         
         foreach (var child in children)
         {
             _rootScene.AddChild(child);
         }
+    }
+    
+    public static void LoadFromXml(string xmlPath)
+    {
+        _xmlPath = xmlPath;
+        ReloadXml();
     }
     
     public static ResizeEdge GetHoveredEdge()
@@ -283,6 +293,8 @@ public static class Window
         Raylib.InitAudioDevice();
         if (!Raylib.IsAudioDeviceReady())
             return;
+        
+        ReloadXml();
         
         _rootScene.Width = 800;
         _rootScene.Height = 600;

@@ -15,6 +15,12 @@ public static class XmlLoader
     private static readonly Dictionary<string, Type> _elementTypes = new();
     private static readonly List<string> _searchPaths = new();
     private static string _currentBasePath = "";
+    private static readonly Dictionary<string, FontFamily> _fontFamilies = new();
+    
+    public static FontFamily? GetFontFamily(string name)
+    {
+        return _fontFamilies.TryGetValue(name, out var font) ? font : null;
+    }
     
     static XmlLoader()
     {
@@ -22,6 +28,7 @@ public static class XmlLoader
         RegisterElement<Circle>("Circle");
         RegisterElement<Scene>("Scene");
         RegisterElement<Grid>("Grid");
+        RegisterElement<Text>("Text");
     }
     
     public static void RegisterElement<T>(string tagName) where T : Node, new()
@@ -77,6 +84,55 @@ public static class XmlLoader
                     fragmentChildren.AddRange(childNodes);
             }
             return fragmentChildren;
+        }
+        
+        if (tagName == "Include")
+        {
+            var source = element.Attribute("Source")?.Value;
+            if (string.IsNullOrEmpty(source))
+            {
+                Console.WriteLine("Include: Source attribute is required");
+                return null;
+            }
+            
+            var externalFile = FindExternalFile(source);
+            if (externalFile != null)
+            {
+                var includedNode = LoadFromExternalFile(externalFile);
+                
+                if (includedNode != null)
+                    return new List<Node> { includedNode };
+                
+                return null;
+            }
+            
+            Console.WriteLine($"Include: File not found: {source}");
+            return null;
+        }
+        
+        if (tagName == "FontFamily")
+        {
+            var name = element.Attribute("Name")?.Value;
+            var fontFile = element.Attribute("Font")?.Value ?? "default.ttf";
+            var sizeStr = element.Attribute("Size")?.Value ?? "16";
+            var colorStr = element.Attribute("Color")?.Value ?? "White";
+            var spacingStr = element.Attribute("Spacing")?.Value ?? "1";
+            
+            int size = int.Parse(sizeStr);
+            float spacing = float.Parse(spacingStr.Replace('.', ','));
+            var color = ParseColor(colorStr);
+            
+            var fontFamily = new FontFamily
+            {
+                FontPath = fontFile,
+                Size = size,
+                Color = color,
+                Spacing = spacing,
+                Rotation = 0
+            };
+            
+            _fontFamilies[name] = fontFamily;
+            return null;
         }
         
         Node? node = null;
@@ -149,7 +205,11 @@ public static class XmlLoader
             
             if (rootTagName == "Fragment")
             {
-                Console.WriteLine("Warning: Fragment as root element in external file is not fully supported. Use a wrapper element.");
+                foreach (var child in root.Elements())
+                {
+                    ParseElement(child);
+                }
+
                 return null;
             }
             
@@ -170,7 +230,6 @@ public static class XmlLoader
     
     private static void SetProperty(Node node, string propertyName, string value)
     {
-        // Handle Bind/Controller before property lookup
         if (propertyName == "Controller" || propertyName == "Bind")
         {
             var controllerType = FindControllerType(value);
@@ -269,6 +328,15 @@ public static class XmlLoader
         if (targetType.IsEnum)
             return Enum.Parse(targetType, value, ignoreCase: true);
         
+        if (targetType == typeof(FontFamily))
+        {
+            var registered = GetFontFamily(value);
+            if (registered.HasValue)
+                return registered.Value;
+            
+            return ParseFontFamily(value);
+        }
+        
         return Convert.ChangeType(value, targetType);
     }
     
@@ -357,5 +425,24 @@ public static class XmlLoader
         }
         
         return Color.White;
+    }
+    
+    private static FontFamily ParseFontFamily(string value)
+    {
+        var parts = value.Split(',');
+        
+        string fontName = parts.Length > 0 ? parts[0].Trim() : "default.ttf";
+        int fontSize = parts.Length > 1 ? int.Parse(parts[1].Trim()) : 16;
+        Color color = parts.Length > 2 ? ParseColor(parts[2].Trim()) : Color.White;
+        float spacing = parts.Length > 3 ? float.Parse(parts[3].Trim()) : 1;
+        
+        return new FontFamily
+        {
+            FontPath = fontName,
+            Size = fontSize,
+            Color = color,
+            Spacing = spacing,
+            Rotation = 0
+        };
     }
 }

@@ -145,7 +145,7 @@ public static class BindingResolver
     
     private static object? ExecuteOnHierarchy(string methodName, object?[] args, Node context)
     {
-        // 1. Controller
+        // 1 Controller
         if (context.Controller != null)
         {
             var method = FindMethod(context.Controller.GetType(), methodName, args);
@@ -153,12 +153,12 @@ public static class BindingResolver
                 return InvokeMethod(method, context.Controller, args);
         }
         
-        // 2. Node
+        // 2 Node
         var nodeMethod = FindMethod(context.GetType(), methodName, args);
         if (nodeMethod != null)
             return InvokeMethod(nodeMethod, context, args);
         
-        // 3. Parent hierarchy (check Controller first, then Node)
+        // 3 Parent
         var parent = context.Parent;
         while (parent != null)
         {
@@ -175,7 +175,7 @@ public static class BindingResolver
             parent = parent.Parent;
         }
         
-        // 4. ParentScene (check Controller first, then Scene)
+        // 4 ParentScene
         var scene = context.ParentScene;
         if (scene != null && scene != context)
         {
