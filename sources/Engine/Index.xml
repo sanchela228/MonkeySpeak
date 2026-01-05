@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Window Title="MonkeySpeak">
-    <Rect Width="100%" Height="45"
-          Color="Blank" OnPress="{Window.Drag()}">
+    <Rect Width="100%" Height="45" MarginLeft="6" MarginRight="6" MarginTop="6"
+          Color="Blue" OnPress="{Window.Drag()}">
         <Grid Columns="3" MarginLeft="Auto" Gap="10" MarginRight="15" Height="100%" Width="Auto">
             <Circle MarginTop="Auto" MarginBottom="Auto"
-                    Width="18" Height="18"
+                    Width="18" Height="18" Cursor="4"
                     OnRelease="{Window.Minimize()}"
                     Color="Yellow"
             />
@@ -30,7 +30,7 @@
         <Rect Width="100%" Height="40" Color="Purple"/>
     </Grid>
     
-    <Grid Columns="1fr 10fr 1fr" ColumnGap="5" Width="100%" Height="100" MarginTop="10" Padding="10">
+    <Grid Columns="1fr 1fr 1fr" ColumnGap="5" Width="100%" Height="100" MarginTop="10" Padding="10">
         <Rect Width="100%" Height="100%" Color="Red"/>
         <Rect Width="100%" Height="100%" Color="Blue"/>
         <Rect Width="100%" Height="100%" Color="Red"/>

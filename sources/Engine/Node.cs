@@ -35,6 +35,12 @@ public abstract class Node
     private bool _isHovered = false;
     private bool _wasHovered = false;
     public bool IsHovered => _isHovered;
+    public MouseCursor Cursor { get; set; } = MouseCursor.Default;
+    
+    private static MouseCursor _frameCursor = MouseCursor.Default;
+    private static bool _frameCursorSet = false;
+    
+    public static bool IsUICursorSet => _frameCursorSet;
     
     public PositionMode PositionMode { get; set; } = PositionMode.Relative;
     
@@ -188,11 +194,23 @@ public abstract class Node
     public void RootUpdate(float deltaTime)
     {
         if (!IsActive) return;
+        
+        if (_parent == null)
+        {
+            _frameCursor = MouseCursor.Default;
+            _frameCursorSet = false;
+        }
+        
         ProcessMouseEvents();
         Controller?.OnUpdate(deltaTime);
         Update(deltaTime);
         foreach (var child in _children)
             child.RootUpdate(deltaTime);
+        
+        if (_parent == null)
+        {
+            Raylib.SetMouseCursor(_frameCursor);
+        }
     }
     
     public void RootDraw()
@@ -213,13 +231,21 @@ public abstract class Node
 
     public void ResolveSize(float parentWidth, float parentHeight)
     {
-        ComputedWidth = Width.Resolve(parentWidth);
-        ComputedHeight = Height.Resolve(parentHeight);
-        
         ComputedMarginTop = MarginTop.IsAuto ? 0 : MarginTop.Resolve(parentHeight);
         ComputedMarginBottom = MarginBottom.IsAuto ? 0 : MarginBottom.Resolve(parentHeight);
         ComputedMarginLeft = MarginLeft.IsAuto ? 0 : MarginLeft.Resolve(parentWidth);
         ComputedMarginRight = MarginRight.IsAuto ? 0 : MarginRight.Resolve(parentWidth);
+        
+        float availableWidth = parentWidth;
+        float availableHeight = parentHeight;
+        
+        if (Width.IsPercent)
+            availableWidth = parentWidth - ComputedMarginLeft - ComputedMarginRight;
+        if (Height.IsPercent)
+            availableHeight = parentHeight - ComputedMarginTop - ComputedMarginBottom;
+        
+        ComputedWidth = Width.Resolve(availableWidth);
+        ComputedHeight = Height.Resolve(availableHeight);
         
         ComputedBorderTop = BorderTop;
         ComputedBorderBottom = BorderBottom;
@@ -237,7 +263,6 @@ public abstract class Node
         float parentWidth = _parent?.ComputedWidth ?? 800;
         float parentHeight = _parent?.ComputedHeight ?? 600;
         
-        // Учитываем border и padding родителя для content area
         if (_parent != null)
         {
             parentWidth -= _parent.ComputedBorderLeft + _parent.ComputedBorderRight 
@@ -340,6 +365,11 @@ public abstract class Node
         MeasureSize();
         ArrangeChildren();
     }
+
+    public void Test()
+    {
+        Console.WriteLine("Test");
+    }
     
     protected void ProcessMouseEvents()
     {
@@ -351,13 +381,25 @@ public abstract class Node
                   && mousePos.Y >= ComputedPosition.Y 
                   && mousePos.Y <= ComputedPosition.Y + ComputedHeight;
         
+        if (_isHovered && Cursor != MouseCursor.Default)
+        {
+            _frameCursor = Cursor;
+            _frameCursorSet = true;
+        }
+        
         // OnHover
-        if (_isHovered && !_wasHovered && OnHover != null)
-            BindingResolver.Execute(OnHover, this);
+        if (_isHovered && !_wasHovered)
+        {
+            if (OnHover != null)
+                BindingResolver.Execute(OnHover, this);
+        }
         
         // OnHoverExit
-        if (!_isHovered && _wasHovered && OnHoverExit != null)
-            BindingResolver.Execute(OnHoverExit, this);
+        if (!_isHovered && _wasHovered)
+        {
+            if (OnHoverExit != null)
+                BindingResolver.Execute(OnHoverExit, this);
+        }
         
         if (_isHovered)
         {

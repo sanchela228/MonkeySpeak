@@ -88,6 +88,8 @@ public static class Window
     
     private static void UpdateCursor(ResizeEdge edge)
     {
+        if (Node.IsUICursorSet) return;
+        
         var cursor = edge switch
         {
             ResizeEdge.Left or ResizeEdge.Right => MouseCursor.ResizeEw,
@@ -290,9 +292,9 @@ public static class Window
         {
             float deltaTime = Raylib.GetFrameTime();
             
+            _rootScene.RootUpdate(deltaTime);
             HandleResize();
             HandleDrag();
-            _rootScene.RootUpdate(deltaTime);
             
             Raylib.BeginDrawing();
             Raylib.ClearBackground(new Color(20, 20, 20, 255));
