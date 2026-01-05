@@ -323,6 +323,7 @@ public static class XmlLoader
             "red" => Color.Red,
             "green" => Color.Green,
             "blue" => Color.Blue,
+            "blank" => Color.Blank,
             "white" => Color.White,
             "black" => Color.Black,
             "yellow" => Color.Yellow,

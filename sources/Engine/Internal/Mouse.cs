@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using Raylib_cs;
 
-namespace Engine;
+namespace Engine.Internal;
 
 public class Mouse
 {

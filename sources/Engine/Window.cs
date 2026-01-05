@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Engine.Internal;
 using Raylib_cs;
 
 namespace Engine;
@@ -101,6 +102,7 @@ public static class Window
     private static void HandleResize()
     {
         if (_isMaximized) return;
+        if (_isDragging) return;
         
         var globalMouse = Mouse.GetCursorPos();
         var mousePos = new Vector2(globalMouse.X, globalMouse.Y);
@@ -241,6 +243,8 @@ public static class Window
     public static void Drag()
     {
         if (_isMaximized) return;
+        if (_isDragging) return;
+        if (_isResizing) return;
         
         var globalMouse = Mouse.GetCursorPos();
         _isDragging = true;
@@ -280,6 +284,7 @@ public static class Window
         _rootScene.Height = 600;
         
         _rootScene.CalculateLayout();
+        Internal.Window.SetWindowRoundedCorners();
         
         while (!Raylib.WindowShouldClose())
         {

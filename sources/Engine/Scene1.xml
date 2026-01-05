@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Scene Layout="Horizontal">
-    <Rect Width="100" Height="100" Color="Gray"/>
-    <Rect Width="100" Height="100" Color="White"/>
-</Scene>
