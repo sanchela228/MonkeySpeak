@@ -14,6 +14,7 @@ namespace Core.Application.Services;
 public class CallsService : ICallsService
 {
     private readonly IConnectionService _connection;
+    private readonly IAudioService _audio;
     private readonly IStunClient _stun;
     private readonly UdpUnifiedManager _udp;
     private readonly object _sync = new();
@@ -25,13 +26,41 @@ public class CallsService : ICallsService
     public event EventHandler<CallSession?>? CurrentChanged;
     public event EventHandler<CallState>? StateChanged;
 
-    public CallsService(IConnectionService connection, IStunClient stun, UdpUnifiedManager udp)
+    public CallsService(IConnectionService connection, IAudioService audio, IStunClient stun, UdpUnifiedManager udp)
     {
         _connection = connection;
+        _audio = audio;
         _stun = stun;
         _udp = udp;
 
         _connection.MessageReceived += OnWsMessage;
+
+        // Audio → UDP: encoded opus packets go out to all peers
+        _audio.OnEncodedAudioReady += OnEncodedAudioReady;
+
+        // UDP → Audio: incoming audio packets routed to playback
+        _udp.OnAudioDataByInterlocutor += OnUdpAudioReceived;
+    }
+
+    private long _sentAudioCount;
+    private long _recvAudioCount;
+
+    private void OnEncodedAudioReady(byte[] opusPacket)
+    {
+        var n = Interlocked.Increment(ref _sentAudioCount);
+        if (n == 1)
+            Core.Logger.Info($"[CallsService] First audio packet sent, len={opusPacket.Length}");
+
+        _ = _udp.SendAudioAsync(new ReadOnlyMemory<byte>(opusPacket));
+    }
+
+    private void OnUdpAudioReceived(string interlocutorId, byte[] opusData)
+    {
+        var n = Interlocked.Increment(ref _recvAudioCount);
+        if (n == 1)
+            Core.Logger.Info($"[CallsService] First audio packet received from {interlocutorId}, len={opusData.Length}");
+
+        _audio.HandleReceivedAudio(interlocutorId, opusData);
     }
 
     public Task<CallSession> CreateAsync(CancellationToken ct = default)
@@ -49,26 +78,6 @@ public class CallsService : ICallsService
         return HangupInternalAsync(reason: "UserHangup", ct);
     }
 
-    public void SetMicrophoneEnabled(bool enabled)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void SetPlaybackEnabled(bool enabled)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void SetMicrophoneVolume(int percent)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void SetPlaybackVolume(int percent)
-    {
-        throw new NotImplementedException();
-    }
-
     private async Task<CallSession> CreateInternalAsync(CancellationToken ct)
     {
         EnsureWsConnected();
@@ -81,8 +90,15 @@ public class CallsService : ICallsService
         try
         {
             var localPort = SelectLocalUdpPort();
-            var publicEp = await _stun.GetPublicEndPointAsync(localPort, timeoutMs: 5000, ct).ConfigureAwait(false);
             var localLanEp = GetLocalLanEndpoint(localPort);
+
+#if DEBUG
+            var publicEp = localLanEp;
+            Core.Logger.Info($"STUN skipped (DEBUG): using LAN endpoint {publicEp}");
+#else
+            var publicEp = await _stun.GetPublicEndPointAsync(localPort, timeoutMs: 5000, ct).ConfigureAwait(false);
+#endif
+
             session.SetLocal(localPort, publicEp, localLanEp);
 
             StartUdpIfNeeded(session);
@@ -132,8 +148,15 @@ public class CallsService : ICallsService
         try
         {
             var localPort = SelectLocalUdpPort();
-            var publicEp = await _stun.GetPublicEndPointAsync(localPort, timeoutMs: 5000, ct).ConfigureAwait(false);
             var localLanEp = GetLocalLanEndpoint(localPort);
+
+#if DEBUG
+            var publicEp = localLanEp;
+            Core.Logger.Info($"STUN skipped (DEBUG): using LAN endpoint {publicEp}");
+#else
+            var publicEp = await _stun.GetPublicEndPointAsync(localPort, timeoutMs: 5000, ct).ConfigureAwait(false);
+#endif
+
             session.SetLocal(localPort, publicEp, localLanEp);
 
             StartUdpIfNeeded(session);
@@ -279,13 +302,8 @@ public class CallsService : ICallsService
             }
         }
 
-        try
-        {
-            _udp.RemoveInterlocutor(left.InterlocutorId);
-        }
-        catch
-        {
-        }
+        try { _udp.RemoveInterlocutor(left.InterlocutorId); } catch { }
+        try { _audio.RemoveInterlocutor(left.InterlocutorId); } catch { }
 
         Core.Logger.Info($"InterlocutorLeft: {left.InterlocutorId}");
     }
@@ -293,6 +311,21 @@ public class CallsService : ICallsService
     private void Transition(CallSession session, CallState next)
     {
         session.TransitionTo(next);
+
+        if (next == CallState.Connected)
+        {
+            try
+            {
+                if (!_audio.IsInitialized)
+                    _audio.Initialize();
+                _audio.StartCapture();
+            }
+            catch (Exception ex)
+            {
+                Core.Logger.Error("Failed to start audio", ex);
+            }
+        }
+
         StateChanged?.Invoke(this, next);
         Core.Logger.Info($"Call state: {next}");
     }
@@ -321,12 +354,15 @@ public class CallsService : ICallsService
             try { _sessionCts?.Dispose(); } catch { }
             _sessionCts = null;
 
+            try { _audio.StopCapture(); } catch { }
             try { _udp.Stop(); } catch { }
 
             try { _udpClient?.Dispose(); } catch { }
             _udpClient = null;
 
             Current = null;
+            _sentAudioCount = 0;
+            _recvAudioCount = 0;
         }
 
         CurrentChanged?.Invoke(this, null);

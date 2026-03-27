@@ -8,4 +8,5 @@ public interface IMonkeySpeakClient
     IAuthService Auth { get; }
     IFriendsService Friends { get; }
     ICallsService Calls { get; }
+    IAudioService Audio { get; }
 }

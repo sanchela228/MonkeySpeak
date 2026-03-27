@@ -32,6 +32,9 @@ public sealed class UdpUnifiedManager : IDisposable
     private volatile bool _isConnected;
 
     private int _pingCounter;
+    private long _totalReceivedPackets;
+    private long _audioReceivedPackets;
+    private long _unmappedAudioPackets;
 
     private readonly Dictionary<string, IPEndPoint> _interlocutorToRemote = new();
     private readonly Dictionary<IPEndPoint, string> _remoteToInterlocutor = new();
@@ -150,6 +153,25 @@ public sealed class UdpUnifiedManager : IDisposable
     public void Stop()
     {
         try { _cts?.Cancel(); } catch { }
+        try { _cts?.Dispose(); } catch { }
+        _cts = null;
+
+        foreach (var kv in _interlocutorCts)
+            try { kv.Value.Cancel(); kv.Value.Dispose(); } catch { }
+
+        _interlocutorCts.Clear();
+        _interlocutorToRemote.Clear();
+        _remoteToInterlocutor.Clear();
+        _interlocutorConnected.Clear();
+
+        _remote = null;
+        _isConnected = false;
+        _pingCounter = 0;
+        _totalReceivedPackets = 0;
+        _audioReceivedPackets = 0;
+        _unmappedAudioPackets = 0;
+
+        Core.Logger.Debug("UDP stopped");
     }
 
     public void Dispose()
@@ -224,7 +246,7 @@ public sealed class UdpUnifiedManager : IDisposable
             {
                 await Task.Delay(TimeSpan.FromSeconds(2), ct).ConfigureAwait(false);
 
-                if (!HasAnyTargets())
+                if (_client == null || !HasAnyTargets())
                     continue;
 
                 Interlocked.Increment(ref _pingCounter);
@@ -238,10 +260,16 @@ public sealed class UdpUnifiedManager : IDisposable
             {
                 return;
             }
+            catch (ObjectDisposedException)
+            {
+                return;
+            }
             catch
             {
             }
         }
+
+        Core.Logger.Debug("UDP ping loop exited");
     }
 
     private bool HasAnyTargets()
@@ -267,6 +295,10 @@ public sealed class UdpUnifiedManager : IDisposable
                 var payload = new byte[data.Length - 1];
                 Buffer.BlockCopy(data, 1, payload, 0, payload.Length);
 
+                var total = Interlocked.Increment(ref _totalReceivedPackets);
+                if (total == 1)
+                    Core.Logger.Info($"UDP first packet received: type={type} from={result.RemoteEndPoint} len={data.Length}");
+
                 switch (type)
                 {
                     case MessageType.HolePunch:
@@ -274,9 +306,21 @@ public sealed class UdpUnifiedManager : IDisposable
                         break;
 
                     case MessageType.Audio:
+                        var audioN = Interlocked.Increment(ref _audioReceivedPackets);
                         OnAudioData?.Invoke(payload);
                         if (_remoteToInterlocutor.TryGetValue(result.RemoteEndPoint, out var ilIdA))
+                        {
                             OnAudioDataByInterlocutor?.Invoke(ilIdA, payload);
+                        }
+                        else
+                        {
+                            var unmapped = Interlocked.Increment(ref _unmappedAudioPackets);
+                            if (unmapped <= 5 || unmapped % 100 == 0)
+                                Core.Logger.Warn($"UDP audio from UNKNOWN endpoint {result.RemoteEndPoint} (unmapped={unmapped}, known=[{string.Join(",", _remoteToInterlocutor.Keys)}])");
+                        }
+
+                        if (audioN == 1 || audioN % 500 == 0)
+                            Core.Logger.Debug($"UDP audio recv #{audioN}: from={result.RemoteEndPoint} len={payload.Length}");
                         break;
 
                     case MessageType.Control:
@@ -297,11 +341,17 @@ public sealed class UdpUnifiedManager : IDisposable
             {
                 return;
             }
+            catch (ObjectDisposedException)
+            {
+                return;
+            }
             catch
             {
                 try { await Task.Delay(200, ct).ConfigureAwait(false); } catch { }
             }
         }
+
+        Core.Logger.Debug("UDP receive loop exited");
     }
 
     private void HandleHolePunch(IPEndPoint remoteEndPoint, byte[] payload)
@@ -309,9 +359,12 @@ public sealed class UdpUnifiedManager : IDisposable
         if (_client == null)
             return;
 
+        Core.Logger.Debug($"UDP HolePunch from {remoteEndPoint}, text={Encoding.UTF8.GetString(payload)}");
+
         if (!_isConnected && _remote != null && remoteEndPoint.Equals(_remote))
         {
             _isConnected = true;
+            Core.Logger.Info($"UDP hole punch SUCCESS (legacy mode): {remoteEndPoint}");
             OnConnected?.Invoke((IPEndPoint)_client.Client.LocalEndPoint!, _remote);
         }
 
@@ -320,6 +373,7 @@ public sealed class UdpUnifiedManager : IDisposable
             if (!_interlocutorConnected.GetValueOrDefault(ilId))
             {
                 _interlocutorConnected[ilId] = true;
+                Core.Logger.Info($"UDP interlocutor connected: {Short(ilId)} @ {remoteEndPoint}");
                 OnInterlocutorConnected?.Invoke(ilId, (IPEndPoint)_client.Client.LocalEndPoint!, remoteEndPoint);
             }
         }
@@ -333,6 +387,7 @@ public sealed class UdpUnifiedManager : IDisposable
                     _remoteToInterlocutor.Remove(oldRemote, out _);
                     _interlocutorToRemote[kvp.Key] = remoteEndPoint;
                     _remoteToInterlocutor[remoteEndPoint] = kvp.Key;
+                    Core.Logger.Info($"UDP port remapped: {Short(kvp.Key)} {oldRemote} -> {remoteEndPoint}");
 
                     if (!_interlocutorConnected.GetValueOrDefault(kvp.Key))
                     {

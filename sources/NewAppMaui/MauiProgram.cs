@@ -70,7 +70,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IAuthService, AuthService>();
         builder.Services.AddSingleton<IFriendsService, FriendsService>();
         builder.Services.AddSingleton<ICallsService, CallsService>();
-
+        builder.Services.AddSingleton<IAudioService, AudioService>();
+        
         builder.Services.AddSingleton<IStunClient, MainServerStunClient>();
         builder.Services.AddSingleton<UdpUnifiedManager>();
         
@@ -79,7 +80,8 @@ public static class MauiProgram
             sp.GetRequiredService<IConnectionService>(),
             sp.GetRequiredService<IAuthService>(),
             sp.GetRequiredService<IFriendsService>(),
-            sp.GetRequiredService<ICallsService>()
+            sp.GetRequiredService<ICallsService>(),
+            sp.GetRequiredService<IAudioService>()
         ));
         
         builder.UseMauiApp<App>().ConfigureFonts(fonts =>

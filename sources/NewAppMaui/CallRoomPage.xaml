@@ -7,7 +7,7 @@
     <VerticalStackLayout Padding="20" Spacing="12">
         <Label Text="Call room" FontSize="24" />
 
-        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="12">
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="12">
             <Label Grid.Row="0" Grid.Column="0" Text="Room:" FontAttributes="Bold" />
             <Label Grid.Row="0" Grid.Column="1" x:Name="RoomCodeLabel" Text="-" />
 
@@ -16,6 +16,15 @@
 
             <Label Grid.Row="2" Grid.Column="0" Text="Participants:" FontAttributes="Bold" />
             <Label Grid.Row="2" Grid.Column="1" x:Name="ParticipantsCountLabel" Text="0" />
+
+            <Label Grid.Row="3" Grid.Column="0" Text="Capture:" FontAttributes="Bold" />
+            <Label Grid.Row="3" Grid.Column="1" x:Name="CaptureDeviceLabel" Text="-" />
+
+            <Label Grid.Row="4" Grid.Column="0" Text="Playback:" FontAttributes="Bold" />
+            <Label Grid.Row="4" Grid.Column="1" x:Name="PlaybackDeviceLabel" Text="-" />
+
+            <Label Grid.Row="5" Grid.Column="0" Text="Audio:" FontAttributes="Bold" />
+            <Label Grid.Row="5" Grid.Column="1" x:Name="AudioStatusLabel" Text="-" />
         </Grid>
 
         <CollectionView x:Name="ParticipantsView" HeightRequest="160">
@@ -34,7 +43,11 @@
             <Label x:Name="LastMessageLabel" Text="-" FontFamily="Consolas" />
         </ScrollView>
 
-        <Button Text="Hang up" Clicked="OnBackClicked" />
+        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+            <Button Grid.Column="0" x:Name="MicButton" Text="Mic: ON" Clicked="OnMicToggleClicked" />
+            <Button Grid.Column="1" x:Name="PlaybackButton" Text="Sound: ON" Clicked="OnPlaybackToggleClicked" />
+            <Button Grid.Column="2" Text="Hang up" Clicked="OnBackClicked" BackgroundColor="Red" TextColor="White" />
+        </Grid>
     </VerticalStackLayout>
 
 </ContentPage>

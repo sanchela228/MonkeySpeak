@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+*.user
+*.suo
+*.cache
+*.vs/
+
+*.log
+*.db
+
+
+postgres_data/
+builds/
+
+.env

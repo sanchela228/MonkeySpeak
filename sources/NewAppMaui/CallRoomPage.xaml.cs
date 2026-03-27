@@ -3,12 +3,15 @@ using Core.Public.Services;
 using Core.Websockets;
 using Core.Websockets.Messages.NoAuthCall;
 using Microsoft.Extensions.DependencyInjection;
+using Core;
 
 namespace NewAppMaui;
 
 public partial class CallRoomPage : ContentPage
 {
     private readonly IConnectionService _connection;
+    private readonly ICallsService _calls;
+    private readonly IAudioService _audio;
     private readonly ObservableCollection<ParticipantVm> _participants = new();
     private CancellationTokenSource? _cts;
 
@@ -18,7 +21,10 @@ public partial class CallRoomPage : ContentPage
 
     public CallRoomPage()
     {
-        _connection = ((App)Application.Current!).Services.GetRequiredService<IConnectionService>();
+        var services = ((App)Application.Current!).Services;
+        _connection = services.GetRequiredService<IConnectionService>();
+        _calls = services.GetRequiredService<ICallsService>();
+        _audio = services.GetRequiredService<IAudioService>();
         InitializeComponent();
 
         ParticipantsView.ItemsSource = _participants;
@@ -148,6 +154,21 @@ public partial class CallRoomPage : ContentPage
         RoomCodeLabel.Text = string.IsNullOrWhiteSpace(_roomCode) ? "-" : _roomCode;
         WsStateLabel.Text = _connection.State.ToString();
         ParticipantsCountLabel.Text = _participants.Count.ToString();
+
+        if (_audio.IsInitialized)
+        {
+            var capDev = _audio.CaptureDevices.FirstOrDefault(d => d.IsDefault) ?? _audio.CaptureDevices.FirstOrDefault();
+            var pbDev = _audio.PlaybackDevices.FirstOrDefault(d => d.IsDefault) ?? _audio.PlaybackDevices.FirstOrDefault();
+            CaptureDeviceLabel.Text = capDev?.Name ?? "(none)";
+            PlaybackDeviceLabel.Text = pbDev?.Name ?? "(none)";
+            AudioStatusLabel.Text = $"Init=✅ Mic={(_audio.IsMicrophoneEnabled ? "ON" : "OFF")} Play={(_audio.IsPlaybackEnabled ? "ON" : "OFF")}";
+        }
+        else
+        {
+            CaptureDeviceLabel.Text = "(not initialized)";
+            PlaybackDeviceLabel.Text = "(not initialized)";
+            AudioStatusLabel.Text = "Init=❌";
+        }
     }
 
     private async Task MaybeAutoHangupAsync()
@@ -176,11 +197,11 @@ public partial class CallRoomPage : ContentPage
         try
         {
             var ct = _cts?.Token ?? CancellationToken.None;
-            var hangup = Context.Create(new HangupSession { Value = reason });
-            await _connection.SendAsync(System.Text.Json.JsonSerializer.Serialize(hangup), ct);
+            await _calls.HangupAsync(ct);
         }
-        catch
+        catch (Exception ex)
         {
+            Core.Logger.Warn($"EndCallAsync hangup error: {ex.Message}");
         }
 
         try
@@ -198,6 +219,20 @@ public partial class CallRoomPage : ContentPage
         catch
         {
         }
+    }
+
+    private void OnMicToggleClicked(object? sender, EventArgs e)
+    {
+        _audio.IsMicrophoneEnabled = !_audio.IsMicrophoneEnabled;
+        MicButton.Text = _audio.IsMicrophoneEnabled ? "Mic: ON" : "Mic: OFF";
+        RefreshUi();
+    }
+
+    private void OnPlaybackToggleClicked(object? sender, EventArgs e)
+    {
+        _audio.IsPlaybackEnabled = !_audio.IsPlaybackEnabled;
+        PlaybackButton.Text = _audio.IsPlaybackEnabled ? "Sound: ON" : "Sound: OFF";
+        RefreshUi();
     }
 
     private async void OnBackClicked(object? sender, EventArgs e)
