@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Concentus" Version="2.2.2" />
+<!--    <PackageReference Include="NSec.Cryptography" Version="24.9.0" />-->
+<!--    <PackageReference Include="SoundFlow" Version="1.2.1" />-->
+<!--    <PackageReference Include="YellowDogMan.RRNoise.NET" Version="0.1.6" />-->
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\sources\App\App\Configurations\**\*.cs" Link="Configurations\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\sources\App\App\System\**\*.cs" Link="System\%(RecursiveDir)%(Filename)%(Extension)" />
+
+    <Compile Remove="..\sources\App\App\System\Managers\Notificator.cs" />
+    <Compile Remove="..\sources\App\App\System\Managers\Updater.cs" />
+    <Compile Remove="..\sources\App\App\System\Services\Language.cs" />
+    <Compile Remove="..\sources\App\App\System\Modules\Network.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\sources\App\Platforms\Interfaces\*.cs" Link="Platforms\Interfaces\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Application\State\" />
+  </ItemGroup>
+
+</Project>

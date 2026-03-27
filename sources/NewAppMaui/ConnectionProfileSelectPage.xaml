@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="NewAppMaui.ConnectionProfileSelectPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Select connection profile">
+
+    <Grid Padding="24" RowDefinitions="Auto,*,Auto" RowSpacing="12">
+        <Label
+            Grid.Row="0"
+            FontSize="18"
+            Text="Choose a server configuration" />
+
+        <CollectionView
+            Grid.Row="1"
+            x:Name="ProfilesView"
+            SelectionMode="Single"
+            VerticalOptions="FillAndExpand">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="12" StrokeShape="RoundRectangle 8">
+                        <VerticalStackLayout Spacing="4">
+                            <Label FontAttributes="Bold" Text="{Binding Name}" />
+                            <Label FontSize="12" Text="{Binding Domain}" />
+                            <Label FontSize="12" Text="{Binding Port}" />
+                            <Label FontSize="12" Text="{Binding UseSsl}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <VerticalStackLayout Grid.Row="2" Spacing="12">
+            <Button
+                x:Name="SelectButton"
+                Text="Select"
+                Clicked="OnSelectClicked" />
+
+            <Button
+                x:Name="DeleteButton"
+                Text="Delete"
+                Clicked="OnDeleteClicked" />
+
+            <Button
+                x:Name="AddCustomButton"
+                Text="Add custom"
+                Clicked="OnAddCustomClicked" />
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>
