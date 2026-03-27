@@ -20,9 +20,18 @@ public class Context
     public IMessage ToMessage()
     {
         var fullName = $"{RootNamespace}.{Type}";
-        var resolvedType = ResolveType(fullName)
-                           ?? throw new InvalidOperationException($"Type {fullName} not found");
-        return (IMessage)JsonSerializer.Deserialize(Message.GetRawText(), resolvedType)!;
+
+        try
+        {
+            var resolvedType = ResolveType(fullName)
+                               ?? throw new InvalidOperationException($"Type {fullName} not found");
+            return (IMessage)JsonSerializer.Deserialize(Message.GetRawText(), resolvedType)!;
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.Error($"Context.ToMessage failed. Type='{Type}' FullType='{fullName}'", ex);
+            throw;
+        }
     }
 
     private static string GetRelativeTypeName(Type t)

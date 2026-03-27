@@ -19,6 +19,7 @@ public sealed class WebSocketClient : IWebSocketClient
 
     public async Task ConnectAsync(Uri uri, CancellationToken ct)
     {
+        Logger.Info($"WebSocketClient.ConnectAsync: {uri}");
         await DisconnectAsync(ct).ConfigureAwait(false);
 
         _ws = new ClientWebSocket();
@@ -30,16 +31,19 @@ public sealed class WebSocketClient : IWebSocketClient
         if (_ws.State == WebSocketState.Open)
         {
             Connected?.Invoke(this, EventArgs.Empty);
+            Logger.Info("WebSocketClient connected");
             _receiveLoopTask = Task.Run(() => ReceiveLoopAsync(_ws, _cts.Token));
         }
         else
         {
+            Logger.Warn($"WebSocketClient connect finished with state={_ws.State}");
             throw new WebSocketException($"WebSocket state is '{_ws.State}' after ConnectAsync.");
         }
     }
 
     public async Task DisconnectAsync(CancellationToken ct)
     {
+        Logger.Debug("WebSocketClient.DisconnectAsync");
         var ws = _ws;
         _ws = null;
 
@@ -72,6 +76,7 @@ public sealed class WebSocketClient : IWebSocketClient
         _receiveLoopTask = null;
 
         Disconnected?.Invoke(this, EventArgs.Empty);
+        Logger.Info("WebSocketClient disconnected");
     }
 
     public async Task SendAsync(string text, CancellationToken ct)
@@ -87,6 +92,7 @@ public sealed class WebSocketClient : IWebSocketClient
         try
         {
             var bytes = Encoding.UTF8.GetBytes(text);
+            Logger.Debug($"WebSocketClient.SendAsync: {bytes.Length} bytes");
             await ws.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, endOfMessage: true, cancellationToken: ct)
                 .ConfigureAwait(false);
         }
@@ -100,6 +106,8 @@ public sealed class WebSocketClient : IWebSocketClient
     {
         var buffer = new byte[4096];
         using var ms = new MemoryStream();
+
+        Logger.Debug("WebSocketClient receive loop started");
 
         try
         {
@@ -123,16 +131,25 @@ public sealed class WebSocketClient : IWebSocketClient
                 {
                     var text = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
                     if (!string.IsNullOrWhiteSpace(text))
+                    {
+                        Logger.Debug($"WebSocketClient received: {text.Length} chars");
+                        Logger.Debug($"WebSocketClient received: {text}");
                         MessageReceived?.Invoke(this, text);
+                    }
                 }
             }
         }
-        catch
+        catch (OperationCanceledException)
         {
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("WebSocketClient receive loop error", ex);
         }
         finally
         {
             Disconnected?.Invoke(this, EventArgs.Empty);
+            Logger.Debug("WebSocketClient receive loop finished");
         }
     }
 }

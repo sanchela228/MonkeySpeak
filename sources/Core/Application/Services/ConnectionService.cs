@@ -23,6 +23,8 @@ public class ConnectionService : IConnectionService
         _ = InitializeAsync();
 
         _ws.MessageReceived += (_, text) => MessageReceived?.Invoke(this, text);
+
+        Core.Logger.Info("ConnectionService created");
     }
 
     public Exception? LastError { get; private set; }
@@ -70,23 +72,31 @@ public class ConnectionService : IConnectionService
 
             LastError = null;
 
+            Core.Logger.Info($"WS connect requested: profile={profile.Id} domain={profile.Domain}:{profile.Port} ssl={profile.UseSsl} retries={maxRetries} uri={uri}");
+
             try
             {
                 for (var attempt = 0; attempt <= maxRetries; attempt++)
                 {
                     SetState(ConnectionState.Connecting);
 
+                    Core.Logger.Debug($"WS connect attempt {attempt + 1}/{maxRetries + 1}: {uri}");
+
                     try
                     {
                         await _ws.ConnectAsync(uri, connectToken).ConfigureAwait(false);
 
                         SetState(ConnectionState.Open);
+
+                        Core.Logger.Info($"WS connected: {uri}");
                         return;
                     }
                     catch (Exception ex) when (!connectToken.IsCancellationRequested)
                     {
                         lastError = ex;
                         LastError = ex;
+
+                        Core.Logger.Warn($"WS connect failed (attempt {attempt + 1}/{maxRetries + 1}): {ex.GetType().Name}: {ex.Message}");
 
                         if (attempt >= maxRetries)
                             break;
@@ -98,6 +108,7 @@ public class ConnectionService : IConnectionService
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
             {
+                Core.Logger.Info("WS connect canceled (likely profile changed / disconnect)");
                 SetState(ConnectionState.Closed);
                 return;
             }
@@ -120,6 +131,7 @@ public class ConnectionService : IConnectionService
             (string.Equals(domain, "localhost", StringComparison.OrdinalIgnoreCase) ||
              string.Equals(domain, "127.0.0.1", StringComparison.OrdinalIgnoreCase)))
         {
+            Core.Logger.Info("Android localhost detected, rewriting to 10.0.2.2");
             domain = "10.0.2.2";
         }
 
@@ -132,6 +144,7 @@ public class ConnectionService : IConnectionService
         await _sync.WaitAsync(ct).ConfigureAwait(false);
         try
         {
+            Core.Logger.Info("WS disconnect requested");
             await _ws.DisconnectAsync(ct).ConfigureAwait(false);
             SetState(ConnectionState.Closed);
         }
@@ -148,6 +161,8 @@ public class ConnectionService : IConnectionService
             var profile = await _settingsStore.GetActiveAsync().ConfigureAwait(false);
             _lastActiveProfileId = profile?.Id;
 
+            Core.Logger.Info($"ConnectionService initialized. ActiveProfileId={_lastActiveProfileId ?? "<null>"}");
+
             if (!_settingsStore.HasExplicitActiveProfileSelection)
                 return;
 
@@ -156,12 +171,14 @@ public class ConnectionService : IConnectionService
         catch (Exception ex)
         {
             LastError = ex;
+            Core.Logger.Error("ConnectionService initialization failed", ex);
             SetState(ConnectionState.Broken);
         }
     }
 
     private void OnSettingsChanged(object? sender, EventArgs e)
     {
+        Core.Logger.Info("Connection settings changed");
         CancelOngoingConnect();
         _ = Task.Run(ReconnectIfProfileChangedAsync);
     }
@@ -171,35 +188,39 @@ public class ConnectionService : IConnectionService
         await _reconnectSync.WaitAsync().ConfigureAwait(false);
         try
         {
-        ConnectionProfile? active;
-        try
-        {
-            active = await _settingsStore.GetActiveAsync().ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            LastError = ex;
-            SetState(ConnectionState.Broken);
-            return;
-        }
+            ConnectionProfile? active;
 
-        var activeId = active?.Id;
-        if (string.Equals(activeId, _lastActiveProfileId, StringComparison.Ordinal))
-            return;
+            try
+            {
+                active = await _settingsStore.GetActiveAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                LastError = ex;
+                SetState(ConnectionState.Broken);
+                return;
+            }
 
-        _lastActiveProfileId = activeId;
+            var activeId = active?.Id;
+            if (string.Equals(activeId, _lastActiveProfileId, StringComparison.Ordinal))
+                return;
 
-        try
-        {
-            CancelOngoingConnect();
-            await DisconnectAsync().ConfigureAwait(false);
-            await ConnectAsync().ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            LastError = ex;
-            SetState(ConnectionState.Broken);
-        }
+            Core.Logger.Info($"Active profile changed: {_lastActiveProfileId ?? "<null>"} -> {activeId ?? "<null>"}");
+
+            _lastActiveProfileId = activeId;
+
+            try
+            {
+                CancelOngoingConnect();
+                await DisconnectAsync().ConfigureAwait(false);
+                await ConnectAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                LastError = ex;
+                Core.Logger.Error("Reconnect after profile change failed", ex);
+                SetState(ConnectionState.Broken);
+            }
         }
         finally
         {
@@ -227,6 +248,8 @@ public class ConnectionService : IConnectionService
             {
             }
 
+            Core.Logger.Debug("Ongoing WS connect cancelled");
+
             _connectCts.Dispose();
             _connectCts = new CancellationTokenSource();
         }
@@ -237,6 +260,7 @@ public class ConnectionService : IConnectionService
         if (State == next)
             return;
 
+        Core.Logger.Debug($"Connection state: {State} -> {next}");
         State = next;
         StateChanged?.Invoke(this, next);
     }

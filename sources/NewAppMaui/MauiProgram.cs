@@ -1,6 +1,9 @@
 using Core.Application.Services;
 using Core.Application.Abstractions;
 using Core.Application.Networking;
+using Core.Application.Calls.Infrastructure;
+using Core.Application.Calls.Infrastructure.Adapters;
+using Core.Application.Calls.Networking;
 using Core.Public;
 using Core.Public.Configurations;
 using Core.Public.Services;
@@ -67,6 +70,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<IAuthService, AuthService>();
         builder.Services.AddSingleton<IFriendsService, FriendsService>();
         builder.Services.AddSingleton<ICallsService, CallsService>();
+
+        builder.Services.AddSingleton<IStunClient, MainServerStunClient>();
+        builder.Services.AddSingleton<UdpUnifiedManager>();
         
         // register DI MonkeySpeakClient
         builder.Services.AddSingleton<IMonkeySpeakClient>(sp => new MonkeySpeakClient(
@@ -84,6 +90,20 @@ public static class MauiProgram
 
 #if DEBUG
         builder.Logging.AddDebug();
+
+        Core.Logger.MinimumLevel = Core.Logger.LogLevel.Debug;
+        Core.Logger.Sink = (level, message, ex) =>
+        {
+            var ts = DateTimeOffset.Now.ToString("HH:mm:ss.fff");
+            var tid = Environment.CurrentManagedThreadId;
+
+            var line = $"[{ts}] [T{tid}] [{level}] {message}";
+            if (ex is not null)
+                line += $" | {ex.GetType().Name}: {ex.Message}";
+
+            System.Diagnostics.Debug.WriteLine(line);
+            Console.WriteLine(line);
+        };
 #endif
 
         return builder.Build();

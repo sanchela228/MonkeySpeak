@@ -5,6 +5,8 @@ namespace Core.Domain.Calls;
 
 public class CallSession
 {
+    public string RoomCode { get; private set; } = string.Empty;
+
     public Interlocutor Self { get; private set; }
 
     public CallState State { get; private set; } = CallState.Idle;
@@ -14,6 +16,16 @@ public class CallSession
 
     public ObservableCollection<Interlocutor> Interlocutors = [];
     
+    public void SetRoomCode(string code)
+    {
+        RoomCode = code ?? string.Empty;
+    }
+
+    public void SetSelf(Interlocutor self)
+    {
+        Self = self;
+    }
+
     public void SetLocal(int localUdpPort, IPEndPoint? publicEp, IPEndPoint? localEp)
     {
         LocalUdpPort = localUdpPort;
