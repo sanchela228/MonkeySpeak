@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NewAppMaui.JoinRoomPage"
+             Title="Join room">
+
+    <VerticalStackLayout Padding="20" Spacing="12">
+        <Label Text="Enter room code" FontSize="18" />
+
+        <Entry x:Name="CodeEntry" Placeholder="Code" />
+
+        <ActivityIndicator x:Name="Loading" IsRunning="False" IsVisible="False" />
+
+        <Label x:Name="ErrorLabel"
+               Text=""
+               TextColor="Red"
+               IsVisible="False" />
+
+        <Button x:Name="ConnectButton" Text="Connect" Clicked="OnConnectClicked" />
+        <Button Text="Back" Clicked="OnBackClicked" />
+    </VerticalStackLayout>
+
+</ContentPage>

@@ -19,7 +19,8 @@ public sealed class ConnectionSettingsStore : IConnectionSettingsStore
             Domain: "95.163.230.160",
             Port: 80,
             UseSsl: false,
-            MaxRetries: 2),
+            MaxRetries: 2
+        ),
         
         new ConnectionProfile(
             Id: "local",
@@ -27,7 +28,8 @@ public sealed class ConnectionSettingsStore : IConnectionSettingsStore
             Domain: "localhost",
             Port: 80,
             UseSsl: false,
-            MaxRetries: 2)
+            MaxRetries: 2
+        )
     ];
 
     public bool HasExplicitActiveProfileSelection => Preferences.ContainsKey(ActiveProfileIdKey);

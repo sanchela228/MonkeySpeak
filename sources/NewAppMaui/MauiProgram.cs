@@ -1,4 +1,6 @@
 using Core.Application.Services;
+using Core.Application.Abstractions;
+using Core.Application.Networking;
 using Core.Public;
 using Core.Public.Configurations;
 using Core.Public.Services;
@@ -55,8 +57,12 @@ public static class MauiProgram
 
         builder.Services.AddTransient<ConnectionProfileSelectPage>();
         builder.Services.AddTransient<ConnectionProfileCreatePage>();
+        builder.Services.AddTransient<CreateRoomPage>();
+        builder.Services.AddTransient<JoinRoomPage>();
+        builder.Services.AddTransient<CallRoomPage>();
         builder.Services.AddTransient<MainPage>();
 
+        builder.Services.AddSingleton<IWebSocketClient, WebSocketClient>();
         builder.Services.AddSingleton<IConnectionService, ConnectionService>();
         builder.Services.AddSingleton<IAuthService, AuthService>();
         builder.Services.AddSingleton<IFriendsService, FriendsService>();

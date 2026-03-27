@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NewAppMaui.CreateRoomPage"
+             Title="Create room">
+
+    <VerticalStackLayout Padding="20" Spacing="12">
+        <Label Text="Room code" FontSize="18" />
+
+        <ActivityIndicator x:Name="Loading" IsRunning="True" IsVisible="True" />
+
+        <Label x:Name="CodeLabel"
+               Text=""
+               FontSize="32"
+               HorizontalTextAlignment="Center" />
+
+        <Label x:Name="ErrorLabel"
+               Text=""
+               TextColor="Red"
+               IsVisible="False" />
+
+        <Button Text="Back" Clicked="OnBackClicked" />
+    </VerticalStackLayout>
+
+</ContentPage>

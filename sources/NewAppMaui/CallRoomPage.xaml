@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NewAppMaui.CallRoomPage"
+             Title="Room">
+
+    <VerticalStackLayout Padding="20" Spacing="12">
+        <Label Text="Call room" FontSize="24" />
+
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="12">
+            <Label Grid.Row="0" Grid.Column="0" Text="Room:" FontAttributes="Bold" />
+            <Label Grid.Row="0" Grid.Column="1" x:Name="RoomCodeLabel" Text="-" />
+
+            <Label Grid.Row="1" Grid.Column="0" Text="WS:" FontAttributes="Bold" />
+            <Label Grid.Row="1" Grid.Column="1" x:Name="WsStateLabel" Text="-" />
+
+            <Label Grid.Row="2" Grid.Column="0" Text="Participants:" FontAttributes="Bold" />
+            <Label Grid.Row="2" Grid.Column="1" x:Name="ParticipantsCountLabel" Text="0" />
+        </Grid>
+
+        <CollectionView x:Name="ParticipantsView" HeightRequest="160">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid ColumnDefinitions="*,*" Padding="6">
+                        <Label Grid.Column="0" Text="{Binding Id}" LineBreakMode="TailTruncation" />
+                        <Label Grid.Column="1" Text="{Binding IpEndPoint}" LineBreakMode="TailTruncation" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Label Text="Last WS message:" FontAttributes="Bold" />
+        <ScrollView HeightRequest="140">
+            <Label x:Name="LastMessageLabel" Text="-" FontFamily="Consolas" />
+        </ScrollView>
+
+        <Button Text="Hang up" Clicked="OnBackClicked" />
+    </VerticalStackLayout>
+
+</ContentPage>

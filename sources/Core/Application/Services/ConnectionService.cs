@@ -1,20 +1,34 @@
 using System.Data;
 using Core.Public.Configurations;
 using Core.Public.Services;
+using Core.Application.Abstractions;
 
 namespace Core.Application.Services;
 
 public class ConnectionService : IConnectionService
 {
     private readonly IConnectionSettingsStore _settingsStore;
+    private readonly SemaphoreSlim _sync = new(1, 1);
+    private readonly SemaphoreSlim _reconnectSync = new(1, 1);
+    private readonly IWebSocketClient _ws;
+    private readonly object _connectCtsSync = new();
+    private CancellationTokenSource _connectCts = new();
+    private string? _lastActiveProfileId;
 
-    public ConnectionService(IConnectionSettingsStore settingsStore)
+    public ConnectionService(IConnectionSettingsStore settingsStore, IWebSocketClient ws)
     {
         _settingsStore = settingsStore;
+        _ws = ws;
+        _settingsStore.Changed += OnSettingsChanged;
+        _ = InitializeAsync();
+
+        _ws.MessageReceived += (_, text) => MessageReceived?.Invoke(this, text);
     }
 
+    public Exception? LastError { get; private set; }
     public ConnectionState State { get; private set; } = ConnectionState.Closed;
     public event EventHandler<ConnectionState>? StateChanged;
+    public event EventHandler<string>? MessageReceived;
     public Task ConnectAsync(CancellationToken ct = default)
     {
         return ConnectInternalAsync(ct);
@@ -22,35 +36,208 @@ public class ConnectionService : IConnectionService
 
     public Task DisconnectAsync(CancellationToken ct = default)
     {
-        if (State != ConnectionState.Closed)
-        {
-            State = ConnectionState.Closed;
-            StateChanged?.Invoke(this, State);
-        }
+        return DisconnectInternalAsync(ct);
+    }
 
-        return Task.CompletedTask;
+    public Task SendAsync(string text, CancellationToken ct = default)
+    {
+        return _ws.SendAsync(text, ct);
     }
 
     public Task<bool> PingAsync(CancellationToken ct = default)
     {
-        return Task.FromResult(true);
+        return Task.FromResult(State == ConnectionState.Open);
     }
 
     private async Task ConnectInternalAsync(CancellationToken ct)
     {
-        var profile = await _settingsStore.GetActiveAsync(ct).ConfigureAwait(false);
-        if (profile is null)
-            throw new InvalidOperationException("No active connection profile.");
+        await _sync.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (State == ConnectionState.Open || State == ConnectionState.Connecting)
+                return;
 
-        _ = BuildWebSocketUri(profile);
+            using var linkedCts = CreateLinkedConnectCts(ct);
+            var connectToken = linkedCts.Token;
 
-        State = ConnectionState.Open;
-        StateChanged?.Invoke(this, State);
+            var profile = await _settingsStore.GetActiveAsync(ct).ConfigureAwait(false);
+            if (profile is null)
+                throw new InvalidOperationException("No active connection profile.");
+
+            var uri = BuildWebSocketUri(profile);
+            var maxRetries = Math.Max(0, profile.MaxRetries);
+            Exception? lastError = null;
+
+            LastError = null;
+
+            try
+            {
+                for (var attempt = 0; attempt <= maxRetries; attempt++)
+                {
+                    SetState(ConnectionState.Connecting);
+
+                    try
+                    {
+                        await _ws.ConnectAsync(uri, connectToken).ConfigureAwait(false);
+
+                        SetState(ConnectionState.Open);
+                        return;
+                    }
+                    catch (Exception ex) when (!connectToken.IsCancellationRequested)
+                    {
+                        lastError = ex;
+                        LastError = ex;
+
+                        if (attempt >= maxRetries)
+                            break;
+
+                        SetState(ConnectionState.Broken);
+                        await Task.Delay(TimeSpan.FromSeconds(2), connectToken).ConfigureAwait(false);
+                    }
+                }
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                SetState(ConnectionState.Closed);
+                return;
+            }
+
+            SetState(ConnectionState.Broken);
+            throw new InvalidOperationException($"Failed to connect to {uri}.", lastError);
+        }
+        finally
+        {
+            _sync.Release();
+        }
     }
 
     private static Uri BuildWebSocketUri(ConnectionProfile profile)
     {
         var scheme = profile.UseSsl ? "wss" : "ws";
-        return new Uri($"{scheme}://{profile.Domain}:{profile.Port}/connector");
+
+        var domain = profile.Domain;
+        if (OperatingSystem.IsAndroid() &&
+            (string.Equals(domain, "localhost", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(domain, "127.0.0.1", StringComparison.OrdinalIgnoreCase)))
+        {
+            domain = "10.0.2.2";
+        }
+
+        return new Uri($"{scheme}://{domain}:{profile.Port}/connector");
+    }
+
+    private async Task DisconnectInternalAsync(CancellationToken ct)
+    {
+        CancelOngoingConnect();
+        await _sync.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            await _ws.DisconnectAsync(ct).ConfigureAwait(false);
+            SetState(ConnectionState.Closed);
+        }
+        finally
+        {
+            _sync.Release();
+        }
+    }
+
+    private async Task InitializeAsync()
+    {
+        try
+        {
+            var profile = await _settingsStore.GetActiveAsync().ConfigureAwait(false);
+            _lastActiveProfileId = profile?.Id;
+
+            if (!_settingsStore.HasExplicitActiveProfileSelection)
+                return;
+
+            await ConnectAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            LastError = ex;
+            SetState(ConnectionState.Broken);
+        }
+    }
+
+    private void OnSettingsChanged(object? sender, EventArgs e)
+    {
+        CancelOngoingConnect();
+        _ = Task.Run(ReconnectIfProfileChangedAsync);
+    }
+
+    private async Task ReconnectIfProfileChangedAsync()
+    {
+        await _reconnectSync.WaitAsync().ConfigureAwait(false);
+        try
+        {
+        ConnectionProfile? active;
+        try
+        {
+            active = await _settingsStore.GetActiveAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            LastError = ex;
+            SetState(ConnectionState.Broken);
+            return;
+        }
+
+        var activeId = active?.Id;
+        if (string.Equals(activeId, _lastActiveProfileId, StringComparison.Ordinal))
+            return;
+
+        _lastActiveProfileId = activeId;
+
+        try
+        {
+            CancelOngoingConnect();
+            await DisconnectAsync().ConfigureAwait(false);
+            await ConnectAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            LastError = ex;
+            SetState(ConnectionState.Broken);
+        }
+        }
+        finally
+        {
+            _reconnectSync.Release();
+        }
+    }
+
+    private CancellationTokenSource CreateLinkedConnectCts(CancellationToken external)
+    {
+        lock (_connectCtsSync)
+        {
+            return CancellationTokenSource.CreateLinkedTokenSource(external, _connectCts.Token);
+        }
+    }
+
+    private void CancelOngoingConnect()
+    {
+        lock (_connectCtsSync)
+        {
+            try
+            {
+                _connectCts.Cancel();
+            }
+            catch
+            {
+            }
+
+            _connectCts.Dispose();
+            _connectCts = new CancellationTokenSource();
+        }
+    }
+
+    private void SetState(ConnectionState next)
+    {
+        if (State == next)
+            return;
+
+        State = next;
+        StateChanged?.Invoke(this, next);
     }
 }

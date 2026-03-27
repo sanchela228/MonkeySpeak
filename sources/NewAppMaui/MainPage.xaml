@@ -24,11 +24,29 @@
                 SemanticProperties.HeadingLevel="Level2"
                 SemanticProperties.Description="Welcome to dot net Multi platform App U I" />
 
+            <Label
+                x:Name="ConnectionStatusLabel"
+                Text="Connecting..."
+                HorizontalOptions="Fill" />
+
+            <Label
+                x:Name="ConnectionErrorLabel"
+                TextColor="Red"
+                IsVisible="False"
+                HorizontalOptions="Fill" />
+
             <Button
-                x:Name="CounterBtn"
-                Text="Click me" 
-                SemanticProperties.Hint="Counts the number of times you click"
-                Clicked="OnCounterClicked"
+                x:Name="CreateConnectionBtn"
+                Text="Create connection"
+                IsVisible="False"
+                Clicked="OnCreateConnectionClicked"
+                HorizontalOptions="Fill" />
+
+            <Button
+                x:Name="ConnectBtn"
+                Text="Connect"
+                IsVisible="False"
+                Clicked="OnConnectClicked"
                 HorizontalOptions="Fill" />
 
             <Button

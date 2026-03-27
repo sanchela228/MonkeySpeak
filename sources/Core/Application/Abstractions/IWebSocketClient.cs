@@ -2,7 +2,7 @@ namespace Core.Application.Abstractions;
 
 public interface IWebSocketClient
 {
-    Task ConnectAsync(CancellationToken ct);
+    Task ConnectAsync(Uri uri, CancellationToken ct);
     Task DisconnectAsync(CancellationToken ct);
     Task SendAsync(string text, CancellationToken ct);
     event EventHandler<string> MessageReceived;
