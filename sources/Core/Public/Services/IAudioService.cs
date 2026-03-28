@@ -25,6 +25,7 @@ public interface IAudioService : IDisposable
     void SwitchPlaybackDevice(string deviceId);
 
     bool IsMicrophoneEnabled { get; set; }
+    event Action<bool>? MicrophoneEnabledChanged;
     bool IsPlaybackEnabled { get; set; }
     int MicrophoneVolume { get; set; }   // 0–200 %
     int PlaybackVolume { get; set; }     // 0–200 %

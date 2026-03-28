@@ -65,11 +65,16 @@ public sealed class AudioService : IAudioService
 
     public event Action<byte[]>? OnEncodedAudioReady;
 
+    public event Action<bool>? MicrophoneEnabledChanged;
+
     public bool IsMicrophoneEnabled
     {
         get => _micEnabled;
         set
         {
+            if (_micEnabled == value)
+                return;
+
             _micEnabled = value;
             if (!value)
             {
@@ -77,6 +82,8 @@ public sealed class AudioService : IAudioService
                 lock (_opusBuffer) _opusBuffer.Clear();
             }
             Logger.Info($"[Audio] Mic {(value ? "enabled" : "disabled")}");
+
+            try { MicrophoneEnabledChanged?.Invoke(value); } catch { }
         }
     }
 

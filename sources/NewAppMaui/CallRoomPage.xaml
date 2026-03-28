@@ -27,6 +27,12 @@
             <Label Grid.Row="5" Grid.Column="1" x:Name="AudioStatusLabel" Text="-" />
         </Grid>
 
+        <Label Text="Microphone device:" FontAttributes="Bold" />
+        <Picker x:Name="CapturePicker" Title="Select microphone" ItemDisplayBinding="{Binding Name}" SelectedIndexChanged="OnCapturePickerChanged" />
+
+        <Label Text="Speakers device:" FontAttributes="Bold" />
+        <Picker x:Name="PlaybackPicker" Title="Select speakers" ItemDisplayBinding="{Binding Name}" SelectedIndexChanged="OnPlaybackPickerChanged" />
+
         <CollectionView x:Name="ParticipantsView" HeightRequest="160">
             <CollectionView.ItemTemplate>
                 <DataTemplate>

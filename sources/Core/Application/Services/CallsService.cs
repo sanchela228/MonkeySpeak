@@ -17,6 +17,7 @@ public class CallsService : ICallsService
     private readonly IAudioService _audio;
     private readonly IStunClient _stun;
     private readonly UdpUnifiedManager _udp;
+    private readonly UdpControlService _controls;
     private readonly object _sync = new();
 
     private CancellationTokenSource? _sessionCts;
@@ -32,6 +33,7 @@ public class CallsService : ICallsService
         _audio = audio;
         _stun = stun;
         _udp = udp;
+        _controls = new UdpControlService();
 
         _connection.MessageReceived += OnWsMessage;
 
@@ -40,6 +42,22 @@ public class CallsService : ICallsService
 
         // UDP → Audio: incoming audio packets routed to playback
         _udp.OnAudioDataByInterlocutor += OnUdpAudioReceived;
+
+        _controls.OnRemoteHangupByInterlocutor += OnRemoteHangupByInterlocutor;
+        _controls.OnRemoteMuteChangedByInterlocutor += OnRemoteMuteChangedByInterlocutor;
+
+        _audio.MicrophoneEnabledChanged += OnLocalMicrophoneEnabledChanged;
+    }
+
+    private void OnLocalMicrophoneEnabledChanged(bool enabled)
+    {
+        try
+        {
+            _controls.SendMuteState(enabled);
+        }
+        catch
+        {
+        }
     }
 
     private long _sentAudioCount;
@@ -211,6 +229,14 @@ public class CallsService : ICallsService
         {
         }
 
+        try
+        {
+            _controls.SendHangup();
+        }
+        catch
+        {
+        }
+
         ResetSession();
     }
 
@@ -280,6 +306,15 @@ public class CallsService : ICallsService
         catch (Exception ex)
         {
             Core.Logger.Error("UDP AddInterlocutor failed", ex);
+        }
+
+        try
+        {
+            // Immediately inform the new peer about our current mic state.
+            _controls.SendMuteStateToInterlocutor(_audio.IsMicrophoneEnabled, joined.Id);
+        }
+        catch
+        {
         }
 
         Core.Logger.Info($"InterlocutorJoined: {joined.Id} {remote}");
@@ -357,6 +392,8 @@ public class CallsService : ICallsService
             try { _audio.StopCapture(); } catch { }
             try { _udp.Stop(); } catch { }
 
+            try { _controls.Detach(); } catch { }
+
             try { _udpClient?.Dispose(); } catch { }
             _udpClient = null;
 
@@ -384,6 +421,39 @@ public class CallsService : ICallsService
 
             _udpClient = new UdpClient(session.LocalUdpPort);
             _udp.Start(_udpClient, _sessionCts!.Token);
+
+            _controls.Attach(_udp);
+        }
+    }
+
+    private void OnRemoteHangupByInterlocutor(string interlocutorId)
+    {
+        Core.Logger.Warn($"Remote hangup received from {interlocutorId}");
+        _ = Task.Run(async () =>
+        {
+            try { await HangupInternalAsync(reason: "RemoteHangup", CancellationToken.None).ConfigureAwait(false); } catch { }
+        });
+    }
+
+    private void OnRemoteMuteChangedByInterlocutor(string interlocutorId, bool isMuted)
+    {
+        try
+        {
+            var session = Current;
+            if (session is null)
+                return;
+
+            lock (_sync)
+            {
+                var it = session.Interlocutors.FirstOrDefault(x => x.Id == interlocutorId);
+                if (it is not null)
+                    it.IsMuted = isMuted;
+            }
+
+            Core.Logger.Info($"Remote mute changed: {interlocutorId} muted={isMuted}");
+        }
+        catch
+        {
         }
     }
 

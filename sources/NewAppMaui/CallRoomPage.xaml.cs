@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Core.Domain.Media;
 using Core.Public.Services;
 using Core.Websockets;
 using Core.Websockets.Messages.NoAuthCall;
@@ -18,6 +19,7 @@ public partial class CallRoomPage : ContentPage
     private string _roomCode = string.Empty;
     private bool _ended;
     private bool _hasEverHadRemote;
+    private bool _suppressDevicePickerEvents;
 
     public CallRoomPage()
     {
@@ -55,6 +57,8 @@ public partial class CallRoomPage : ContentPage
         _connection.MessageReceived += OnMessageReceived;
         _connection.StateChanged += OnStateChanged;
 
+        TryInitializeAudioAndPickers();
+
         RefreshUi();
     }
 
@@ -68,6 +72,84 @@ public partial class CallRoomPage : ContentPage
         _cts = null;
 
         base.OnDisappearing();
+    }
+
+    private void TryInitializeAudioAndPickers()
+    {
+        try
+        {
+            if (!_audio.IsInitialized)
+                _audio.Initialize();
+
+            _audio.RefreshDevices();
+            PopulateDevicePickers();
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.Warn($"Audio init/devices failed: {ex.Message}");
+        }
+    }
+
+    private void PopulateDevicePickers()
+    {
+        try
+        {
+            _suppressDevicePickerEvents = true;
+
+            var capList = _audio.CaptureDevices?.ToList() ?? new List<AudioDeviceInfo>();
+            var pbList = _audio.PlaybackDevices?.ToList() ?? new List<AudioDeviceInfo>();
+
+            CapturePicker.ItemsSource = capList;
+            PlaybackPicker.ItemsSource = pbList;
+
+            CapturePicker.SelectedItem = capList.FirstOrDefault(d => d.IsDefault) ?? capList.FirstOrDefault();
+            PlaybackPicker.SelectedItem = pbList.FirstOrDefault(d => d.IsDefault) ?? pbList.FirstOrDefault();
+        }
+        catch
+        {
+        }
+        finally
+        {
+            _suppressDevicePickerEvents = false;
+        }
+    }
+
+    private void OnCapturePickerChanged(object? sender, EventArgs e)
+    {
+        if (_suppressDevicePickerEvents)
+            return;
+
+        try
+        {
+            if (CapturePicker.SelectedItem is not AudioDeviceInfo dev)
+                return;
+
+            _audio.SwitchCaptureDevice(dev.Id);
+            RefreshUi();
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.Warn($"SwitchCaptureDevice failed: {ex.Message}");
+        }
+    }
+
+    private void OnPlaybackPickerChanged(object? sender, EventArgs e)
+    {
+        if (_suppressDevicePickerEvents)
+            return;
+
+        try
+        {
+            if (PlaybackPicker.SelectedItem is not AudioDeviceInfo dev)
+                return;
+
+            _audio.SwitchPlaybackDevice(dev.Id);
+            RefreshUi();
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.Warn($"SwitchPlaybackDevice failed: {ex.Message}");
+        }
     }
 
     private void OnStateChanged(object? sender, System.Data.ConnectionState e)
