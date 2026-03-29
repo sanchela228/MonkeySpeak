@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NewAppMaui.LoginPage"
+             Title="Login">
+
+    <VerticalStackLayout Padding="30" Spacing="16" VerticalOptions="Center">
+        <Label Text="MonkeySpeak" FontSize="28" HorizontalOptions="Center" />
+        <Label Text="Server requires login" FontSize="14" HorizontalOptions="Center" TextColor="Gray" />
+
+        <Entry x:Name="UsernameEntry" Placeholder="Username" />
+        <Entry x:Name="PasswordEntry" Placeholder="Password" IsPassword="True" />
+
+        <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" />
+
+        <Button x:Name="LoginBtn" Text="Login" Clicked="OnLoginClicked" />
+        <ActivityIndicator x:Name="Spinner" IsRunning="False" IsVisible="False" />
+    </VerticalStackLayout>
+
+</ContentPage>

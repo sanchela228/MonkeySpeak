@@ -126,6 +126,48 @@ public static class MessageDispatcherAuthExtensions
             }
         });
 
+        dispatcher.On<Messages.AuthCall.LoginRequest>(async (msg, author) =>
+        {
+            using var scope = serviceProvider.CreateScope();
+            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+
+            try
+            {
+                var user = await userService.VerifyPasswordAsync(msg.Username, msg.Password);
+                if (user == null)
+                {
+                    author.Send(new Messages.AuthCall.ErrorRegistration
+                    {
+                        Value = "Invalid username or password",
+                        ErrorCode = "INVALID_CREDENTIALS"
+                    });
+                    return;
+                }
+
+                author.UserId = user.Id;
+                author.IsAuthenticated = true;
+
+                author.Send(new Messages.AuthCall.LoginSuccess
+                {
+                    UserId = user.Id.ToString(),
+                    Username = user.Username,
+                    Value = "Login successful"
+                });
+
+                await NotifyFriendsPresenceChange(author, true, connections, serviceProvider);
+
+                Console.WriteLine($"User logged in with password: {user.Username} ({user.Id})");
+            }
+            catch (Exception ex)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration
+                {
+                    Value = ex.Message,
+                    ErrorCode = "LOGIN_FAILED"
+                });
+            }
+        });
+
         dispatcher.On<Messages.AuthCall.RegisterKey>(async (msg, author) =>
         {
             using var scope = serviceProvider.CreateScope();

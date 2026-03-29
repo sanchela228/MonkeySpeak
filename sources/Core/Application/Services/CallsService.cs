@@ -428,11 +428,22 @@ public class CallsService : ICallsService
 
     private void OnRemoteHangupByInterlocutor(string interlocutorId)
     {
-        Core.Logger.Warn($"Remote hangup received from {interlocutorId}");
-        _ = Task.Run(async () =>
+        try
         {
-            try { await HangupInternalAsync(reason: "RemoteHangup", CancellationToken.None).ConfigureAwait(false); } catch { }
-        });
+            var session = Current;
+            if (session is null)
+                return;
+
+            // In mesh, a peer's UDP Hangup means that peer is leaving, not that the entire call must end.
+            HandleInterlocutorLeft(session, new InterlocutorLeft
+            {
+                Value = "RemoteHangup",
+                InterlocutorId = interlocutorId
+            });
+        }
+        catch
+        {
+        }
     }
 
     private void OnRemoteMuteChangedByInterlocutor(string interlocutorId, bool isMuted)

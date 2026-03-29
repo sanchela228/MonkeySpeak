@@ -63,10 +63,12 @@ public static class MauiProgram
         builder.Services.AddTransient<CreateRoomPage>();
         builder.Services.AddTransient<JoinRoomPage>();
         builder.Services.AddTransient<CallRoomPage>();
+        builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<MainPage>();
 
         builder.Services.AddSingleton<IWebSocketClient, WebSocketClient>();
         builder.Services.AddSingleton<IConnectionService, ConnectionService>();
+        builder.Services.AddSingleton<IKeyStore, MauiKeyStore>();
         builder.Services.AddSingleton<IAuthService, AuthService>();
         builder.Services.AddSingleton<IFriendsService, FriendsService>();
         builder.Services.AddSingleton<ICallsService, CallsService>();

@@ -9,10 +9,14 @@
   <ItemGroup>
     <PackageReference Include="Concentus" Version="2.2.2" />
     <PackageReference Include="SoundFlow" Version="1.2.1" />
-<!--    <PackageReference Include="YellowDogMan.RRNoise.NET" Version="0.1.6" />-->
-<!--    <PackageReference Include="NSec.Cryptography" Version="24.9.0" />-->
+    <PackageReference Include="YellowDogMan.RRNoise.NET" Version="0.1.9" />
+    <PackageReference Include="NSec.Cryptography" Version="25.4.0" />
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <AndroidNativeLibrary Include="**\*.so" />
+  </ItemGroup>
+  
   <ItemGroup>
     <Compile Include="..\sources\App\App\Configurations\**\*.cs" Link="Configurations\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\sources\App\App\System\**\*.cs" Link="System\%(RecursiveDir)%(Filename)%(Extension)" />

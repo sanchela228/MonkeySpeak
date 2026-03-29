@@ -1,4 +1,6 @@
 using System.Data;
+using System.Text.Json;
+using Core.Domain;
 using Core.Public.Configurations;
 using Core.Public.Services;
 using Core.Application.Abstractions;
@@ -15,6 +17,8 @@ public class ConnectionService : IConnectionService
     private CancellationTokenSource _connectCts = new();
     private string? _lastActiveProfileId;
 
+    private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
+
     public ConnectionService(IConnectionSettingsStore settingsStore, IWebSocketClient ws)
     {
         _settingsStore = settingsStore;
@@ -22,7 +26,7 @@ public class ConnectionService : IConnectionService
         _settingsStore.Changed += OnSettingsChanged;
         _ = InitializeAsync();
 
-        _ws.MessageReceived += (_, text) => MessageReceived?.Invoke(this, text);
+        _ws.MessageReceived += OnRawMessage;
 
         Core.Logger.Info("ConnectionService created");
     }
@@ -31,6 +35,37 @@ public class ConnectionService : IConnectionService
     public ConnectionState State { get; private set; } = ConnectionState.Closed;
     public event EventHandler<ConnectionState>? StateChanged;
     public event EventHandler<string>? MessageReceived;
+
+    public BackendSettings? ServerSettings { get; private set; }
+    public event EventHandler<BackendSettings>? ServerSettingsReceived;
+
+    private void OnRawMessage(object? sender, string text)
+    {
+        try
+        {
+            var ctx = JsonSerializer.Deserialize<Websockets.Context>(text, JsonOpts);
+            if (ctx is not null && ctx.Type == "Messages.ServerSettings")
+            {
+                var msg = ctx.Message.Deserialize<Websockets.Messages.ServerSettings>(JsonOpts);
+                if (msg is not null)
+                {
+                    var settings = new BackendSettings();
+                    if (Enum.TryParse<AuthMode>(msg.AuthMode, true, out var mode))
+                        settings.AuthMode = mode;
+
+                    ServerSettings = settings;
+                    Core.Logger.Info($"ServerSettings received: AuthMode={settings.AuthMode}");
+                    ServerSettingsReceived?.Invoke(this, settings);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.Warn($"ServerSettings parse failed: {ex.Message}");
+        }
+
+        MessageReceived?.Invoke(this, text);
+    }
     public Task ConnectAsync(CancellationToken ct = default)
     {
         return ConnectInternalAsync(ct);
@@ -262,6 +297,10 @@ public class ConnectionService : IConnectionService
 
         Core.Logger.Debug($"Connection state: {State} -> {next}");
         State = next;
+
+        if (next is ConnectionState.Closed or ConnectionState.Broken)
+            ServerSettings = null;
+
         StateChanged?.Invoke(this, next);
     }
 }

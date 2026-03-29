@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Core.Configurations;
 using Core.Database.Services;
 using Microsoft.Extensions.DependencyInjection;
 using ContextDatabase = Core.Database.Context;
@@ -11,12 +12,13 @@ using ContextDatabase = Core.Database.Context;
 namespace Core.Websockets;
 
 public class WebsocketMiddleware(WebSocket ws, IServiceProvider serviceProvider,
-    ConcurrentDictionary<Guid, Connection> connections, 
-    ConcurrentDictionary<string, Room> rooms)
+    ConcurrentDictionary<Guid, Connection> connections,
+    ConcurrentDictionary<string, Room> rooms,
+    BackendSettings backendSettings)
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider;
     public MessageDispatcher MessageDispatcher { get; } = new();
-    
+
     public async Task OpenWebsocketConnection(HttpContext context)
     {
         var connection = new Connection(ws);
@@ -31,7 +33,13 @@ public class WebsocketMiddleware(WebSocket ws, IServiceProvider serviceProvider,
 
             MessageDispatcher.Configure(dbContext, connections, rooms, this);
             MessageDispatcher.ConfigureAuthHandlers(_serviceProvider, connections, rooms, this);
-            
+
+            await connection.SendAsync(new Messages.ServerSettings
+            {
+                AuthMode = backendSettings.AuthMode.ToString(),
+                Value = "Server settings"
+            });
+
             await HandleWebSocket(connection);
         }
         catch (Exception e)

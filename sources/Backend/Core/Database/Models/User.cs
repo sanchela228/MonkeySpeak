@@ -24,8 +24,10 @@ public class User
     [Column(TypeName = "varchar(64)")]
     public string KeyFingerprint { get; set; }
     
+    public string? PasswordHash { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    
+
     public DateTime LastSeenAt { get; set; } = DateTime.UtcNow;
     
     public virtual ICollection<Friendship> InitiatedFriendships { get; set; } = new List<Friendship>();

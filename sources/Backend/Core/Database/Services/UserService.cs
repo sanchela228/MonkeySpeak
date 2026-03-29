@@ -104,6 +104,36 @@ public class UserService
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
+    public async Task<User> CreateUserWithPasswordAsync(string username, string password)
+    {
+        if (await GetUserByUsernameAsync(username) != null)
+            throw new InvalidOperationException($"User with username '{username}' already exists");
+
+        var user = new User
+        {
+            Username = username,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+            PublicKeyEd25519 = Array.Empty<byte>(),
+            PublicKeyX25519 = Array.Empty<byte>(),
+            KeyFingerprint = string.Empty,
+            CreatedAt = DateTime.UtcNow,
+            LastSeenAt = DateTime.UtcNow
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+        return user;
+    }
+
+    public async Task<User?> VerifyPasswordAsync(string username, string password)
+    {
+        var user = await GetUserByUsernameAsync(username);
+        if (user == null || string.IsNullOrEmpty(user.PasswordHash))
+            return null;
+
+        return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash) ? user : null;
+    }
+
     public async Task<List<User>> SearchUsersAsync(string query, int limit = 20)
     {
         return await _context.Users

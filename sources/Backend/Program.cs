@@ -19,6 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.Configure<App>(builder.Configuration.GetSection("App"));
+builder.Services.Configure<Core.Configurations.BackendSettings>(builder.Configuration.GetSection("BackendSettings"));
 
 builder.Services.AddRazorPages();
 
@@ -44,7 +45,8 @@ app.Map("/connector", async (HttpContext ctx, IServiceProvider serviceProvider) 
 
     using var ws = await ctx.WebSockets.AcceptWebSocketAsync();
 
-    var handler = new WebsocketMiddleware(ws, serviceProvider, Backend.Core.Context.Connections, Backend.Core.Context.Rooms);
+    var backendSettings = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<Core.Configurations.BackendSettings>>().Value;
+    var handler = new WebsocketMiddleware(ws, serviceProvider, Backend.Core.Context.Connections, Backend.Core.Context.Rooms, backendSettings);
     await handler.OpenWebsocketConnection(ctx);
 });
 
@@ -57,8 +59,29 @@ app.UseStaticFiles();
 app.MapControllers();
 
 await App.ApplyMigrations(app);
+await SeedTestUsers(app);
 
 app.Run();
+
+static async Task SeedTestUsers(WebApplication app)
+{
+    using var scope = app.Services.CreateScope();
+    var userService = scope.ServiceProvider.GetRequiredService<Core.Database.Services.UserService>();
+
+    try
+    {
+        var existing = await userService.GetUserByUsernameAsync("admin");
+        if (existing is null)
+        {
+            await userService.CreateUserWithPasswordAsync("admin", "admin");
+            Console.WriteLine("Seed: test user 'admin' created (password: admin)");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Seed failed: {ex.Message}");
+    }
+}
 
 
 static void RunUdpStunTest()

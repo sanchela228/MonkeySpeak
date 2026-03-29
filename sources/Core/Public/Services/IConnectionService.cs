@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using Core.Domain;
 
 namespace Core.Public.Services;
 
@@ -11,6 +12,9 @@ public interface IConnectionService
     event EventHandler<ConnectionState>? StateChanged;
 
     event EventHandler<string>? MessageReceived;
+
+    BackendSettings? ServerSettings { get; }
+    event EventHandler<BackendSettings>? ServerSettingsReceived;
 
     Task ConnectAsync(CancellationToken ct = default);
     Task DisconnectAsync(CancellationToken ct = default);

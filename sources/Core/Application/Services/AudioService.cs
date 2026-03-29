@@ -1,11 +1,12 @@
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Concentus.Enums;
 using Concentus.Structs;
 using Core.Application.Media;
 using Core.Domain.Media;
 using Core.Public.Services;
-// using RNNoise.NET;
+using RNNoise.NET;
 using SoundFlow.Abstracts.Devices;
 using SoundFlow.Backends.MiniAudio;
 using SoundFlow.Components;
@@ -34,7 +35,7 @@ public sealed class AudioService : IAudioService
     private AudioPlaybackDevice? _playbackDevice;
 
     private OpusEncoder? _encoder;
-    // private Denoiser? _denoiser;
+    private Denoiser? _denoiser;
 
     private readonly List<float> _rnnoiseBuffer = new(FrameSizePerChannel);
     private readonly List<float> _opusBuffer = new(FrameSizePerChannel);
@@ -220,25 +221,28 @@ public sealed class AudioService : IAudioService
             {
                 try
                 {
-                    if (channel.DedicatedPlaybackDevice != null)
+                    lock (channel)
                     {
-                        try { channel.DedicatedPlaybackDevice.MasterMixer.RemoveComponent(channel.Player); } catch { }
-                        try { channel.DedicatedPlaybackDevice.Stop(); } catch { }
-                        try { channel.DedicatedPlaybackDevice.Dispose(); } catch { }
-                    }
+                        if (channel.DedicatedPlaybackDevice != null)
+                        {
+                            try { channel.DedicatedPlaybackDevice.MasterMixer.RemoveComponent(channel.Player); } catch { }
+                            try { channel.DedicatedPlaybackDevice.Stop(); } catch { }
+                            try { channel.DedicatedPlaybackDevice.Dispose(); } catch { }
+                        }
 
-                    var newDevice = _engine.InitializePlaybackDevice(selected, Format);
-                    if (newDevice == null)
-                    {
-                        Logger.Warn($"[Audio] Failed to init playback for channel {id}");
-                        continue;
-                    }
+                        var newDevice = _engine.InitializePlaybackDevice(selected, Format);
+                        if (newDevice == null)
+                        {
+                            Logger.Warn($"[Audio] Failed to init playback for channel {id}");
+                            continue;
+                        }
 
-                    channel.DedicatedPlaybackDevice = newDevice;
-                    newDevice.Start();
-                    newDevice.MasterMixer.AddComponent(channel.Player);
-                    channel.Player.Play();
-                    try { channel.Stream.Clear(); } catch { }
+                        channel.DedicatedPlaybackDevice = newDevice;
+                        newDevice.Start();
+                        newDevice.MasterMixer.AddComponent(channel.Player);
+                        channel.Player.Play();
+                        try { channel.Stream.Clear(); } catch { }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -260,54 +264,79 @@ public sealed class AudioService : IAudioService
         if (!_channels.TryGetValue(interlocutorId, out var channel))
         {
             Logger.Info($"[Audio] First packet from {interlocutorId}, opusLen={opusData.Length}, creating channel...");
-            channel = CreateChannel(interlocutorId);
-            if (channel == null)
+
+            var created = CreateChannelOnAudioThread(interlocutorId);
+            if (created == null)
             {
                 Logger.Error($"[Audio] Channel creation FAILED for {interlocutorId}");
                 return;
             }
-            channel = _channels.GetOrAdd(interlocutorId, channel);
-        }
 
-        var decoded = new float[FrameSizePerChannel];
-        int samples = channel.DecodeAndMeasure(decoded, opusData, FrameSizePerChannel);
-
-        // Log every 200 packets
-        if (count % 200 == 1)
-        {
-            float peak = 0f;
-            for (int i = 0; i < samples; i++)
-                peak = Math.Max(peak, Math.Abs(decoded[i]));
-            Logger.Debug($"[Audio] Recv #{count}: samples={samples} peak={peak:F4} playbackEnabled={_playbackEnabled}");
-        }
-
-        float gain = _playbackVolume / 100f;
-        if (Math.Abs(gain - 1.0f) > 0.001f && samples > 0)
-        {
-            for (int i = 0; i < samples; i++)
+            channel = _channels.GetOrAdd(interlocutorId, created);
+            if (!ReferenceEquals(channel, created))
             {
-                if (float.IsNaN(decoded[i]) || float.IsInfinity(decoded[i]))
-                    decoded[i] = 0f;
-                else
-                    decoded[i] = Math.Clamp(decoded[i] * gain, -1.0f, 1.0f);
+                try
+                {
+                    _mixerActions.Enqueue(() =>
+                    {
+                        try { lock (created) created.Dispose(); } catch { }
+                    });
+                }
+                catch { }
             }
         }
 
-        if (_playbackEnabled && samples > 0)
+        lock (channel)
         {
-            ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes<float>(decoded.AsSpan(0, samples));
-            var buf = new byte[bytes.Length];
-            bytes.CopyTo(buf);
-            channel.Stream.Write(buf, 0, buf.Length);
+            var decoded = new float[FrameSizePerChannel];
+            int samples = channel.DecodeAndMeasure(decoded, opusData, FrameSizePerChannel);
+
+            // Log every 200 packets
+            if (count % 200 == 1)
+            {
+                float peak = 0f;
+                for (int i = 0; i < samples; i++)
+                    peak = Math.Max(peak, Math.Abs(decoded[i]));
+                Logger.Debug($"[Audio] Recv #{count}: samples={samples} peak={peak:F4} playbackEnabled={_playbackEnabled}");
+            }
+
+            float gain = _playbackVolume / 100f;
+            if (Math.Abs(gain - 1.0f) > 0.001f && samples > 0)
+            {
+                for (int i = 0; i < samples; i++)
+                {
+                    if (float.IsNaN(decoded[i]) || float.IsInfinity(decoded[i]))
+                        decoded[i] = 0f;
+                    else
+                        decoded[i] = Math.Clamp(decoded[i] * gain, -1.0f, 1.0f);
+                }
+            }
+
+            if (_playbackEnabled && samples > 0)
+            {
+                ReadOnlySpan<byte> bytes = MemoryMarshal.AsBytes<float>(decoded.AsSpan(0, samples));
+                var buf = new byte[bytes.Length];
+                bytes.CopyTo(buf);
+                channel.Stream.Write(buf, 0, buf.Length);
+            }
         }
     }
 
     public void RemoveInterlocutor(string interlocutorId)
     {
-        if (_channels.TryRemove(interlocutorId, out var channel))
+        if (!_channels.TryRemove(interlocutorId, out var channel))
+            return;
+
+        try
         {
-            channel.Dispose();
-            Logger.Info($"[Audio] Removed channel for {interlocutorId}");
+            _mixerActions.Enqueue(() =>
+            {
+                try { lock (channel) channel.Dispose(); } catch { }
+                Logger.Info($"[Audio] Removed channel for {interlocutorId}");
+            });
+        }
+        catch
+        {
         }
     }
 
@@ -329,7 +358,7 @@ public sealed class AudioService : IAudioService
             _captureDevice = _engine.InitializeCaptureDevice(null, Format);
             _playbackDevice = _engine.InitializePlaybackDevice(null, Format);
 
-            // _denoiser = new Denoiser();
+            _denoiser = new Denoiser();
 
             _encoder = new OpusEncoder(Format.SampleRate, Format.Channels, OpusApplication.OPUS_APPLICATION_VOIP)
             {
@@ -426,7 +455,7 @@ public sealed class AudioService : IAudioService
                 _rnnoiseBuffer.RemoveRange(0, FrameSizePerChannel);
 
                 Span<float> span = frame.AsSpan();
-                // _denoiser!.Denoise(span, finish: false);
+                _denoiser!.Denoise(span, finish: false);
 
                 lock (_opusBuffer)
                 {
@@ -506,6 +535,36 @@ public sealed class AudioService : IAudioService
         }
     }
 
+    private InterlocutorAudioChannel? CreateChannelOnAudioThread(string interlocutorId)
+    {
+        try
+        {
+            var tcs = new TaskCompletionSource<InterlocutorAudioChannel?>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            _mixerActions.Enqueue(() =>
+            {
+                try
+                {
+                    var ch = CreateChannel(interlocutorId);
+                    tcs.TrySetResult(ch);
+                }
+                catch
+                {
+                    tcs.TrySetResult(null);
+                }
+            });
+
+            if (!tcs.Task.Wait(TimeSpan.FromSeconds(5)))
+                return null;
+
+            return tcs.Task.Result;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static IReadOnlyList<AudioDeviceInfo> MapDevices(DeviceInfo[] devices)
     {
         var list = new List<AudioDeviceInfo>(devices.Length);
@@ -550,7 +609,7 @@ public sealed class AudioService : IAudioService
         try { _captureDevice?.Dispose(); } catch { }
         try { _playbackDevice?.Dispose(); } catch { }
         try { _engine?.Dispose(); } catch { }
-        // try { _denoiser?.Dispose(); } catch { }
+        try { _denoiser?.Dispose(); } catch { }
 
         Logger.Info("[Audio] Disposed");
     }

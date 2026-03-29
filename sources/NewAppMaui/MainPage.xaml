@@ -30,6 +30,11 @@
                 HorizontalOptions="Fill" />
 
             <Label
+                x:Name="AuthStatusLabel"
+                Text="Not authenticated"
+                HorizontalOptions="Fill" />
+
+            <Label
                 x:Name="ConnectionErrorLabel"
                 TextColor="Red"
                 IsVisible="False"
