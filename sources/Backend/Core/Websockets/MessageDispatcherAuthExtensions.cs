@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using Core.Database.Services;
 using Core.Database.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -269,6 +271,7 @@ public static class MessageDispatcherAuthExtensions
                 {
                     FriendshipId = friendship.Id.ToString(),
                     FriendId = friend.Id.ToString(),
+                    FriendUsername = friend.Username,
                     Value = "Friend request sent"
                 });
 
@@ -349,6 +352,8 @@ public static class MessageDispatcherAuthExtensions
             try
             {
                 var friendshipId = Guid.Parse(msg.FriendshipId);
+
+                var friendship = await friendshipService.GetFriendshipByIdAsync(friendshipId);
                 await friendshipService.RemoveFriendshipByIdAsync(friendshipId, author.UserId.Value);
 
                 author.Send(new Messages.AuthCall.FriendRequestRejected
@@ -356,6 +361,17 @@ public static class MessageDispatcherAuthExtensions
                     FriendshipId = friendshipId.ToString(),
                     Value = "Friend request rejected"
                 });
+
+                if (friendship != null)
+                {
+                    var senderUserId = friendship.UserId;
+                    var senderConnection = connections.Values.FirstOrDefault(c => c.UserId == senderUserId && c.IsAuthenticated);
+                    senderConnection?.Send(new Messages.AuthCall.FriendRequestRejected
+                    {
+                        FriendshipId = friendshipId.ToString(),
+                        Value = "Friend request rejected"
+                    });
+                }
 
                 Console.WriteLine($"User {author.UserId} rejected friend request: {friendshipId}");
             }
@@ -473,6 +489,77 @@ public static class MessageDispatcherAuthExtensions
             }
         });
 
+        dispatcher.On<Messages.AuthCall.GetOutgoingPendingFriendList>(async (msg, author) =>
+        {
+            if (!author.IsAuthenticated || author.UserId == null)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Not authenticated", ErrorCode = "NOT_AUTHENTICATED" });
+                return;
+            }
+
+            using var scope = serviceProvider.CreateScope();
+            var friendshipService = scope.ServiceProvider.GetRequiredService<FriendshipService>();
+
+            try
+            {
+                var outgoing = await friendshipService.GetOutgoingPendingRequestsAsync(author.UserId.Value);
+
+                var items = outgoing.Select(f => new Messages.AuthCall.OutgoingFriendRequestInfo
+                {
+                    FriendshipId = f.Id.ToString(),
+                    ToUserId = f.Friend.Id.ToString(),
+                    ToUsername = f.Friend.Username
+                }).ToList();
+
+                author.Send(new Messages.AuthCall.OutgoingPendingFriendListResponse
+                {
+                    Friends = items,
+                    Value = "Outgoing pending friend list retrieved"
+                });
+            }
+            catch (Exception ex)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration { Value = ex.Message, ErrorCode = "GET_OUTGOING_PENDING_FAILED" });
+            }
+        });
+
+        dispatcher.On<Messages.AuthCall.CancelFriendRequest>(async (msg, author) =>
+        {
+            if (!author.IsAuthenticated || author.UserId == null)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Not authenticated", ErrorCode = "NOT_AUTHENTICATED" });
+                return;
+            }
+
+            using var scope = serviceProvider.CreateScope();
+            var friendshipService = scope.ServiceProvider.GetRequiredService<FriendshipService>();
+
+            try
+            {
+                var friendshipId = Guid.Parse(msg.FriendshipId);
+                var friendship = await friendshipService.CancelOutgoingFriendRequestAsync(friendshipId, author.UserId.Value);
+
+                // notify sender
+                author.Send(new Messages.AuthCall.FriendRequestCancelled
+                {
+                    FriendshipId = friendshipId.ToString(),
+                    Value = "Friend request cancelled"
+                });
+
+                // notify recipient (so their incoming pending list closes)
+                var friendConnection = connections.Values.FirstOrDefault(c => c.UserId == friendship.FriendId && c.IsAuthenticated);
+                friendConnection?.Send(new Messages.AuthCall.FriendRequestCancelled
+                {
+                    FriendshipId = friendshipId.ToString(),
+                    Value = "Friend request cancelled"
+                });
+            }
+            catch (Exception ex)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration { Value = ex.Message, ErrorCode = "CANCEL_FRIEND_REQUEST_FAILED" });
+            }
+        });
+
         dispatcher.On<Messages.AuthCall.GetPublicKeys>(async (msg, author) =>
         {
             if (!author.IsAuthenticated || author.UserId == null)
@@ -563,6 +650,195 @@ public static class MessageDispatcherAuthExtensions
             catch (Exception ex)
             {
                 author.Send(new Messages.AuthCall.ErrorRegistration { Value = ex.Message, ErrorCode = "INITIATE_CALL_FAILED" });
+            }
+        });
+
+        dispatcher.On<Messages.AuthCall.InviteToCall>(async (msg, author) =>
+        {
+            if (!author.IsAuthenticated || author.UserId == null)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Not authenticated", ErrorCode = "NOT_AUTHENTICATED" });
+                return;
+            }
+
+            using var scope = serviceProvider.CreateScope();
+            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+            var friendshipService = scope.ServiceProvider.GetRequiredService<FriendshipService>();
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(msg.FriendId) || string.IsNullOrWhiteSpace(msg.RoomCode))
+                {
+                    author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Invalid parameters", ErrorCode = "INVALID_PARAMS" });
+                    return;
+                }
+
+                var friendId = Guid.Parse(msg.FriendId);
+
+                if (!await friendshipService.AreFriendsAsync(author.UserId.Value, friendId))
+                {
+                    author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Not friends with this user", ErrorCode = "NOT_FRIENDS" });
+                    return;
+                }
+
+                if (!rooms.TryGetValue(msg.RoomCode, out var room) || !room.Connections.ContainsKey(author.Id))
+                {
+                    author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Room not found", ErrorCode = "ROOM_NOT_FOUND" });
+                    return;
+                }
+
+                var friendConnection = connections.Values.FirstOrDefault(c => c.UserId == friendId && c.IsAuthenticated);
+                if (friendConnection == null)
+                {
+                    author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Friend is offline", ErrorCode = "FRIEND_OFFLINE" });
+                    return;
+                }
+
+                var callerUser = await userService.GetUserByIdAsync(author.UserId.Value);
+
+                friendConnection.Send(new Messages.AuthCall.IncomingCall
+                {
+                    RoomCode = msg.RoomCode,
+                    FromUserId = author.UserId.Value.ToString(),
+                    FromUsername = callerUser?.Username ?? "Unknown",
+                    Value = "Incoming call"
+                });
+
+                author.Send(new Messages.AuthCall.CallInviteSent
+                {
+                    FriendId = friendId.ToString(),
+                    RoomCode = msg.RoomCode,
+                    Value = "Invite sent"
+                });
+            }
+            catch (Exception ex)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration { Value = ex.Message, ErrorCode = "INVITE_CALL_FAILED" });
+            }
+        });
+
+        dispatcher.On<Messages.AuthCall.CallInviteResponse>(async (msg, author) =>
+        {
+            if (!author.IsAuthenticated || author.UserId == null)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Not authenticated", ErrorCode = "NOT_AUTHENTICATED" });
+                return;
+            }
+
+            using var scope = serviceProvider.CreateScope();
+            var friendshipService = scope.ServiceProvider.GetRequiredService<FriendshipService>();
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(msg.ToUserId) || string.IsNullOrWhiteSpace(msg.RoomCode))
+                {
+                    author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Invalid parameters", ErrorCode = "INVALID_PARAMS" });
+                    return;
+                }
+
+                var toUserId = Guid.Parse(msg.ToUserId);
+
+                if (!await friendshipService.AreFriendsAsync(author.UserId.Value, toUserId))
+                {
+                    author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Not friends with this user", ErrorCode = "NOT_FRIENDS" });
+                    return;
+                }
+
+                // If callee tries to accept/reject after caller cancelled (or room already gone), do not proxy "accept".
+                if (msg.Accepted)
+                {
+                    if (!rooms.TryGetValue(msg.RoomCode, out var room)
+                        || room.State != Room.RoomState.Waiting
+                        || !room.Connections.Values.Any(c => c.UserId == toUserId))
+                    {
+                        author.Send(new Messages.AuthCall.ErrorRegistration
+                        {
+                            Value = "Call has expired",
+                            ErrorCode = "CALL_EXPIRED"
+                        });
+                        return;
+                    }
+                }
+
+                var target = connections.Values.FirstOrDefault(c => c.UserId == toUserId && c.IsAuthenticated);
+                if (target == null)
+                {
+                    author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Target offline", ErrorCode = "TARGET_OFFLINE" });
+                    return;
+                }
+
+                target.Send(new Messages.AuthCall.CallInviteResponse
+                {
+                    RoomCode = msg.RoomCode,
+                    ToUserId = msg.ToUserId,
+                    FromUserId = author.UserId.Value.ToString(),
+                    FromUsername = msg.FromUsername,
+                    Accepted = msg.Accepted,
+                    Reason = msg.Reason,
+                    Value = msg.Value
+                });
+            }
+            catch (Exception ex)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration { Value = ex.Message, ErrorCode = "CALL_INVITE_RESPONSE_FAILED" });
+            }
+        });
+
+        dispatcher.On<Messages.AuthCall.CancelCallInvite>(async (msg, author) =>
+        {
+            if (!author.IsAuthenticated || author.UserId == null)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Not authenticated", ErrorCode = "NOT_AUTHENTICATED" });
+                return;
+            }
+
+            using var scope = serviceProvider.CreateScope();
+            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+            var friendshipService = scope.ServiceProvider.GetRequiredService<FriendshipService>();
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(msg.FriendId) || string.IsNullOrWhiteSpace(msg.RoomCode))
+                {
+                    author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Invalid parameters", ErrorCode = "INVALID_PARAMS" });
+                    return;
+                }
+
+                var friendId = Guid.Parse(msg.FriendId);
+
+                if (!await friendshipService.AreFriendsAsync(author.UserId.Value, friendId))
+                {
+                    author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Not friends with this user", ErrorCode = "NOT_FRIENDS" });
+                    return;
+                }
+
+                var friendConnection = connections.Values.FirstOrDefault(c => c.UserId == friendId && c.IsAuthenticated);
+                if (friendConnection == null)
+                    return;
+
+                var callerUser = await userService.GetUserByIdAsync(author.UserId.Value);
+
+                friendConnection.Send(new Messages.AuthCall.CallInviteCancelled
+                {
+                    RoomCode = msg.RoomCode,
+                    FromUserId = author.UserId.Value.ToString(),
+                    FromUsername = callerUser?.Username ?? "Unknown",
+                    Value = "Invite cancelled"
+                });
+
+                // Ensure the callee cannot "accept" a cancelled ringing call.
+                if (rooms.TryGetValue(msg.RoomCode, out var room)
+                    && room.State == Room.RoomState.Waiting
+                    && room.Connections.Count <= 1
+                    && room.Connections.ContainsKey(author.Id))
+                {
+                    rooms.TryRemove(msg.RoomCode, out _);
+                    author.Status = Connection.StatusConnection.Idle;
+                }
+            }
+            catch (Exception ex)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration { Value = ex.Message, ErrorCode = "CANCEL_CALL_INVITE_FAILED" });
             }
         });
     }

@@ -14,39 +14,45 @@ public class MauiKeyStore : IKeyStore
 
     private static string KeyDir => FileSystem.AppDataDirectory;
 
+    private static string Profile
+        => (Environment.GetEnvironmentVariable("MONKEYSPEAK_PROFILE") ?? "default").Trim();
+
+    private static string PrefKey(string baseKey) => $"{baseKey}.{Profile}";
+    private static string FileName(string baseName) => $"{Profile}.{baseName}";
+
     public Task<string?> GetUserIdAsync()
-        => Task.FromResult<string?>(Preferences.Get(UserIdKey, null as string));
+        => Task.FromResult<string?>(Preferences.Get(PrefKey(UserIdKey), null as string));
 
     public Task<string> GetOrCreateUsernameAsync()
     {
-        var existing = Preferences.Get(UsernameKey, null as string);
+        var existing = Preferences.Get(PrefKey(UsernameKey), null as string);
         if (!string.IsNullOrEmpty(existing))
             return Task.FromResult(existing);
 
         var generated = "user_" + Guid.NewGuid().ToString("N")[..8];
-        Preferences.Set(UsernameKey, generated);
+        Preferences.Set(PrefKey(UsernameKey), generated);
         return Task.FromResult(generated);
     }
 
     public Task SaveRegistrationAsync(string userId, string username, string fingerprint)
     {
-        Preferences.Set(UserIdKey, userId);
-        Preferences.Set(UsernameKey, username);
-        Preferences.Set(FingerprintKey, fingerprint);
+        Preferences.Set(PrefKey(UserIdKey), userId);
+        Preferences.Set(PrefKey(UsernameKey), username);
+        Preferences.Set(PrefKey(FingerprintKey), fingerprint);
         return Task.CompletedTask;
     }
 
     public Task<bool> HasKeysAsync()
     {
-        var privPath = Path.Combine(KeyDir, EdPrivFileName);
+        var privPath = Path.Combine(KeyDir, FileName(EdPrivFileName));
         return Task.FromResult(File.Exists(privPath));
     }
 
     public async Task<(byte[] privateEd25519, byte[] publicEd25519, byte[] publicX25519)> GetOrCreateKeysAsync()
     {
-        var privEdPath = Path.Combine(KeyDir, EdPrivFileName);
-        var pubEdPath = Path.Combine(KeyDir, EdPubFileName);
-        var pubXPath = Path.Combine(KeyDir, XPubFileName);
+        var privEdPath = Path.Combine(KeyDir, FileName(EdPrivFileName));
+        var pubEdPath = Path.Combine(KeyDir, FileName(EdPubFileName));
+        var pubXPath = Path.Combine(KeyDir, FileName(XPubFileName));
 
         if (File.Exists(privEdPath) && File.Exists(pubEdPath) && File.Exists(pubXPath))
         {
@@ -65,9 +71,32 @@ public class MauiKeyStore : IKeyStore
 
     public Task ClearRegistrationAsync()
     {
-        Preferences.Remove(UserIdKey);
-        Preferences.Remove(FingerprintKey);
+        Preferences.Remove(PrefKey(UserIdKey));
+        Preferences.Remove(PrefKey(FingerprintKey));
         // Keep UsernameKey so the user keeps their generated name
         return Task.CompletedTask;
+    }
+
+    public void ClearAllLocal()
+    {
+        Preferences.Remove(PrefKey(UserIdKey));
+        Preferences.Remove(PrefKey(UsernameKey));
+        Preferences.Remove(PrefKey(FingerprintKey));
+
+        TryDelete(Path.Combine(KeyDir, FileName(EdPrivFileName)));
+        TryDelete(Path.Combine(KeyDir, FileName(EdPubFileName)));
+        TryDelete(Path.Combine(KeyDir, FileName(XPubFileName)));
+    }
+
+    private static void TryDelete(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+        catch
+        {
+        }
     }
 }

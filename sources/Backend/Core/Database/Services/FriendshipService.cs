@@ -100,6 +100,14 @@ public class FriendshipService
         await _context.SaveChangesAsync();
     }
 
+    public Task<Friendship?> GetFriendshipByIdAsync(Guid friendshipId)
+    {
+        return _context.Friendships
+            .Include(f => f.User)
+            .Include(f => f.Friend)
+            .FirstOrDefaultAsync(f => f.Id == friendshipId);
+    }
+
     public async Task<List<Friendship>> GetPendingRequestsAsync(Guid userId)
     {
         return await _context.Friendships
@@ -107,6 +115,37 @@ public class FriendshipService
             .Include(f => f.Friend)
             .Where(f => f.FriendId == userId && f.Status == FriendshipStatus.Pending)
             .ToListAsync();
+    }
+
+    public async Task<List<Friendship>> GetOutgoingPendingRequestsAsync(Guid userId)
+    {
+        return await _context.Friendships
+            .Include(f => f.User)
+            .Include(f => f.Friend)
+            .Where(f => f.UserId == userId && f.Status == FriendshipStatus.Pending)
+            .ToListAsync();
+    }
+
+    public async Task<Friendship> CancelOutgoingFriendRequestAsync(Guid friendshipId, Guid authorUserId)
+    {
+        var friendship = await _context.Friendships
+            .Include(f => f.User)
+            .Include(f => f.Friend)
+            .FirstOrDefaultAsync(f => f.Id == friendshipId);
+
+        if (friendship == null)
+            throw new InvalidOperationException("Friendship not found");
+
+        if (friendship.Status != FriendshipStatus.Pending)
+            throw new InvalidOperationException("Friendship is not pending");
+
+        // SECURITY: Only the sender can cancel the outgoing request
+        if (friendship.UserId != authorUserId)
+            throw new UnauthorizedAccessException("You are not authorized to cancel this friend request");
+
+        _context.Friendships.Remove(friendship);
+        await _context.SaveChangesAsync();
+        return friendship;
     }
 
     public async Task<List<User>> GetFriendsAsync(Guid userId)

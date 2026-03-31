@@ -3,6 +3,28 @@
     "Windows Machine": {
       "commandName": "Project",
       "nativeDebugging": false
+    },
+    "DevUserA": {
+      "commandName": "Project",
+      "nativeDebugging": false,
+      "environmentVariables": {
+        "MONKEYSPEAK_PROFILE": "A"
+      }
+    },
+    "DevUserB": {
+      "commandName": "Project",
+      "nativeDebugging": false,
+      "environmentVariables": {
+        "MONKEYSPEAK_PROFILE": "B"
+      }
+    },
+    "DevRandomEachRun": {
+      "commandName": "Project",
+      "nativeDebugging": false,
+      "environmentVariables": {
+        "MONKEYSPEAK_PROFILE": "R",
+        "MONKEYSPEAK_DEV_NEW_USER_EACH_RUN": "1"
+      }
     }
   }
 }

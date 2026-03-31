@@ -16,7 +16,7 @@ namespace Pages
             _appConfiguration = appInfo.Value;
             _environment = environment;
             
-            Manifest = GetManifestFromXml();
+            // Manifest = GetManifestFromXml();
         }
 
         public Manifest Manifest;
@@ -29,12 +29,12 @@ namespace Pages
         {
             string webRootPath = _environment.WebRootPath;
             string xmlFilePath = Path.Combine(webRootPath, "Manifest.xml");
-
+        
             XmlSerializer serializer = new XmlSerializer(typeof(Manifest));
         
             using (FileStream fileStream = new FileStream(xmlFilePath, FileMode.Open))
             {
-                return (Manifest)serializer.Deserialize(fileStream);
+                return (Manifest) serializer.Deserialize(fileStream);
             }
         }
     }

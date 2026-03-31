@@ -31,8 +31,4 @@
     <Compile Include="..\sources\App\Platforms\Interfaces\*.cs" Link="Platforms\Interfaces\%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Application\State\" />
-  </ItemGroup>
-
 </Project>

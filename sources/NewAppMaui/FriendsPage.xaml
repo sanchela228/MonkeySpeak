@@ -29,18 +29,32 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
+            <Label Text="Pending (sent)" FontAttributes="Bold" />
+
+            <CollectionView x:Name="PendingSentView" HeightRequest="200">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid ColumnDefinitions="*,Auto" Padding="6" ColumnSpacing="8">
+                            <Label Grid.Column="0" Text="{Binding ToUsername}" LineBreakMode="TailTruncation" />
+                            <Button Grid.Column="1" Text="Cancel" Clicked="OnCancelPendingClicked" CommandParameter="{Binding FriendshipId}" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
             <Label Text="Friends" FontAttributes="Bold" />
 
             <CollectionView x:Name="FriendsView" HeightRequest="400">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <Grid ColumnDefinitions="*,Auto" Padding="6" ColumnSpacing="8">
+                        <Grid ColumnDefinitions="*,Auto,Auto" Padding="6" ColumnSpacing="8">
                             <VerticalStackLayout Grid.Column="0" Spacing="2">
                                 <Label Text="{Binding Username}" FontAttributes="Bold" />
                                 <Label Text="{Binding IsOnline, StringFormat='Online: {0}'}" FontSize="12" />
                             </VerticalStackLayout>
 
-                            <Button Grid.Column="1" Text="Remove" Clicked="OnRemoveClicked" CommandParameter="{Binding UserId}" />
+                            <Button Grid.Column="1" Text="Call" Clicked="OnCallClicked" CommandParameter="{Binding UserId}" />
+                            <Button Grid.Column="2" Text="Remove" Clicked="OnRemoveClicked" CommandParameter="{Binding UserId}" />
                         </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

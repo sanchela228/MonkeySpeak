@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="NewAppMaui.IncomingFriendCallPage"
+             Title="Incoming call">
+
+    <VerticalStackLayout Padding="20" Spacing="12">
+        <Label x:Name="CallerLabel" Text="Incoming call" FontSize="24" />
+        <Label x:Name="StatusLabel" Text="" />
+
+        <ActivityIndicator x:Name="Loading" IsRunning="False" IsVisible="False" />
+
+        <Label x:Name="ErrorLabel" TextColor="Red" IsVisible="False" />
+
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+            <Button Grid.Column="0" x:Name="AcceptBtn" Text="Accept" Clicked="OnAcceptClicked" />
+            <Button Grid.Column="1" x:Name="RejectBtn" Text="Reject" Clicked="OnRejectClicked" />
+        </Grid>
+    </VerticalStackLayout>
+
+</ContentPage>

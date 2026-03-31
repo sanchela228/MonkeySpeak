@@ -19,6 +19,7 @@ public class FriendsService : IFriendsService
 
     private List<Friend> _friends = new();
     private List<FriendRequest> _pending = new();
+    private List<OutgoingFriendRequest> _pendingSent = new();
 
     public FriendsService(IConnectionService connection)
     {
@@ -45,8 +46,18 @@ public class FriendsService : IFriendsService
         }
     }
 
+    public IReadOnlyList<OutgoingFriendRequest> PendingSent
+    {
+        get
+        {
+            lock (_sync)
+                return _pendingSent;
+        }
+    }
+
     public event EventHandler? FriendsUpdated;
     public event EventHandler? PendingUpdated;
+    public event EventHandler? PendingSentUpdated;
 
     public async Task RefreshAsync(CancellationToken ct = default)
     {
@@ -54,6 +65,7 @@ public class FriendsService : IFriendsService
 
         await SendAsync(new GetFriendList { Value = "Get friend list" }, ct).ConfigureAwait(false);
         await SendAsync(new GetPendingFriendList { Value = "Get pending friend list" }, ct).ConfigureAwait(false);
+        await SendAsync(new GetOutgoingPendingFriendList { Value = "Get outgoing pending friend list" }, ct).ConfigureAwait(false);
     }
 
     public Task SendFriendRequestAsync(string friendUsername, CancellationToken ct = default)
@@ -67,6 +79,27 @@ public class FriendsService : IFriendsService
             FriendUsername = friendUsername.Trim(),
             Value = "Add friend"
         }, ct);
+    }
+
+    public async Task CancelPendingAsync(string friendshipId, CancellationToken ct = default)
+    {
+        EnsureWsConnected();
+        if (string.IsNullOrWhiteSpace(friendshipId))
+            return;
+
+        if (!BeginPendingAction(friendshipId))
+            return;
+
+        try
+        {
+            RemovePendingSentLocal(friendshipId);
+            await SendAsync(new CancelFriendRequest { FriendshipId = friendshipId, Value = "Cancel friend request" }, ct)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            EndPendingAction(friendshipId);
+        }
     }
 
     public async Task AcceptAsync(string friendshipId, CancellationToken ct = default)
@@ -126,11 +159,13 @@ public class FriendsService : IFriendsService
             {
                 _friends = new List<Friend>();
                 _pending = new List<FriendRequest>();
+                _pendingSent = new List<OutgoingFriendRequest>();
                 _pendingActionsInFlight.Clear();
             }
 
             FriendsUpdated?.Invoke(this, EventArgs.Empty);
             PendingUpdated?.Invoke(this, EventArgs.Empty);
+            PendingSentUpdated?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -149,14 +184,23 @@ public class FriendsService : IFriendsService
                 case "Messages.AuthCall.PendingFriendListResponse":
                     HandlePendingList(ctx);
                     break;
+                case "Messages.AuthCall.OutgoingPendingFriendListResponse":
+                    HandleOutgoingPendingList(ctx);
+                    break;
                 case "Messages.AuthCall.FriendRequestReceived":
                     HandleFriendRequestReceived(ctx);
+                    break;
+                case "Messages.AuthCall.FriendRequestSent":
+                    HandleFriendRequestSent(ctx);
                     break;
                 case "Messages.AuthCall.FriendAccepted":
                     HandleFriendAccepted(ctx);
                     break;
                 case "Messages.AuthCall.FriendRequestRejected":
                     HandleFriendRequestRejected(ctx);
+                    break;
+                case "Messages.AuthCall.FriendRequestCancelled":
+                    HandleFriendRequestCancelled(ctx);
                     break;
                 case "Messages.AuthCall.FriendOnline":
                     HandleFriendOnline(ctx);
@@ -212,6 +256,50 @@ public class FriendsService : IFriendsService
         PendingUpdated?.Invoke(this, EventArgs.Empty);
     }
 
+    private void HandleOutgoingPendingList(Context ctx)
+    {
+        var msg = ctx.Message.Deserialize<OutgoingPendingFriendListResponse>(JsonOpts);
+        if (msg is null) return;
+
+        lock (_sync)
+        {
+            _pendingSent = msg.Friends.Select(r => new OutgoingFriendRequest
+            {
+                FriendshipId = r.FriendshipId ?? string.Empty,
+                ToUserId = r.ToUserId ?? string.Empty,
+                ToUsername = r.ToUsername ?? string.Empty
+            }).ToList();
+        }
+
+        PendingSentUpdated?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void HandleFriendRequestSent(Context ctx)
+    {
+        var msg = ctx.Message.Deserialize<FriendRequestSent>(JsonOpts);
+        if (msg is null) return;
+
+        var req = new OutgoingFriendRequest
+        {
+            FriendshipId = msg.FriendshipId ?? string.Empty,
+            ToUserId = msg.FriendId ?? string.Empty,
+            ToUsername = msg.FriendUsername ?? string.Empty
+        };
+
+        var updated = false;
+        lock (_sync)
+        {
+            if (!_pendingSent.Any(x => x.FriendshipId == req.FriendshipId))
+            {
+                _pendingSent.Add(req);
+                updated = true;
+            }
+        }
+
+        if (updated)
+            PendingSentUpdated?.Invoke(this, EventArgs.Empty);
+    }
+
     private void HandleFriendRequestReceived(Context ctx)
     {
         var msg = ctx.Message.Deserialize<FriendRequestReceived>(JsonOpts);
@@ -238,6 +326,26 @@ public class FriendsService : IFriendsService
             PendingUpdated?.Invoke(this, EventArgs.Empty);
     }
 
+    private void HandleFriendRequestCancelled(Context ctx)
+    {
+        var msg = ctx.Message.Deserialize<FriendRequestCancelled>(JsonOpts);
+        if (msg is null) return;
+
+        var id = msg.FriendshipId ?? string.Empty;
+        var updatedSent = false;
+        var updatedIncoming = false;
+        lock (_sync)
+        {
+            updatedSent = _pendingSent.RemoveAll(x => x.FriendshipId == id) > 0;
+            updatedIncoming = _pending.RemoveAll(x => x.FriendshipId == id) > 0;
+        }
+
+        if (updatedSent)
+            PendingSentUpdated?.Invoke(this, EventArgs.Empty);
+        if (updatedIncoming)
+            PendingUpdated?.Invoke(this, EventArgs.Empty);
+    }
+
     private void HandleFriendAccepted(Context ctx)
     {
         var msg = ctx.Message.Deserialize<FriendAccepted>(JsonOpts);
@@ -251,14 +359,19 @@ public class FriendsService : IFriendsService
         var msg = ctx.Message.Deserialize<FriendRequestRejected>(JsonOpts);
         if (msg is null) return;
 
-        var updated = false;
+        var id = msg.FriendshipId ?? string.Empty;
+        var updatedIncoming = false;
+        var updatedSent = false;
         lock (_sync)
         {
-            updated = _pending.RemoveAll(x => x.FriendshipId == (msg.FriendshipId ?? string.Empty)) > 0;
+            updatedIncoming = _pending.RemoveAll(x => x.FriendshipId == id) > 0;
+            updatedSent = _pendingSent.RemoveAll(x => x.FriendshipId == id) > 0;
         }
 
-        if (updated)
+        if (updatedIncoming)
             PendingUpdated?.Invoke(this, EventArgs.Empty);
+        if (updatedSent)
+            PendingSentUpdated?.Invoke(this, EventArgs.Empty);
     }
 
     private void HandleFriendOnline(Context ctx)
@@ -347,5 +460,17 @@ public class FriendsService : IFriendsService
 
         if (updated)
             PendingUpdated?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void RemovePendingSentLocal(string friendshipId)
+    {
+        var updated = false;
+        lock (_sync)
+        {
+            updated = _pendingSent.RemoveAll(x => x.FriendshipId == friendshipId) > 0;
+        }
+
+        if (updated)
+            PendingSentUpdated?.Invoke(this, EventArgs.Empty);
     }
 }

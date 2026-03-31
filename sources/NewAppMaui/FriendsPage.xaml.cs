@@ -7,15 +7,19 @@ namespace NewAppMaui;
 public partial class FriendsPage : ContentPage
 {
     private readonly IFriendsService _friends;
+    private readonly IFriendCallsService _friendCalls;
     private CancellationTokenSource? _cts;
 
     public FriendsPage()
     {
-        _friends = ((App)Application.Current!).Services.GetRequiredService<IFriendsService>();
+        var services = ((App)Application.Current!).Services;
+        _friends = services.GetRequiredService<IFriendsService>();
+        _friendCalls = services.GetRequiredService<IFriendCallsService>();
         InitializeComponent();
 
         _friends.FriendsUpdated += (_, _) => MainThread.BeginInvokeOnMainThread(UpdateLists);
         _friends.PendingUpdated += (_, _) => MainThread.BeginInvokeOnMainThread(UpdateLists);
+        _friends.PendingSentUpdated += (_, _) => MainThread.BeginInvokeOnMainThread(UpdateLists);
     }
 
     protected override void OnAppearing()
@@ -38,6 +42,7 @@ public partial class FriendsPage : ContentPage
     {
         FriendsView.ItemsSource = _friends.Friends.ToArray();
         PendingView.ItemsSource = _friends.Pending.ToArray();
+        PendingSentView.ItemsSource = _friends.PendingSent.ToArray();
     }
 
     private async Task RefreshAsync(CancellationToken ct)
@@ -173,6 +178,51 @@ public partial class FriendsPage : ContentPage
         try
         {
             await _friends.RemoveFriendAsync(friendId, ct);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                ErrorLabel.Text = ex.Message;
+                ErrorLabel.IsVisible = true;
+            });
+        }
+    }
+
+    private async void OnCallClicked(object? sender, EventArgs e)
+    {
+        if (sender is not Button btn)
+            return;
+
+        var friendId = btn.CommandParameter as string;
+        if (string.IsNullOrWhiteSpace(friendId))
+            return;
+
+        var friend = _friends.Friends.FirstOrDefault(x => x.UserId == friendId);
+        var friendUsername = friend?.Username ?? string.Empty;
+
+        var page = ((App)Application.Current!).Services.GetRequiredService<OutgoingFriendCallPage>();
+        page.Initialize(friendId, friendUsername);
+        await Shell.Current.Navigation.PushModalAsync(new NavigationPage(page));
+    }
+
+    private async void OnCancelPendingClicked(object? sender, EventArgs e)
+    {
+        if (sender is not Button btn)
+            return;
+
+        var friendshipId = btn.CommandParameter as string;
+        if (string.IsNullOrWhiteSpace(friendshipId))
+            return;
+
+        var ct = _cts?.Token ?? CancellationToken.None;
+
+        try
+        {
+            await _friends.CancelPendingAsync(friendshipId, ct);
         }
         catch (OperationCanceledException)
         {
