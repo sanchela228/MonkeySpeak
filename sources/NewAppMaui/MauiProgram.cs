@@ -64,6 +64,7 @@ public static class MauiProgram
         builder.Services.AddTransient<JoinRoomPage>();
         builder.Services.AddTransient<CallRoomPage>();
         builder.Services.AddTransient<LoginPage>();
+        builder.Services.AddTransient<FriendsPage>();
         builder.Services.AddTransient<MainPage>();
 
         builder.Services.AddSingleton<IWebSocketClient, WebSocketClient>();

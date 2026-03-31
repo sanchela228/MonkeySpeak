@@ -65,6 +65,7 @@ public partial class MainPage : ContentPage
 
         CreateConnectionBtn.IsVisible = connected && _auth.IsAuthenticated;
         ConnectBtn.IsVisible = connected && _auth.IsAuthenticated;
+        FriendsBtn.IsVisible = connected && _auth.IsAuthenticated;
 
         var err = _connection.LastError;
         ConnectionErrorLabel.Text = err?.Message ?? string.Empty;
@@ -85,5 +86,10 @@ public partial class MainPage : ContentPage
     {
         var page = ((App)Application.Current!).Services.GetRequiredService<ConnectionProfileSelectPage>();
         await Navigation.PushModalAsync(new NavigationPage(page));
+    }
+
+    private async void OnFriendsClicked(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(FriendsPage));
     }
 }

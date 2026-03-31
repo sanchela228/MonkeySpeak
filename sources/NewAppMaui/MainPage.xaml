@@ -59,6 +59,12 @@
                 Text="Change connection"
                 Clicked="OnChangeConnectionClicked"
                 HorizontalOptions="Fill" />
+
+            <Button
+                x:Name="FriendsBtn"
+                Text="Friends"
+                Clicked="OnFriendsClicked"
+                HorizontalOptions="Fill" />
         </VerticalStackLayout>
     </ScrollView>
 
