@@ -1,66 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<ResourceDictionary 
+<ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
-    
-    <Style x:Key="GreenMainButton" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="#4B9B58" />
-        <Setter Property="TextColor" Value="White" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="BorderColor" Value="#60c571" />
-        <Setter Property="BorderWidth" Value="1" />
-
-        <Setter Property="VisualStateManager.VisualStateGroups">
-            <VisualStateGroupList>
-                <VisualStateGroup Name="CommonStates">
-
-                    <VisualState Name="Normal" />
-
-                    <VisualState Name="Pressed">
-                        <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="#4a8B58" />
-                        </VisualState.Setters>
-                    </VisualState>
-
-                    <VisualState Name="PointerOver">
-                        <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="#60c571" />
-                        </VisualState.Setters>
-                    </VisualState>
-
-                </VisualStateGroup>
-            </VisualStateGroupList>
-        </Setter>
-    </Style>
-    
-    <Style x:Key="GrayMainButton" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="#121212" />
-        <Setter Property="TextColor" Value="White" />
-        <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="BorderColor" Value="#333333" />
-        <Setter Property="BorderWidth" Value="1" />
-
-        <Setter Property="VisualStateManager.VisualStateGroups">
-            <VisualStateGroupList>
-                <VisualStateGroup Name="CommonStates">
-
-                    <VisualState Name="Normal" />
-
-                    <VisualState Name="Pressed">
-                        <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="#111211" />
-                        </VisualState.Setters>
-                    </VisualState>
-
-                    <VisualState Name="PointerOver">
-                        <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="#333333" />
-                        </VisualState.Setters>
-                    </VisualState>
-
-                </VisualStateGroup>
-            </VisualStateGroupList>
-        </Setter>
-    </Style>
-    
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors">
+        <ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary Source="/Resources/Styles/Custom/Buttons.xaml" />
+        </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

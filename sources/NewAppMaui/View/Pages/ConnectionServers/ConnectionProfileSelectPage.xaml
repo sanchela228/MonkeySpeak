@@ -8,8 +8,8 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Resources/Styles/Custom/Templates/ConnectionProfileItemTemplate.xaml" />
-                <ResourceDictionary Source="Resources/Styles/Custom/Templates/AddCustomServerCardTemplate.xaml" />
+                <ResourceDictionary Source="/View/Templates/ConnectionProfilePage/ConnectionProfileItemTemplate.xaml" />
+                <ResourceDictionary Source="/View/Templates/ConnectionProfilePage/AddCustomServerCardTemplate.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </ContentPage.Resources>
@@ -29,18 +29,12 @@
                 Text="Choose relay server" />
         </VerticalStackLayout>
 
-        <CollectionView
-            Grid.Row="2"
-            x:Name="ProfilesView"
-            SelectionMode="Single"
-            SelectionChanged="OnProfilesSelectionChanged"
-            ItemTemplate="{StaticResource ConnectionProfileItemTemplate}"
-            VerticalOptions="FillAndExpand" >
-
-            <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Vertical" ItemSpacing="8" />
-            </CollectionView.ItemsLayout>
-        </CollectionView>
+        <ScrollView Grid.Row="2" VerticalOptions="Start" MaximumHeightRequest="282">
+            <VerticalStackLayout
+                x:Name="ProfilesView"
+                Spacing="8"
+                BindableLayout.ItemTemplate="{StaticResource ConnectionProfileItemTemplate}" />
+        </ScrollView>
 
         <ContentView
             Grid.Row="3"

@@ -2,7 +2,8 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:conv="clr-namespace:NewAppMaui.Converters">
+    xmlns:conv="clr-namespace:NewAppMaui.Converters"
+    xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors">
 
     <conv:SelectedItemEqualsCurrentItemConverter x:Key="SelectedItemEqualsCurrentItemConverter" />
 
@@ -15,15 +16,25 @@
             Padding="16"
             StrokeShape="RoundRectangle 16">
 
+            <Border.Behaviors>
+                <behaviors:HandCursorBehavior />
+            </Border.Behaviors>
+
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer
+                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=SelectProfileCommand}"
+                    CommandParameter="{Binding .}" />
+            </Border.GestureRecognizers>
+
             <Border.Triggers>
                 <DataTrigger TargetType="Border" Value="True">
                     <DataTrigger.Binding>
                         <MultiBinding Converter="{StaticResource SelectedItemEqualsCurrentItemConverter}">
-                            <Binding Path="." />
-                            <Binding Source="{RelativeSource AncestorType={x:Type CollectionView}}" Path="SelectedItem" />
+                            <Binding Path="Id" />
+                            <Binding Source="{RelativeSource AncestorType={x:Type ContentPage}}" Path="SelectedProfileId" />
                         </MultiBinding>
                     </DataTrigger.Binding>
-                    <Setter Property="BackgroundColor" Value="#151515" />
+                    <Setter Property="BackgroundColor" Value="#121412" />
                     <Setter Property="Stroke" Value="#4B9B58" />
                     <Setter TargetName="SelectedMark" Property="IsVisible" Value="True" />
                 </DataTrigger>
@@ -37,12 +48,7 @@
                                 <Setter TargetName="PointerOverOverlay" Property="Opacity" Value="0" />
                             </VisualState.Setters>
                         </VisualState>
-
-                        <VisualState Name="PointerOver">
-                            <VisualState.Setters>
-                                <Setter TargetName="PointerOverOverlay" Property="Opacity" Value="1" />
-                            </VisualState.Setters>
-                        </VisualState>
+                        
                     </VisualStateGroup>
                 </VisualStateGroupList>
             </VisualStateManager.VisualStateGroups>
@@ -81,28 +87,18 @@
                     TextColor="White"
                     FontSize="16"
                     FontAttributes="Bold" />
-
-                <Border
+                
+                <Image
                     x:Name="SelectedMark"
                     Grid.Column="2"
-                    WidthRequest="26"
-                    HeightRequest="26"
-                    StrokeThickness="0"
-                    BackgroundColor="#4B9B58"
-                    StrokeShape="RoundRectangle 13"
-                    HorizontalOptions="Center"
+                    Grid.RowSpan="2"
+                    IsVisible="False"
+                    WidthRequest="28"
+                    HeightRequest="28"
+                    Aspect="AspectFit"
                     VerticalOptions="Center"
-                    IsVisible="False">
-
-                    <Path
-                        Data="M 6 13 L 11 18 L 20 8"
-                        Stroke="White"
-                        StrokeThickness="2.4"
-                        StrokeLineCap="Round"
-                        StrokeLineJoin="Round"
-                        HorizontalOptions="Center"
-                        VerticalOptions="Center" />
-                </Border>
+                    Source="check.png"
+                />
 
                 <Label
                     Grid.Row="1"

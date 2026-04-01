@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors">
 
     <ControlTemplate x:Key="AddCustomServerCardTemplate">
         <Border
@@ -11,6 +12,10 @@
             StrokeDashArray="4,4"
             Padding="16"
             StrokeShape="RoundRectangle 16">
+
+            <Border.Behaviors>
+                <behaviors:HandCursorBehavior />
+            </Border.Behaviors>
 
             <VisualStateManager.VisualStateGroups>
                 <VisualStateGroupList>
@@ -70,6 +75,17 @@
                         TextColor="#333"
                         FontSize="12" />
                 </VerticalStackLayout>
+                
+                <Image
+                    Grid.Column="2"
+                    Grid.RowSpan="2"
+                    WidthRequest="28"
+                    HeightRequest="28"
+                    Aspect="AspectFit"
+                    Opacity="0.25"
+                    VerticalOptions="Center"
+                    Source="angle_right.png"
+                />
 
             </Grid>
         </Border>
