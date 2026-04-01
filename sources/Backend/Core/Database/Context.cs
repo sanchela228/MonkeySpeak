@@ -19,7 +19,8 @@ public class Context : DbContext
         
         modelBuilder.Entity<Models.User>(entity =>
         {
-            entity.HasIndex(e => e.Username).IsUnique();
+            entity.HasIndex(e => e.Username);
+            entity.HasIndex(e => e.UserCode).IsUnique();
             entity.HasIndex(e => e.KeyFingerprint);
         });
         

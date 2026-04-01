@@ -8,6 +8,7 @@ public partial class FriendsPage : ContentPage
 {
     private readonly IFriendsService _friends;
     private readonly IFriendCallsService _friendCalls;
+    private readonly IAuthService _auth;
     private CancellationTokenSource? _cts;
 
     public FriendsPage()
@@ -15,6 +16,7 @@ public partial class FriendsPage : ContentPage
         var services = ((App)Application.Current!).Services;
         _friends = services.GetRequiredService<IFriendsService>();
         _friendCalls = services.GetRequiredService<IFriendCallsService>();
+        _auth = services.GetRequiredService<IAuthService>();
         InitializeComponent();
 
         _friends.FriendsUpdated += (_, _) => MainThread.BeginInvokeOnMainThread(UpdateLists);
@@ -26,8 +28,22 @@ public partial class FriendsPage : ContentPage
     {
         base.OnAppearing();
         _cts = new CancellationTokenSource();
+        UpdateMyId();
         UpdateLists();
         _ = RefreshAsync(_cts.Token);
+    }
+
+    private void UpdateMyId()
+    {
+        var username = _auth.Username ?? string.Empty;
+        var code = _auth.UserCode ?? string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(code))
+            MyIdLabel.Text = $"My ID: {username}#{code}";
+        else if (!string.IsNullOrWhiteSpace(username))
+            MyIdLabel.Text = $"My ID: {username}";
+        else
+            MyIdLabel.Text = string.Empty;
     }
 
     protected override void OnDisappearing()
@@ -64,7 +80,11 @@ public partial class FriendsPage : ContentPage
         {
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
-                ErrorLabel.Text = ex.Message;
+                var msg = ex.Message;
+                if (msg.Contains("USERNAME_AMBIGUOUS", StringComparison.OrdinalIgnoreCase))
+                    msg = "Username is ambiguous. Ask your friend for their My ID and use username#code.";
+
+                ErrorLabel.Text = msg;
                 ErrorLabel.IsVisible = true;
             });
         }
@@ -102,7 +122,11 @@ public partial class FriendsPage : ContentPage
         {
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
-                ErrorLabel.Text = ex.Message;
+                var msg = ex.Message;
+                if (msg.Contains("USERNAME_AMBIGUOUS", StringComparison.OrdinalIgnoreCase))
+                    msg = "Username is ambiguous. Ask your friend for their My ID and use username#code.";
+
+                ErrorLabel.Text = msg;
                 ErrorLabel.IsVisible = true;
             });
         }

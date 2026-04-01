@@ -26,18 +26,33 @@ public class UserService
             .FirstOrDefaultAsync(u => u.Username == username);
     }
 
+    public Task<List<User>> GetUsersByUsernameAsync(string username)
+    {
+        return _context.Users
+            .Where(u => u.Username == username)
+            .ToListAsync();
+    }
+
+    public Task<User?> GetUserByHandleAsync(string username, string userCode)
+    {
+        return _context.Users
+            .FirstOrDefaultAsync(u => u.Username == username && u.UserCode == userCode);
+    }
+
+    public Task<User?> GetUserByUserCodeAsync(string userCode)
+    {
+        return _context.Users
+            .FirstOrDefaultAsync(u => u.UserCode == userCode);
+    }
+
     public async Task<User> CreateUserAsync(string username, byte[] publicKeyEd25519, byte[] publicKeyX25519)
     {
-        if (await GetUserByUsernameAsync(username) != null)
-        {
-            throw new InvalidOperationException($"User with username '{username}' already exists");
-        }
-
         var fingerprint = ComputeFingerprint(publicKeyEd25519);
 
         var user = new User
         {
             Username = username,
+            UserCode = await GenerateUniqueUserCodeAsync(),
             PublicKeyEd25519 = publicKeyEd25519,
             PublicKeyX25519 = publicKeyX25519,
             KeyFingerprint = fingerprint,
@@ -106,12 +121,10 @@ public class UserService
 
     public async Task<User> CreateUserWithPasswordAsync(string username, string password)
     {
-        if (await GetUserByUsernameAsync(username) != null)
-            throw new InvalidOperationException($"User with username '{username}' already exists");
-
         var user = new User
         {
             Username = username,
+            UserCode = await GenerateUniqueUserCodeAsync(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
             PublicKeyEd25519 = Array.Empty<byte>(),
             PublicKeyX25519 = Array.Empty<byte>(),
@@ -127,11 +140,33 @@ public class UserService
 
     public async Task<User?> VerifyPasswordAsync(string username, string password)
     {
-        var user = await GetUserByUsernameAsync(username);
-        if (user == null || string.IsNullOrEmpty(user.PasswordHash))
-            return null;
+        var users = await _context.Users
+            .Where(u => u.Username == username && u.PasswordHash != null && u.PasswordHash != string.Empty)
+            .ToListAsync();
 
-        return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash) ? user : null;
+        foreach (var user in users)
+        {
+            if (string.IsNullOrEmpty(user.PasswordHash))
+                continue;
+
+            if (BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
+                return user;
+        }
+
+        return null;
+    }
+
+    private async Task<string> GenerateUniqueUserCodeAsync()
+    {
+        // 32 hex chars (128 bits). Effectively collision-free.
+        while (true)
+        {
+            var code = Guid.NewGuid().ToString("N").ToLowerInvariant();
+
+            var exists = await _context.Users.AnyAsync(u => u.UserCode == code);
+            if (!exists)
+                return code;
+        }
     }
 
     public async Task<List<User>> SearchUsersAsync(string query, int limit = 20)

@@ -3,48 +3,65 @@
     x:Class="NewAppMaui.ConnectionProfileSelectPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    Title="Select connection profile">
+    Shell.NavBarIsVisible="False"
+    NavigationPage.HasNavigationBar="False">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/Custom/Templates/ConnectionProfileItemTemplate.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Custom/Templates/AddCustomServerCardTemplate.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ContentPage.Resources>
 
-    <Grid Padding="24" RowDefinitions="Auto,*,Auto" RowSpacing="12">
-        <Label
-            Grid.Row="0"
-            FontSize="18"
-            Text="Choose a server configuration" />
+    <Grid Padding="24" MaximumWidthRequest="450"
+          RowDefinitions="*,Auto,Auto,Auto,60,Auto,*" RowSpacing="8">
+
+        <VerticalStackLayout Grid.Row="1" Spacing="2">
+            <Label
+                FontSize="20"
+                TextColor="White"
+                Text="Servers" />
+
+            <Label
+                FontSize="14"
+                TextColor="#888"
+                Text="Choose relay server" />
+        </VerticalStackLayout>
 
         <CollectionView
-            Grid.Row="1"
+            Grid.Row="2"
             x:Name="ProfilesView"
             SelectionMode="Single"
-            VerticalOptions="FillAndExpand">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Border Padding="12" StrokeShape="RoundRectangle 8">
-                        <VerticalStackLayout Spacing="4">
-                            <Label FontAttributes="Bold" Text="{Binding Name}" />
-                            <Label FontSize="12" Text="{Binding Domain}" />
-                            <Label FontSize="12" Text="{Binding Port}" />
-                            <Label FontSize="12" Text="{Binding UseSsl}" />
-                        </VerticalStackLayout>
-                    </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
+            SelectionChanged="OnProfilesSelectionChanged"
+            ItemTemplate="{StaticResource ConnectionProfileItemTemplate}"
+            VerticalOptions="FillAndExpand" >
+
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="8" />
+            </CollectionView.ItemsLayout>
         </CollectionView>
 
-        <VerticalStackLayout Grid.Row="2" Spacing="12">
+        <ContentView
+            Grid.Row="3"
+            ControlTemplate="{StaticResource AddCustomServerCardTemplate}">
+            <ContentView.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnAddCustomTapped" />
+            </ContentView.GestureRecognizers>
+        </ContentView>
+        
+        <VerticalStackLayout Grid.Row="5" Spacing="12">
             <Button
                 x:Name="SelectButton"
                 Text="Select"
+                Style="{StaticResource GreenMainButton}"
                 Clicked="OnSelectClicked" />
 
             <Button
                 x:Name="DeleteButton"
                 Text="Delete"
+                Style="{StaticResource GrayMainButton}"
                 Clicked="OnDeleteClicked" />
-
-            <Button
-                x:Name="AddCustomButton"
-                Text="Add custom"
-                Clicked="OnAddCustomClicked" />
         </VerticalStackLayout>
     </Grid>
 </ContentPage>

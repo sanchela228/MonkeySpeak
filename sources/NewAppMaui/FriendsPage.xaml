@@ -8,7 +8,9 @@
         <VerticalStackLayout Padding="20" Spacing="12">
             <Label Text="Add friend" FontAttributes="Bold" />
 
-            <Entry x:Name="UsernameEntry" Placeholder="Username" />
+            <Label x:Name="MyIdLabel" FontSize="12" />
+
+            <Entry x:Name="UsernameEntry" Placeholder="Username or username#code" />
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                 <Button Grid.Column="0" Text="Add" Clicked="OnAddClicked" />
@@ -21,7 +23,7 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="6" ColumnSpacing="8">
-                            <Label Grid.Column="0" Text="{Binding FromUsername}" LineBreakMode="TailTruncation" />
+                            <Label Grid.Column="0" Text="{Binding Handle}" LineBreakMode="TailTruncation" />
                             <Button Grid.Column="1" Text="Accept" Clicked="OnAcceptClicked" CommandParameter="{Binding FriendshipId}" />
                             <Button Grid.Column="2" Text="Reject" Clicked="OnRejectClicked" CommandParameter="{Binding FriendshipId}" />
                         </Grid>
@@ -35,7 +37,7 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Grid ColumnDefinitions="*,Auto" Padding="6" ColumnSpacing="8">
-                            <Label Grid.Column="0" Text="{Binding ToUsername}" LineBreakMode="TailTruncation" />
+                            <Label Grid.Column="0" Text="{Binding Handle}" LineBreakMode="TailTruncation" />
                             <Button Grid.Column="1" Text="Cancel" Clicked="OnCancelPendingClicked" CommandParameter="{Binding FriendshipId}" />
                         </Grid>
                     </DataTemplate>
@@ -49,7 +51,7 @@
                     <DataTemplate>
                         <Grid ColumnDefinitions="*,Auto,Auto" Padding="6" ColumnSpacing="8">
                             <VerticalStackLayout Grid.Column="0" Spacing="2">
-                                <Label Text="{Binding Username}" FontAttributes="Bold" />
+                                <Label Text="{Binding Handle}" FontAttributes="Bold" />
                                 <Label Text="{Binding IsOnline, StringFormat='Online: {0}'}" FontSize="12" />
                             </VerticalStackLayout>
 

@@ -111,6 +111,7 @@ public static class MessageDispatcherAuthExtensions
                 {
                     UserId = user.Id.ToString(),
                     Username = user.Username,
+                    UserCode = user.UserCode,
                     Value = "Authentication successful"
                 });
 
@@ -153,6 +154,7 @@ public static class MessageDispatcherAuthExtensions
                 {
                     UserId = user.Id.ToString(),
                     Username = user.Username,
+                    UserCode = user.UserCode,
                     Value = "Login successful"
                 });
 
@@ -226,6 +228,7 @@ public static class MessageDispatcherAuthExtensions
                 author.Send(new Messages.AuthCall.KeyRegistered
                 {
                     UserId = user.Id.ToString(),
+                    UserCode = user.UserCode,
                     Fingerprint = user.KeyFingerprint,
                     Value = "Registration successful"
                 });
@@ -258,7 +261,43 @@ public static class MessageDispatcherAuthExtensions
             
             try
             {
-                var friend = await userService.GetUserByUsernameAsync(msg.FriendUsername);
+                var handle = (msg.FriendUsername ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(handle))
+                {
+                    author.Send(new Messages.AuthCall.ErrorRegistration { Value = "Empty friend handle", ErrorCode = "INVALID_FRIEND_HANDLE" });
+                    return;
+                }
+
+                Core.Database.Models.User? friend;
+                var hashIdx = handle.LastIndexOf('#');
+                if (hashIdx > 0 && hashIdx < handle.Length - 1)
+                {
+                    var username = handle[..hashIdx].Trim();
+                    var code = handle[(hashIdx + 1)..].Trim().ToLowerInvariant();
+                    friend = await userService.GetUserByHandleAsync(username, code);
+                }
+                else
+                {
+                    var users = await userService.GetUsersByUsernameAsync(handle);
+                    if (users.Count == 0)
+                    {
+                        author.Send(new Messages.AuthCall.ErrorRegistration { Value = "User not found", ErrorCode = "USER_NOT_FOUND" });
+                        return;
+                    }
+
+                    if (users.Count > 1)
+                    {
+                        author.Send(new Messages.AuthCall.ErrorRegistration
+                        {
+                            Value = "Username is ambiguous. Use username#code.",
+                            ErrorCode = "USERNAME_AMBIGUOUS"
+                        });
+                        return;
+                    }
+
+                    friend = users[0];
+                }
+
                 if (friend == null)
                 {
                     author.Send(new Messages.AuthCall.ErrorRegistration { Value = "User not found", ErrorCode = "USER_NOT_FOUND" });
@@ -272,6 +311,7 @@ public static class MessageDispatcherAuthExtensions
                     FriendshipId = friendship.Id.ToString(),
                     FriendId = friend.Id.ToString(),
                     FriendUsername = friend.Username,
+                    FriendUserCode = friend.UserCode,
                     Value = "Friend request sent"
                 });
 
@@ -284,6 +324,7 @@ public static class MessageDispatcherAuthExtensions
                         FriendshipId = friendship.Id.ToString(),
                         FromUserId = author.UserId.Value.ToString(),
                         FromUsername = senderUser?.Username ?? "Unknown",
+                        FromUserCode = senderUser?.UserCode ?? string.Empty,
                         Value = "New friend request"
                     });
                 }
@@ -438,6 +479,7 @@ public static class MessageDispatcherAuthExtensions
                 {
                     UserId = f.Id.ToString(),
                     Username = f.Username,
+                    UserCode = f.UserCode,
                     IsOnline = connections.Values.Any(c => c.UserId == f.Id && c.IsAuthenticated),
                     LastSeenAt = f.LastSeenAt.ToString("o")
                 }).ToList();
@@ -474,6 +516,7 @@ public static class MessageDispatcherAuthExtensions
                    FriendshipId = f.Id.ToString(),
                    FromUserId = f.User.Id.ToString(),
                    FromUsername = f.User.Username.ToString(),
+                   FromUserCode = f.User.UserCode,
                    Value = "Friend pending request received"
                 }).ToList();
                 
@@ -508,7 +551,8 @@ public static class MessageDispatcherAuthExtensions
                 {
                     FriendshipId = f.Id.ToString(),
                     ToUserId = f.Friend.Id.ToString(),
-                    ToUsername = f.Friend.Username
+                    ToUsername = f.Friend.Username,
+                    ToUserCode = f.Friend.UserCode
                 }).ToList();
 
                 author.Send(new Messages.AuthCall.OutgoingPendingFriendListResponse

@@ -4,6 +4,7 @@ public class FriendInfo
 {
     public string UserId { get; set; }
     public string Username { get; set; }
+    public string UserCode { get; set; }
     public bool IsOnline { get; set; }
     public string LastSeenAt { get; set; }
 }

@@ -12,6 +12,11 @@ public class User
     [StringLength(50)]
     [Column(TypeName = "varchar(50)")]
     public string Username { get; set; }
+
+    [Required]
+    [StringLength(32)]
+    [Column(TypeName = "varchar(32)")]
+    public string UserCode { get; set; } = string.Empty;
     
     [Required]
     public byte[] PublicKeyEd25519 { get; set; }

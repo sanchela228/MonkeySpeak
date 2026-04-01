@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <ControlTemplate x:Key="AddCustomServerCardTemplate">
+        <Border
+            HorizontalOptions="Fill"
+            Stroke="#333333"
+            StrokeThickness="1"
+            StrokeDashArray="4,4"
+            Padding="16"
+            StrokeShape="RoundRectangle 16">
+
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroupList>
+                    <VisualStateGroup Name="CommonStates">
+                        <VisualState Name="Normal">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="Transparent" />
+                                <Setter Property="Stroke" Value="#333333" />
+                            </VisualState.Setters>
+                        </VisualState>
+
+                        <VisualState Name="PointerOver">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#151515" />
+                                <Setter Property="Stroke" Value="#4a4a4a" />
+                            </VisualState.Setters>
+                        </VisualState>
+
+                        <VisualState Name="Pressed">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#1a1a1a" />
+                                <Setter Property="Stroke" Value="#4a4a4a" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </VisualStateManager.VisualStateGroups>
+
+            <Grid ColumnDefinitions="Auto,*,Auto"
+                  ColumnSpacing="12">
+
+                <Border
+                    WidthRequest="36"
+                    HeightRequest="36"
+                    StrokeThickness="0"
+                    BackgroundColor="#333"
+                    StrokeShape="RoundRectangle 18"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center">
+
+                    <Label
+                        Text="+"
+                        TextColor="White"
+                        FontSize="20"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center" />
+                </Border>
+
+                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                    <Label
+                        Text="Custom server"
+                        TextColor="White"
+                        FontSize="15" />
+
+                    <Label
+                        Text="STUN / TURN / WebRTC"
+                        TextColor="#333"
+                        FontSize="12" />
+                </VerticalStackLayout>
+
+            </Grid>
+        </Border>
+    </ControlTemplate>
+
+</ResourceDictionary>

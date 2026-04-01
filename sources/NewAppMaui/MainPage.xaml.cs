@@ -85,7 +85,7 @@ public partial class MainPage : ContentPage
     private async void OnChangeConnectionClicked(object? sender, EventArgs e)
     {
         var page = ((App)Application.Current!).Services.GetRequiredService<ConnectionProfileSelectPage>();
-        await Navigation.PushModalAsync(new NavigationPage(page));
+        await Navigation.PushModalAsync(page);
     }
 
     private async void OnFriendsClicked(object? sender, EventArgs e)

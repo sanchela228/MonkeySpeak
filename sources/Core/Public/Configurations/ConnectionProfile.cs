@@ -6,4 +6,7 @@ public sealed record ConnectionProfile(
     string Domain,
     int Port,
     bool UseSsl,
-    int MaxRetries);
+    int MaxRetries)
+{
+    public string ConnectionString => $"{Domain}:{Port}";
+};

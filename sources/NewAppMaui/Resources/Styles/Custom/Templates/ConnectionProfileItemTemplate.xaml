@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:conv="clr-namespace:NewAppMaui.Converters">
+
+    <conv:SelectedItemEqualsCurrentItemConverter x:Key="SelectedItemEqualsCurrentItemConverter" />
+
+    <DataTemplate x:Key="ConnectionProfileItemTemplate">
+        <Border
+            HorizontalOptions="Fill"
+            Stroke="#333333"
+            StrokeThickness="1"
+            BackgroundColor="#121212"
+            Padding="16"
+            StrokeShape="RoundRectangle 16">
+
+            <Border.Triggers>
+                <DataTrigger TargetType="Border" Value="True">
+                    <DataTrigger.Binding>
+                        <MultiBinding Converter="{StaticResource SelectedItemEqualsCurrentItemConverter}">
+                            <Binding Path="." />
+                            <Binding Source="{RelativeSource AncestorType={x:Type CollectionView}}" Path="SelectedItem" />
+                        </MultiBinding>
+                    </DataTrigger.Binding>
+                    <Setter Property="BackgroundColor" Value="#151515" />
+                    <Setter Property="Stroke" Value="#4B9B58" />
+                    <Setter TargetName="SelectedMark" Property="IsVisible" Value="True" />
+                </DataTrigger>
+            </Border.Triggers>
+
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroupList>
+                    <VisualStateGroup Name="CommonStates">
+                        <VisualState Name="Normal">
+                            <VisualState.Setters>
+                                <Setter TargetName="PointerOverOverlay" Property="Opacity" Value="0" />
+                            </VisualState.Setters>
+                        </VisualState>
+
+                        <VisualState Name="PointerOver">
+                            <VisualState.Setters>
+                                <Setter TargetName="PointerOverOverlay" Property="Opacity" Value="1" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </VisualStateManager.VisualStateGroups>
+
+            <Grid>
+                <BoxView
+                    x:Name="PointerOverOverlay"
+                    ZIndex="0"
+                    InputTransparent="True"
+                    BackgroundColor="#151515"
+                    Opacity="0" />
+
+                <Grid ColumnDefinitions="Auto,*,Auto"
+                      RowDefinitions="Auto,Auto"
+                      ColumnSpacing="12"
+                      ZIndex="1">
+
+                <Image
+                    Grid.RowSpan="2"
+                    WidthRequest="28"
+                    HeightRequest="28"
+                    Aspect="AspectFit"
+                    VerticalOptions="Center"
+                    Source="custom_conn.png">
+
+                    <Image.Triggers>
+                        <DataTrigger TargetType="Image" Binding="{Binding Id}" Value="default">
+                            <Setter Property="Source" Value="def_earth_conn.png" />
+                        </DataTrigger>
+                    </Image.Triggers>
+                </Image>
+
+                <Label
+                    Grid.Column="1"
+                    Text="{Binding Name}"
+                    TextColor="White"
+                    FontSize="16"
+                    FontAttributes="Bold" />
+
+                <Border
+                    x:Name="SelectedMark"
+                    Grid.Column="2"
+                    WidthRequest="26"
+                    HeightRequest="26"
+                    StrokeThickness="0"
+                    BackgroundColor="#4B9B58"
+                    StrokeShape="RoundRectangle 13"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    IsVisible="False">
+
+                    <Path
+                        Data="M 6 13 L 11 18 L 20 8"
+                        Stroke="White"
+                        StrokeThickness="2.4"
+                        StrokeLineCap="Round"
+                        StrokeLineJoin="Round"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center" />
+                </Border>
+
+                <Label
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Text="{Binding ConnectionString}"
+                    TextColor="#9ca3af"
+                    FontSize="13" />
+
+                </Grid>
+            </Grid>
+        </Border>
+    </DataTemplate>
+
+</ResourceDictionary>

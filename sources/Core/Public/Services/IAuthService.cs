@@ -5,6 +5,7 @@ public interface IAuthService
     bool IsAuthenticated { get; }
     string? UserId { get; }
     string? Username { get; }
+    string? UserCode { get; }
 
     event EventHandler? Authenticated;
     event EventHandler<string>? AuthFailed;

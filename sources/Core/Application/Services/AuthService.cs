@@ -31,6 +31,7 @@ public class AuthService : IAuthService
     public bool IsAuthenticated { get; private set; }
     public string? UserId { get; private set; }
     public string? Username { get; private set; }
+    public string? UserCode { get; private set; }
 
     public event EventHandler? Authenticated;
     public event EventHandler<string>? AuthFailed;
@@ -174,6 +175,7 @@ public class AuthService : IAuthService
         IsAuthenticated = false;
         UserId = null;
         Username = null;
+        UserCode = null;
         Core.Logger.Info("Auth state reset");
         LoggedOut?.Invoke(this, EventArgs.Empty);
     }
@@ -210,6 +212,7 @@ public class AuthService : IAuthService
         IsAuthenticated = true;
         UserId = msg.UserId;
         Username = msg.Username;
+        UserCode = msg.UserCode;
 
         Core.Logger.Info($"Login success: {msg.Username} ({msg.UserId})");
         _loginTcs?.TrySetResult(true);
@@ -224,6 +227,7 @@ public class AuthService : IAuthService
         IsAuthenticated = true;
         UserId = msg.UserId;
         Username = msg.Username;
+        UserCode = msg.UserCode;
 
         Core.Logger.Info($"KeyPair auth success: {msg.Username} ({msg.UserId})");
         _authTcs?.TrySetResult(true);
@@ -241,6 +245,7 @@ public class AuthService : IAuthService
         IsAuthenticated = true;
         UserId = msg.UserId;
         Username = username;
+        UserCode = msg.UserCode;
 
         Core.Logger.Info($"Key registered: userId={msg.UserId} fingerprint={msg.Fingerprint}");
         _authTcs?.TrySetResult(true);

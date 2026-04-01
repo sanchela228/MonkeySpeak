@@ -230,6 +230,7 @@ public class FriendsService : IFriendsService
             {
                 UserId = f.UserId ?? string.Empty,
                 Username = f.Username ?? string.Empty,
+                UserCode = f.UserCode ?? string.Empty,
                 IsOnline = f.IsOnline,
                 LastSeenAt = f.LastSeenAt ?? string.Empty
             }).ToList();
@@ -249,7 +250,8 @@ public class FriendsService : IFriendsService
             {
                 FriendshipId = r.FriendshipId ?? string.Empty,
                 FromUserId = r.FromUserId ?? string.Empty,
-                FromUsername = r.FromUsername ?? string.Empty
+                FromUsername = r.FromUsername ?? string.Empty,
+                FromUserCode = r.FromUserCode ?? string.Empty
             }).ToList();
         }
 
@@ -267,7 +269,8 @@ public class FriendsService : IFriendsService
             {
                 FriendshipId = r.FriendshipId ?? string.Empty,
                 ToUserId = r.ToUserId ?? string.Empty,
-                ToUsername = r.ToUsername ?? string.Empty
+                ToUsername = r.ToUsername ?? string.Empty,
+                ToUserCode = r.ToUserCode ?? string.Empty
             }).ToList();
         }
 
@@ -283,7 +286,8 @@ public class FriendsService : IFriendsService
         {
             FriendshipId = msg.FriendshipId ?? string.Empty,
             ToUserId = msg.FriendId ?? string.Empty,
-            ToUsername = msg.FriendUsername ?? string.Empty
+            ToUsername = msg.FriendUsername ?? string.Empty,
+            ToUserCode = msg.FriendUserCode ?? string.Empty
         };
 
         var updated = false;
@@ -309,7 +313,8 @@ public class FriendsService : IFriendsService
         {
             FriendshipId = msg.FriendshipId ?? string.Empty,
             FromUserId = msg.FromUserId ?? string.Empty,
-            FromUsername = msg.FromUsername ?? string.Empty
+            FromUsername = msg.FromUsername ?? string.Empty,
+            FromUserCode = msg.FromUserCode ?? string.Empty
         };
 
         var updated = false;

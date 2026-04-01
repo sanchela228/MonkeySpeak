@@ -7,6 +7,7 @@ public class OutgoingFriendRequestInfo
     public string FriendshipId { get; set; } = string.Empty;
     public string ToUserId { get; set; } = string.Empty;
     public string ToUsername { get; set; } = string.Empty;
+    public string ToUserCode { get; set; } = string.Empty;
 }
 
 public class OutgoingPendingFriendListResponse : IMessage

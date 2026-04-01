@@ -6,6 +6,7 @@ public class FriendInfo
 {
     public string UserId { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
+    public string UserCode { get; set; } = string.Empty;
     public bool IsOnline { get; set; }
     public string LastSeenAt { get; set; } = string.Empty;
 }
@@ -27,6 +28,7 @@ public class OutgoingFriendRequestInfo
     public string FriendshipId { get; set; } = string.Empty;
     public string ToUserId { get; set; } = string.Empty;
     public string ToUsername { get; set; } = string.Empty;
+    public string ToUserCode { get; set; } = string.Empty;
 }
 
 public class OutgoingPendingFriendListResponse : IMessage
@@ -79,6 +81,7 @@ public class FriendRequestSent : IMessage
     public string FriendshipId { get; set; } = string.Empty;
     public string FriendId { get; set; } = string.Empty;
     public string FriendUsername { get; set; } = string.Empty;
+    public string FriendUserCode { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;
 }
 
@@ -87,6 +90,7 @@ public class FriendRequestReceived : IMessage
     public string FriendshipId { get; set; } = string.Empty;
     public string FromUserId { get; set; } = string.Empty;
     public string FromUsername { get; set; } = string.Empty;
+    public string FromUserCode { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;
 }
 

@@ -15,21 +15,12 @@ public sealed class ConnectionSettingsStore : IConnectionSettingsStore
     [
         new ConnectionProfile(
             Id: "default",
-            Name: "Default",
+            Name: "MonkeySpeak (RU)",
             Domain: "95.163.230.160",
             Port: 80,
             UseSsl: false,
-            MaxRetries: 2
+            MaxRetries: 1
         ),
-        
-        new ConnectionProfile(
-            Id: "local",
-            Name: "Localhost",
-            Domain: "localhost",
-            Port: 80,
-            UseSsl: false,
-            MaxRetries: 2
-        )
     ];
 
     public bool HasExplicitActiveProfileSelection => Preferences.ContainsKey(ActiveProfileIdKey);
