@@ -7,7 +7,7 @@
     <ControlTemplate x:Key="AddCustomServerCardTemplate">
         <Border
             HorizontalOptions="Fill"
-            Stroke="#333333"
+            Stroke="{StaticResource CardBorder}"
             StrokeThickness="1"
             StrokeDashArray="4,4"
             Padding="16"
@@ -23,21 +23,21 @@
                         <VisualState Name="Normal">
                             <VisualState.Setters>
                                 <Setter Property="BackgroundColor" Value="Transparent" />
-                                <Setter Property="Stroke" Value="#333333" />
+                                <Setter Property="Stroke" Value="{StaticResource CardBorder}" />
                             </VisualState.Setters>
                         </VisualState>
 
                         <VisualState Name="PointerOver">
                             <VisualState.Setters>
-                                <Setter Property="BackgroundColor" Value="#151515" />
-                                <Setter Property="Stroke" Value="#4a4a4a" />
+                                <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundHover}" />
+                                <Setter Property="Stroke" Value="{StaticResource CardBorderHover}" />
                             </VisualState.Setters>
                         </VisualState>
 
                         <VisualState Name="Pressed">
                             <VisualState.Setters>
-                                <Setter Property="BackgroundColor" Value="#1a1a1a" />
-                                <Setter Property="Stroke" Value="#4a4a4a" />
+                                <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundPressed}" />
+                                <Setter Property="Stroke" Value="{StaticResource CardBorderHover}" />
                             </VisualState.Setters>
                         </VisualState>
                     </VisualStateGroup>
@@ -51,14 +51,14 @@
                     WidthRequest="36"
                     HeightRequest="36"
                     StrokeThickness="0"
-                    BackgroundColor="#333"
+                    BackgroundColor="{StaticResource CardBorder}"
                     StrokeShape="RoundRectangle 18"
                     HorizontalOptions="Center"
                     VerticalOptions="Center">
 
                     <Label
                         Text="+"
-                        TextColor="White"
+                        TextColor="{StaticResource TextPrimary}"
                         FontSize="20"
                         HorizontalOptions="Center"
                         VerticalOptions="Center" />
@@ -67,15 +67,15 @@
                 <VerticalStackLayout Grid.Column="1" Spacing="2">
                     <Label
                         Text="Custom server"
-                        TextColor="White"
+                        TextColor="{StaticResource TextPrimary}"
                         FontSize="15" />
 
                     <Label
-                        Text="STUN / TURN / WebRTC"
-                        TextColor="#333"
+                        Text="Run on your own backend"
+                        TextColor="{StaticResource TextSecondary}"
                         FontSize="12" />
                 </VerticalStackLayout>
-                
+
                 <Image
                     Grid.Column="2"
                     Grid.RowSpan="2"

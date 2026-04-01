@@ -20,12 +20,12 @@
         <VerticalStackLayout Grid.Row="1" Spacing="2">
             <Label
                 FontSize="20"
-                TextColor="White"
+                TextColor="{StaticResource TextPrimary}"
                 Text="Servers" />
 
             <Label
                 FontSize="14"
-                TextColor="#888"
+                TextColor="{StaticResource TextMuted}"
                 Text="Choose relay server" />
         </VerticalStackLayout>
 

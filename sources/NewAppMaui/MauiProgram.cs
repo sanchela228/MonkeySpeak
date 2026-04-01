@@ -95,6 +95,25 @@ public static class MauiProgram
         {
             fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
             fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+        })
+        .ConfigureMauiHandlers(handlers =>
+        {
+#if WINDOWS
+            Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("BorderlessEntry", (handler, view) =>
+            {
+                var textBox = handler.PlatformView;
+                textBox.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+                textBox.Padding = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 4);
+
+                var transparent = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
+                textBox.Background = transparent;
+                textBox.Resources["TextControlBorderBrush"] = transparent;
+                textBox.Resources["TextControlBorderBrushPointerOver"] = transparent;
+                textBox.Resources["TextControlBorderBrushFocused"] = transparent;
+                textBox.Resources["TextControlBorderBrushDisabled"] = transparent;
+                textBox.Resources["TextControlBorderThemeThicknessFocused"] = new Microsoft.UI.Xaml.Thickness(0);
+            });
+#endif
         });
 
 #if DEBUG

@@ -5,46 +5,177 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Shell.NavBarIsVisible="False"
     NavigationPage.HasNavigationBar="False">
-    
+
     <Grid Padding="24" MaximumWidthRequest="450"
-          RowDefinitions="*,Auto,Auto,Auto,60,Auto,*" RowSpacing="8">
+          RowDefinitions="*,Auto,Auto,60,Auto,*" RowSpacing="8">
 
         <VerticalStackLayout Grid.Row="1" Spacing="2">
             <Label
                 FontSize="20"
-                TextColor="White"
-                Text="Servers" />
+                TextColor="{StaticResource TextPrimary}"
+                Text="Custom server" />
 
             <Label
                 FontSize="14"
-                TextColor="#888"
-                Text="Choose relay server" />
+                TextColor="{StaticResource TextMuted}"
+                Text="Add relay endpoint" />
         </VerticalStackLayout>
-        
-        <ScrollView>
-            <VerticalStackLayout Padding="24" Spacing="12">
-                <Label FontSize="18" Text="Create custom connection" />
 
-                <Entry x:Name="NameEntry" Placeholder="Name" />
-                <Entry x:Name="DomainEntry" Placeholder="Domain" />
+        <ScrollView Grid.Row="2" VerticalOptions="Start">
+            <VerticalStackLayout Spacing="8">
 
-                <Entry x:Name="PortEntry" Placeholder="Port" Keyboard="Numeric" />
+                <!-- NAME -->
+                <Border
+                    Stroke="{StaticResource CardBorder}"
+                    StrokeThickness="1"
+                    BackgroundColor="{StaticResource CardBackground}"
+                    Padding="16, 16,16,8"
+                    StrokeShape="RoundRectangle 16">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Image
+                            WidthRequest="20" HeightRequest="20"
+                            VerticalOptions="Start"
+                            Opacity="0.25"
+                            Source="tag.png" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label
+                                Text="NAME"
+                                FontSize="11"
+                                TextColor="{StaticResource TextSecondary}"
+                                CharacterSpacing="1" />
+                            <Entry
+                                x:Name="NameEntry"
+                                TextColor="{StaticResource TextPrimary}"
+                                FontSize="15"
+                                BackgroundColor="Transparent"
+                                Placeholder="My server"
+                                PlaceholderColor="{StaticResource TextMuted}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
 
-                <HorizontalStackLayout Spacing="12">
-                    <Label VerticalOptions="Center" Text="Use SSL" />
-                    <Switch x:Name="UseSslSwitch" />
-                </HorizontalStackLayout>
+                <!-- ADDRESS -->
+                <Border
+                    Stroke="{StaticResource CardBorder}"
+                    StrokeThickness="1"
+                    BackgroundColor="{StaticResource CardBackground}"
+                    Padding="16, 16,16,8"
+                    StrokeShape="RoundRectangle 16">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Image
+                            WidthRequest="20" HeightRequest="20"
+                            VerticalOptions="Start"
+                            Opacity="0.25"
+                            Source="globe.png" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label
+                                Text="ADDRESS"
+                                FontSize="11"
+                                TextColor="{StaticResource TextSecondary}"
+                                CharacterSpacing="1" />
+                            <Entry
+                                x:Name="DomainEntry"
+                                TextColor="{StaticResource TextPrimary}"
+                                FontSize="15"
+                                BackgroundColor="Transparent"
+                                Placeholder="example.com"
+                                PlaceholderColor="{StaticResource TextMuted}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
 
-                <Entry x:Name="MaxRetriesEntry" Placeholder="Max retries" Keyboard="Numeric" />
+                <!-- PORT + SSL -->
+                <Grid ColumnDefinitions="0.4*,0.6*" ColumnSpacing="8">
 
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                    <Button Grid.Column="0" Text="Cancel" Clicked="OnCancelClicked" />
-                    <Button Grid.Column="1" Text="Create" Clicked="OnCreateClicked" />
+                    <!-- PORT -->
+                    <Border
+                        Stroke="{StaticResource CardBorder}"
+                        StrokeThickness="1"
+                        BackgroundColor="{StaticResource CardBackground}"
+                        Padding="16,16,16,8"
+                        StrokeShape="RoundRectangle 16">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Image
+                                WidthRequest="22" HeightRequest="22"
+                                VerticalOptions="Start"
+                                Opacity="0.25"
+                                Source="mail_box.png" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label
+                                    Text="PORT"
+                                    FontSize="11"
+                                    TextColor="{StaticResource TextSecondary}"
+                                    CharacterSpacing="1" />
+                                <Entry
+                                    x:Name="PortEntry"
+                                    TextColor="{StaticResource TextPrimary}"
+                                    FontSize="15"
+                                    BackgroundColor="Transparent"
+                                    Keyboard="Numeric"
+                                    Placeholder="5062"
+                                    PlaceholderColor="{StaticResource TextMuted}" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+
+                    <!-- SSL -->
+                    <Border
+                        Grid.Column="1"
+                        Stroke="{StaticResource CardBorder}"
+                        StrokeThickness="1"
+                        BackgroundColor="{StaticResource CardBackground}"
+                        Padding="16"
+                        StrokeShape="RoundRectangle 16">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <Image
+                                WidthRequest="24" HeightRequest="24"
+                                VerticalOptions="Center"
+                                Opacity="0.25"
+                                Source="ssl.png" />
+                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                <Label
+                                    Text="SSL"
+                                    TextColor="{StaticResource TextPrimary}"
+                                    FontSize="15" />
+                                <Label
+                                    Text="Unencrypted"
+                                    TextColor="{StaticResource TextSecondary}"
+                                    FontSize="12" />
+                            </VerticalStackLayout>
+                            <Switch
+                                x:Name="UseSslSwitch"
+                                Grid.Column="2"
+                                VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
                 </Grid>
+
+                <Label
+                    Text="SSL recommended for connections outside local network"
+                    TextColor="{StaticResource TextMuted}"
+                    FontSize="12"
+                    Padding="4,0,0,0" />
+
+                <!-- MAX RETRIES (hidden, kept for logic) -->
+                <Entry
+                    x:Name="MaxRetriesEntry"
+                    IsVisible="False"
+                    Text="2" />
+
             </VerticalStackLayout>
         </ScrollView>
-        
-    </Grid>
 
+        <VerticalStackLayout Grid.Row="4" Spacing="12">
+            <Button
+                Text="Create"
+                Style="{StaticResource GreenMainButton}"
+                Clicked="OnCreateClicked" />
+
+            <Button
+                Text="Cancel"
+                Style="{StaticResource GrayMainButton}"
+                Clicked="OnCancelClicked" />
+        </VerticalStackLayout>
+    </Grid>
 
 </ContentPage>

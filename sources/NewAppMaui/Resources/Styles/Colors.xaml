@@ -27,6 +27,27 @@
     <Color x:Key="Gray900">#212121</Color>
     <Color x:Key="Gray950">#141414</Color>
 
+    <!-- App accent -->
+    <Color x:Key="AccentGreen">#4B9B58</Color>
+    <Color x:Key="AccentGreenHover">#60c571</Color>
+    <Color x:Key="AccentGreenPressed">#4a8B58</Color>
+
+    <!-- Surfaces -->
+    <Color x:Key="CardBackground">#121212</Color>
+    <Color x:Key="CardBackgroundHover">#151515</Color>
+    <Color x:Key="CardBackgroundPressed">#1a1a1a</Color>
+    <Color x:Key="CardBackgroundSelected">#121412</Color>
+
+    <!-- Borders -->
+    <Color x:Key="CardBorder">#333333</Color>
+    <Color x:Key="CardBorderHover">#4a4a4a</Color>
+
+    <!-- Text -->
+    <Color x:Key="TextPrimary">White</Color>
+    <Color x:Key="TextSecondary">#9ca3af</Color>
+    <Color x:Key="TextMuted">#888888</Color>
+    <Color x:Key="TextDim">#383838</Color>
+
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
     <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>

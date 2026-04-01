@@ -10,9 +10,9 @@
     <DataTemplate x:Key="ConnectionProfileItemTemplate">
         <Border
             HorizontalOptions="Fill"
-            Stroke="#333333"
+            Stroke="{StaticResource CardBorder}"
             StrokeThickness="1"
-            BackgroundColor="#121212"
+            BackgroundColor="{StaticResource CardBackground}"
             Padding="16"
             StrokeShape="RoundRectangle 16">
 
@@ -34,8 +34,8 @@
                             <Binding Source="{RelativeSource AncestorType={x:Type ContentPage}}" Path="SelectedProfileId" />
                         </MultiBinding>
                     </DataTrigger.Binding>
-                    <Setter Property="BackgroundColor" Value="#121412" />
-                    <Setter Property="Stroke" Value="#4B9B58" />
+                    <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundSelected}" />
+                    <Setter Property="Stroke" Value="{StaticResource AccentGreen}" />
                     <Setter TargetName="SelectedMark" Property="IsVisible" Value="True" />
                 </DataTrigger>
             </Border.Triggers>
@@ -48,7 +48,7 @@
                                 <Setter TargetName="PointerOverOverlay" Property="Opacity" Value="0" />
                             </VisualState.Setters>
                         </VisualState>
-                        
+
                     </VisualStateGroup>
                 </VisualStateGroupList>
             </VisualStateManager.VisualStateGroups>
@@ -58,7 +58,7 @@
                     x:Name="PointerOverOverlay"
                     ZIndex="0"
                     InputTransparent="True"
-                    BackgroundColor="#151515"
+                    BackgroundColor="{StaticResource CardBackgroundHover}"
                     Opacity="0" />
 
                 <Grid ColumnDefinitions="Auto,*,Auto"
@@ -72,7 +72,7 @@
                     HeightRequest="28"
                     Aspect="AspectFit"
                     VerticalOptions="Center"
-                    Source="custom_conn.png">
+                    Source="globe.png">
 
                     <Image.Triggers>
                         <DataTrigger TargetType="Image" Binding="{Binding Id}" Value="default">
@@ -84,10 +84,10 @@
                 <Label
                     Grid.Column="1"
                     Text="{Binding Name}"
-                    TextColor="White"
+                    TextColor="{StaticResource TextPrimary}"
                     FontSize="16"
                     FontAttributes="Bold" />
-                
+
                 <Image
                     x:Name="SelectedMark"
                     Grid.Column="2"
@@ -104,7 +104,7 @@
                     Grid.Row="1"
                     Grid.Column="1"
                     Text="{Binding ConnectionString}"
-                    TextColor="#9ca3af"
+                    TextColor="{StaticResource TextSecondary}"
                     FontSize="13" />
 
                 </Grid>
