@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows.Input;
 using Core.Public.Configurations;
+using NewAppMaui.View.Layout;
 using NewAppMaui.View.Pages;
 using ConnectionProfile = Core.Public.Configurations.ConnectionProfile;
 
@@ -29,12 +30,15 @@ public partial class ConnectionProfileSelectPage : ContentPage, INotifyPropertyC
 
     public ICommand SelectProfileCommand { get; }
 
-    public ConnectionProfileSelectPage(IConnectionSettingsStore store, IServiceProvider services)
+    public ConnectionProfileSelectPage(IConnectionSettingsStore store, IServiceProvider services, CallUiController callController)
     {
         _store = store;
         _services = services;
         _startupMode = !_store.HasExplicitActiveProfileSelection;
         _selectedProfileId = string.Empty;
+
+        if (callController.IsInCall)
+            _ = callController.EndCallAsync("ServerChange");
 
         SelectProfileCommand = new Command<ConnectionProfile>(profile =>
         {

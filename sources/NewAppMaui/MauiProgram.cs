@@ -62,6 +62,7 @@ public static class MauiProgram
         builder.Services.AddTransient<ConnectionProfileSelectPage>();
         builder.Services.AddTransient<ConnectionProfileCreatePage>();
         builder.Services.AddTransient<View.Pages.ConnectingPage>();
+        builder.Services.AddSingleton<View.Layout.CallUiController>();
         builder.Services.AddTransient<View.Layout.MainLayout>();
         builder.Services.AddTransient<CreateRoomPage>();
         builder.Services.AddTransient<JoinRoomPage>();

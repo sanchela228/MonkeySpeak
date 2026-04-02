@@ -30,9 +30,7 @@
                 x:Name="ExpandButton"
                 IsVisible="False"
                 WidthRequest="32" HeightRequest="32"
-                StrokeThickness="1"
-                BackgroundColor="#0a0a0a"
-                StrokeShape="RoundRectangle 20"
+                StrokeThickness="0"
                 HorizontalOptions="Start"
                 VerticalOptions="Start"
                 Margin="12,12,0,0"
@@ -43,12 +41,15 @@
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnExpandTapped" />
                 </Border.GestureRecognizers>
-                <Image Source="angle_right.png"
-                       WidthRequest="14" HeightRequest="14" />
+                <Image Source="close_sidebar.png" Opacity="0.3"
+                       WidthRequest="30" HeightRequest="30" />
             </Border>
 
             <!-- Actual content -->
             <ContentView x:Name="ContentArea" />
+
+            <!-- Call overlay (hidden by default, persists during call) -->
+            <ContentView x:Name="CallViewContainer" IsVisible="False" />
 
         </Grid>
 

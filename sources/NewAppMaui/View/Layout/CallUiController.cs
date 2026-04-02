@@ -61,7 +61,7 @@ public class CallUiController
 
     private void OnCallStateChanged(object? sender, CallState state)
     {
-        if (state == CallState.Disconnected && IsInCall)
+        if (state == CallState.Closed && IsInCall)
         {
             _ = EndCallAsync("Disconnected");
         }

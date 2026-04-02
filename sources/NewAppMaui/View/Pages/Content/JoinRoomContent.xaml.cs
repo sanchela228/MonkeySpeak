@@ -23,6 +23,9 @@ public partial class JoinRoomContent : ContentView
 
         _entries = [C0, C1, C2, C3, C4, C5];
         _cts = new CancellationTokenSource();
+
+        foreach (var entry in _entries)
+            AttachBackspaceHandler(entry);
     }
 
     protected override void OnHandlerChanged()
@@ -37,6 +40,32 @@ public partial class JoinRoomContent : ContentView
             _cts?.Dispose();
             _cts = null;
         }
+    }
+
+    private void AttachBackspaceHandler(Entry entry)
+    {
+        entry.HandlerChanged += (_, _) =>
+        {
+#if WINDOWS
+            if (entry.Handler?.PlatformView is Microsoft.UI.Xaml.Controls.TextBox textBox)
+            {
+                textBox.KeyDown += (s, e) =>
+                {
+                    if (e.Key == Windows.System.VirtualKey.Back && string.IsNullOrEmpty(textBox.Text))
+                    {
+                        var idx = Array.IndexOf(_entries, entry);
+                        if (idx > 0)
+                        {
+                            var prev = _entries[idx - 1];
+                            prev.Focus();
+                            prev.CursorPosition = prev.Text?.Length ?? 0;
+                        }
+                        e.Handled = true;
+                    }
+                };
+            }
+#endif
+        };
     }
 
     private void OnCharTextChanged(object? sender, TextChangedEventArgs e)
@@ -54,9 +83,19 @@ public partial class JoinRoomContent : ContentView
             _suppressTextChanged = false;
 
             if (idx < _entries.Length - 1)
-                _entries[idx + 1].Focus();
+            {
+                var next = _entries[idx + 1];
+                next.Focus();
+                if (!string.IsNullOrEmpty(next.Text))
+                {
+                    next.CursorPosition = 0;
+                    next.SelectionLength = next.Text.Length;
+                }
+            }
             else
+            {
                 CheckAutoConnect();
+            }
         }
         else
         {
@@ -67,8 +106,11 @@ public partial class JoinRoomContent : ContentView
 
     private void OnCharFocused(object? sender, FocusEventArgs e)
     {
-        if (sender is Entry entry)
-            entry.CursorPosition = entry.Text?.Length ?? 0;
+        if (sender is Entry entry && !string.IsNullOrEmpty(entry.Text))
+        {
+            entry.CursorPosition = 0;
+            entry.SelectionLength = entry.Text.Length;
+        }
     }
 
     private string GetCode()
@@ -92,7 +134,6 @@ public partial class JoinRoomContent : ContentView
     {
         var ct = _cts?.Token ?? CancellationToken.None;
 
-        // ErrorLabel.IsVisible = false;
         Spinner.IsVisible = true;
         Spinner.IsRunning = true;
         ConnectButton.IsEnabled = false;
@@ -102,7 +143,7 @@ public partial class JoinRoomContent : ContentView
             if (_connection.State != System.Data.ConnectionState.Open)
                 throw new InvalidOperationException("WebSocket is not connected.");
 
-            var code = GetCode().Trim();
+            var code = GetCode().Trim().ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(code))
                 throw new InvalidOperationException("Please enter a code.");
 
