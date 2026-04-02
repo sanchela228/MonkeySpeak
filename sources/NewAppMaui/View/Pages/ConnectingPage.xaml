@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="NewAppMaui.View.Pages.ConnectingPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Shell.NavBarIsVisible="False"
+    NavigationPage.HasNavigationBar="False">
+
+    <Grid Padding="24" MaximumWidthRequest="400">
+
+        <!-- Loading state -->
+        <VerticalStackLayout
+            x:Name="LoadingPanel"
+            VerticalOptions="Center"
+            HorizontalOptions="Center"
+            Spacing="16">
+
+            <ActivityIndicator
+                x:Name="Spinner"
+                IsRunning="True"
+                Color="{StaticResource AccentGreen}"
+                WidthRequest="40"
+                HeightRequest="40"
+                HorizontalOptions="Center" />
+
+            <Label
+                x:Name="StatusLabel"
+                Text="Connecting..."
+                FontSize="16"
+                TextColor="{StaticResource TextPrimary}"
+                HorizontalOptions="Center" />
+
+            <Label
+                x:Name="SubStatusLabel"
+                Text=""
+                FontSize="13"
+                TextColor="{StaticResource TextSecondary}"
+                HorizontalOptions="Center" />
+
+            <Button
+                Text="Cancel"
+                Style="{StaticResource GrayMainButton}"
+                Clicked="OnCancelClicked"
+                Margin="0,16,0,0"
+                HorizontalOptions="Center"
+                WidthRequest="200" />
+
+        </VerticalStackLayout>
+
+        <!-- Error state -->
+        <VerticalStackLayout
+            x:Name="ErrorPanel"
+            IsVisible="False"
+            VerticalOptions="Center"
+            HorizontalOptions="Center"
+            Spacing="16"
+            MaximumWidthRequest="350">
+
+            <Label
+                Text="Connection failed"
+                FontSize="20"
+                TextColor="{StaticResource TextPrimary}"
+                HorizontalOptions="Center" />
+
+            <Label
+                x:Name="ErrorLabel"
+                Text=""
+                FontSize="14"
+                TextColor="{StaticResource TextSecondary}"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"
+                LineBreakMode="WordWrap" />
+
+            <Button
+                x:Name="RetryButton"
+                Text="Retry"
+                Style="{StaticResource GreenMainButton}"
+                Clicked="OnRetryClicked"
+                Margin="0,8,0,0" />
+
+            <Button
+                x:Name="ChangeServerButton"
+                Text="Change server"
+                Style="{StaticResource GrayMainButton}"
+                Clicked="OnChangeServerClicked" />
+
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentPage>

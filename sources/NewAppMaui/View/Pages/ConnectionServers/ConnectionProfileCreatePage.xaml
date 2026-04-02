@@ -85,7 +85,7 @@
                 </Border>
 
                 <!-- PORT + SSL -->
-                <Grid ColumnDefinitions="0.4*,0.6*" ColumnSpacing="8">
+                <Grid ColumnDefinitions="0.3*,0.7*" ColumnSpacing="8">
 
                     <!-- PORT -->
                     <Border
@@ -124,28 +124,30 @@
                         Stroke="{StaticResource CardBorder}"
                         StrokeThickness="1"
                         BackgroundColor="{StaticResource CardBackground}"
-                        Padding="16"
+                        Padding="12"
                         StrokeShape="RoundRectangle 16">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                             <Image
-                                WidthRequest="24" HeightRequest="24"
+                                WidthRequest="22" HeightRequest="22"
                                 VerticalOptions="Center"
                                 Opacity="0.25"
                                 Source="ssl.png" />
-                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
                                 <Label
                                     Text="SSL"
                                     TextColor="{StaticResource TextPrimary}"
-                                    FontSize="15" />
+                                    FontSize="14" />
                                 <Label
-                                    Text="Unencrypted"
+                                    Text="Encryption"
                                     TextColor="{StaticResource TextSecondary}"
-                                    FontSize="12" />
+                                    FontSize="11" />
                             </VerticalStackLayout>
                             <Switch
                                 x:Name="UseSslSwitch"
                                 Grid.Column="2"
+                                HorizontalOptions="End"
                                 VerticalOptions="Center" />
+                            
                         </Grid>
                     </Border>
                 </Grid>

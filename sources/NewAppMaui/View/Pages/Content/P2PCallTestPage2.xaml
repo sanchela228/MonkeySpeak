@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Pages.Content.P2PCallTestPage2"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <VerticalStackLayout
+        VerticalOptions="Center"
+        HorizontalOptions="Center"
+        Spacing="8">
+
+        <Label
+            Text="Test Page 2"
+            FontSize="24"
+            TextColor="{StaticResource TextPrimary}"
+            HorizontalOptions="Center" />
+
+        <Label
+            Text="This is the second test content panel"
+            FontSize="14"
+            TextColor="{StaticResource TextSecondary}"
+            HorizontalOptions="Center" />
+
+    </VerticalStackLayout>
+
+</ContentView>

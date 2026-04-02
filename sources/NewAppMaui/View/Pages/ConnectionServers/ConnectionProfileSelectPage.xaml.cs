@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows.Input;
 using Core.Public.Configurations;
+using NewAppMaui.View.Pages;
 using ConnectionProfile = Core.Public.Configurations.ConnectionProfile;
 
 namespace NewAppMaui;
@@ -99,15 +100,8 @@ public partial class ConnectionProfileSelectPage : ContentPage, INotifyPropertyC
 
         await _store.SetActiveAsync(selected.Id);
 
-        if (_startupMode)
-        {
-            if (Window is not null)
-                Window.Page = new AppShell();
-            return;
-        }
-
-        if (Navigation.ModalStack.Count > 0)
-            await Navigation.PopModalAsync();
+        if (Window is not null)
+            Window.Page = _services.GetRequiredService<ConnectingPage>();
     }
 
     private async void OnAddCustomClicked(object? sender, EventArgs e)

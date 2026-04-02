@@ -42,25 +42,41 @@
         <Setter Property="BorderColor" Value="{StaticResource CardBorder}" />
         <Setter Property="BorderWidth" Value="1" />
         <Setter Property="behaviors:HandCursor.Enabled" Value="True" />
-
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>
                 <VisualStateGroup Name="CommonStates">
-
                     <VisualState Name="Normal" />
-
                     <VisualState Name="Pressed">
                         <VisualState.Setters>
                             <Setter Property="BackgroundColor" Value="{StaticResource CardBackgroundPressed}" />
                         </VisualState.Setters>
                     </VisualState>
-
                     <VisualState Name="PointerOver">
                         <VisualState.Setters>
                             <Setter Property="BackgroundColor" Value="{StaticResource CardBorder}" />
                         </VisualState.Setters>
                     </VisualState>
-
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+    
+    <Style x:Key="GrayOutBorderButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{StaticResource TextMuted}" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="BorderColor" Value="Transparent" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="behaviors:HandCursor.Enabled" Value="True" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup Name="CommonStates">
+                    <VisualState Name="Normal" />
+                    <VisualState Name="PointerOver">
+                        <VisualState.Setters>
+                            <Setter Property="TextColor" Value="White" />
+                        </VisualState.Setters>
+                    </VisualState>
                 </VisualStateGroup>
             </VisualStateGroupList>
         </Setter>

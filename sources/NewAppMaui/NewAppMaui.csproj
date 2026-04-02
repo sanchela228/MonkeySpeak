@@ -96,6 +96,9 @@
       <MauiXaml Update="View\Pages\ConnectionServers\ConnectionProfileCreatePage.xaml">
         <SubType>Designer</SubType>
       </MauiXaml>
+      <MauiXaml Update="View\Pages\Modules\Authorization\LoginPage.xaml">
+        <SubType>Designer</SubType>
+      </MauiXaml>
     </ItemGroup>
 
     <ItemGroup>
@@ -105,6 +108,10 @@
       </Compile>
       <Compile Update="View\Pages\ConnectionServers\ConnectionProfileCreatePage.xaml.cs">
         <DependentUpon>ConnectionProfileCreatePage.xaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="View\Pages\Modules\Authorization\LoginPage.xaml.cs">
+        <DependentUpon>LoginPage.xaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>

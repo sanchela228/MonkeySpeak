@@ -1,14 +1,18 @@
 using Core.Public.Services;
+using NewAppMaui.View.Layout;
+using NewAppMaui.View.Pages;
 
 namespace NewAppMaui;
 
 public partial class LoginPage : ContentPage
 {
     private readonly IAuthService _auth;
+    private readonly IServiceProvider _services;
 
-    public LoginPage()
+    public LoginPage(IAuthService auth, IServiceProvider services)
     {
-        _auth = ((App)Application.Current!).Services.GetRequiredService<IAuthService>();
+        _auth = auth;
+        _services = services;
         InitializeComponent();
     }
 
@@ -32,7 +36,8 @@ public partial class LoginPage : ContentPage
         {
             await _auth.LoginAsync(username, password);
 
-            await Shell.Current.GoToAsync("//MainPage");
+            if (Window is not null)
+                Window.Page = _services.GetRequiredService<MainLayout>();
         }
         catch (Exception ex)
         {
@@ -46,6 +51,12 @@ public partial class LoginPage : ContentPage
         }
     }
 
+    private async void OnBackClicked(object? sender, EventArgs e)
+    {
+        if (Window is not null)
+            Window.Page = _services.GetRequiredService<ConnectionProfileSelectPage>();
+    }
+    
     private void ShowError(string message)
     {
         ErrorLabel.Text = message;

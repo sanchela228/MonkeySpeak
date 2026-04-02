@@ -1,6 +1,7 @@
 using Core.Application.Abstractions;
 using Core.Public.Configurations;
 using Microsoft.Extensions.DependencyInjection;
+using NewAppMaui.View.Pages;
 
 namespace NewAppMaui;
 
@@ -32,8 +33,9 @@ public partial class App : Application
 
         var store = _services.GetRequiredService<IConnectionSettingsStore>();
         Page rootPage;
+
         if (store.HasExplicitActiveProfileSelection)
-            rootPage = new AppShell();
+            rootPage = _services.GetRequiredService<ConnectingPage>();
         else
             rootPage = _services.GetRequiredService<ConnectionProfileSelectPage>();
 

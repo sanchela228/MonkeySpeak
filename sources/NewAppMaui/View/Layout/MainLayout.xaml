@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="NewAppMaui.View.Layout.MainLayout"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:layout="clr-namespace:NewAppMaui.View.Layout"
+    Shell.NavBarIsVisible="False"
+    NavigationPage.HasNavigationBar="False">
+
+    <Grid ColumnDefinitions="260,*">
+
+        <!-- Sidebar -->
+        <layout:Sidebar
+            x:Name="SidebarView"
+            Grid.Column="0" />
+
+        <!-- Separator -->
+        <BoxView
+            Grid.Column="0"
+            WidthRequest="1"
+            BackgroundColor="{StaticResource CardBorder}"
+            HorizontalOptions="End" />
+
+        <!-- Content area -->
+        <ContentView
+            x:Name="ContentArea"
+            Grid.Column="1" />
+
+    </Grid>
+
+</ContentPage>

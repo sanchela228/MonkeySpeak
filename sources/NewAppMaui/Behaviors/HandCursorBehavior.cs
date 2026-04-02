@@ -1,14 +1,16 @@
+using MauiView = Microsoft.Maui.Controls.View;
+
 namespace NewAppMaui.Behaviors;
 
-public class HandCursorBehavior : Behavior<View>
+public class HandCursorBehavior : Behavior<MauiView>
 {
-    protected override void OnAttachedTo(View bindable)
+    protected override void OnAttachedTo(MauiView bindable)
     {
         base.OnAttachedTo(bindable);
         bindable.HandlerChanged += OnHandlerChanged;
     }
 
-    protected override void OnDetachingFrom(View bindable)
+    protected override void OnDetachingFrom(MauiView bindable)
     {
         bindable.HandlerChanged -= OnHandlerChanged;
         base.OnDetachingFrom(bindable);
@@ -16,7 +18,7 @@ public class HandCursorBehavior : Behavior<View>
 
     static void OnHandlerChanged(object? sender, EventArgs e)
     {
-        HandCursor.Apply(sender as View);
+        HandCursor.Apply(sender as MauiView);
     }
 }
 
@@ -31,11 +33,11 @@ public static class HandCursor
 
     static void OnEnabledChanged(BindableObject bindable, object oldValue, object newValue)
     {
-        if (bindable is View view && (bool)newValue)
+        if (bindable is MauiView view && (bool)newValue)
             view.HandlerChanged += (_, _) => Apply(view);
     }
 
-    internal static void Apply(View? view)
+    internal static void Apply(MauiView? view)
     {
 #if WINDOWS
         if (view?.Handler?.PlatformView is not Microsoft.UI.Xaml.UIElement element)

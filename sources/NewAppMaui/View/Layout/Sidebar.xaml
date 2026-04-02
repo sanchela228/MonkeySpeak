@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Layout.Sidebar"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors">
+
+    <Grid RowDefinitions="Auto,*,Auto"
+          BackgroundColor="#0a0a0a"
+          Padding="12">
+
+        <!-- Menu items -->
+        <VerticalStackLayout Grid.Row="0" Spacing="4">
+
+            <Border
+                x:Name="MenuItem1"
+                Padding="12,10"
+                StrokeThickness="0"
+                BackgroundColor="Transparent"
+                StrokeShape="RoundRectangle 10">
+                <Border.Behaviors>
+                    <behaviors:HandCursorBehavior />
+                </Border.Behaviors>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMenu1Tapped" />
+                </Border.GestureRecognizers>
+                <Label Text="P2P Call"
+                       TextColor="{StaticResource TextPrimary}"
+                       FontSize="14" />
+            </Border>
+
+            <Border
+                x:Name="MenuItem2"
+                Padding="12,10"
+                StrokeThickness="0"
+                BackgroundColor="Transparent"
+                StrokeShape="RoundRectangle 10">
+                <Border.Behaviors>
+                    <behaviors:HandCursorBehavior />
+                </Border.Behaviors>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMenu2Tapped" />
+                </Border.GestureRecognizers>
+                <Label Text="Test Page 2"
+                       TextColor="{StaticResource TextPrimary}"
+                       FontSize="14" />
+            </Border>
+
+        </VerticalStackLayout>
+
+        <!-- Friends placeholder -->
+        <VerticalStackLayout Grid.Row="1" Spacing="4" Margin="0,16,0,0">
+            <Label Text="FRIENDS"
+                   FontSize="11"
+                   TextColor="{StaticResource TextMuted}"
+                   CharacterSpacing="1"
+                   Padding="12,0" />
+
+            <Label Text="Coming soon..."
+                   FontSize="13"
+                   TextColor="{StaticResource TextSecondary}"
+                   Padding="12,8" />
+        </VerticalStackLayout>
+
+        <!-- User panel -->
+        <Border
+            Grid.Row="2"
+            Padding="12,10"
+            StrokeThickness="0"
+            BackgroundColor="{StaticResource CardBackground}"
+            StrokeShape="RoundRectangle 10">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                <Border
+                    WidthRequest="32" HeightRequest="32"
+                    StrokeThickness="0"
+                    BackgroundColor="{StaticResource CardBorder}"
+                    StrokeShape="RoundRectangle 16">
+                    <Label Text="U"
+                           TextColor="{StaticResource TextPrimary}"
+                           FontSize="14"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+                </Border>
+
+                <Label
+                    Grid.Column="1"
+                    x:Name="UsernameLabel"
+                    Text="User"
+                    TextColor="{StaticResource TextPrimary}"
+                    FontSize="13"
+                    VerticalOptions="Center"
+                    LineBreakMode="TailTruncation" />
+
+                <Border
+                    Grid.Column="2"
+                    WidthRequest="28" HeightRequest="28"
+                    StrokeThickness="0"
+                    BackgroundColor="Transparent"
+                    StrokeShape="RoundRectangle 14">
+                    <Border.Behaviors>
+                        <behaviors:HandCursorBehavior />
+                    </Border.Behaviors>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnSettingsTapped" />
+                    </Border.GestureRecognizers>
+                    <Image Source="custom_conn.png"
+                           WidthRequest="18" HeightRequest="18"
+                           Opacity="0.5" />
+                </Border>
+            </Grid>
+        </Border>
+
+    </Grid>
+
+</ContentView>
