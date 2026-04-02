@@ -8,24 +8,41 @@
         VerticalOptions="Center"
         HorizontalOptions="Center"
         Spacing="8">
+        
+        <Image
+            WidthRequest="180"
+            HeightRequest="180"
+            Aspect="AspectFit"
+            VerticalOptions="Center"
+            Source="main_mks.png"
+        />
 
         <Label
-            Text="P2P Call"
-            FontSize="24"
-            TextColor="{StaticResource TextPrimary}"
-            HorizontalOptions="Center" />
+            Text="Create your p2p voice chat right now!"
+            FontSize="14"
+            HorizontalOptions="Center"
+            TextColor="{StaticResource TextSecondary}" />
 
         <Label
-            Text="Create or join a voice room"
+            Text="A conversation without limits"
             FontSize="14"
             TextColor="{StaticResource TextSecondary}"
             HorizontalOptions="Center" />
         
         <Button
-            x:Name="RetryButton"
-            Text="Retry"
+            Text="Create a Room"
+            MaximumWidthRequest="450"
             Style="{StaticResource GreenMainButton}"
             Clicked="OnTestBackSettingsMenu"
+            HorizontalOptions="Fill"
+            Margin="0,38,0,0" />
+        
+        <Button
+            Text="Connect"
+            MaximumWidthRequest="450"
+            Style="{StaticResource GrayMainButton}"
+            Clicked="OnTestBackSettingsMenu"
+            HorizontalOptions="Fill"
             Margin="0,8,0,0" />
 
     </VerticalStackLayout>

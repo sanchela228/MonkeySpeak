@@ -9,22 +9,22 @@
 
     <Grid ColumnDefinitions="260,*">
 
-        <!-- Sidebar -->
-        <layout:Sidebar
-            x:Name="SidebarView"
-            Grid.Column="0" />
+            <!-- Sidebar -->
+            <layout:Sidebar
+                x:Name="SidebarView"
+                Grid.Column="0" />
 
-        <!-- Separator -->
-        <BoxView
-            Grid.Column="0"
-            WidthRequest="1"
-            BackgroundColor="{StaticResource CardBorder}"
-            HorizontalOptions="End" />
+            <!-- Separator -->
+            <BoxView
+                Grid.Column="0"
+                WidthRequest="1"
+                BackgroundColor="{StaticResource CardBorder}"
+                HorizontalOptions="End" />
 
-        <!-- Content area -->
-        <ContentView
-            x:Name="ContentArea"
-            Grid.Column="1" />
+            <!-- Content area -->
+            <ContentView
+                x:Name="ContentArea"
+                Grid.Column="1" />
 
     </Grid>
 

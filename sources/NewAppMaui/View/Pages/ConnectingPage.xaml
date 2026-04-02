@@ -3,6 +3,7 @@
     x:Class="NewAppMaui.View.Pages.ConnectingPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+
     Shell.NavBarIsVisible="False"
     NavigationPage.HasNavigationBar="False">
 
@@ -74,13 +75,15 @@
             <Button
                 x:Name="RetryButton"
                 Text="Retry"
+                WidthRequest="200"
                 Style="{StaticResource GreenMainButton}"
                 Clicked="OnRetryClicked"
                 Margin="0,8,0,0" />
 
             <Button
                 x:Name="ChangeServerButton"
-                Text="Change server"
+                Text="Cancel"
+                WidthRequest="200"
                 Style="{StaticResource GrayMainButton}"
                 Clicked="OnChangeServerClicked" />
 

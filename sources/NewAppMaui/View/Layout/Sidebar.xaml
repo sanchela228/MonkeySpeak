@@ -11,6 +11,22 @@
 
         <!-- Menu items -->
         <VerticalStackLayout Grid.Row="0" Spacing="4">
+            
+            <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10">
+                <Image
+                    WidthRequest="48"
+                    HeightRequest="48"
+                    Aspect="AspectFit"
+                    VerticalOptions="Center"
+                    Source="logo_mini.png"
+                />
+                <Label
+                    Text="MonkeySpeak"
+                    FontFamily="Midami"
+                    FontSize="18"
+                    TextColor="{StaticResource TextPrimary}"
+                    HorizontalOptions="Center" />
+            </Grid>
 
             <Border
                 x:Name="MenuItem1"

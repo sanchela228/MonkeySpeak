@@ -7,10 +7,11 @@
     <VerticalStackLayout
         VerticalOptions="Center"
         HorizontalOptions="Center"
+        MaximumWidthRequest="450"
         Spacing="8">
 
         <Label
-            Text="Test Page 2"
+            Text="ewr"
             FontSize="24"
             TextColor="{StaticResource TextPrimary}"
             HorizontalOptions="Center" />
@@ -20,6 +21,14 @@
             FontSize="14"
             TextColor="{StaticResource TextSecondary}"
             HorizontalOptions="Center" />
+        
+          
+        <Button
+            x:Name="RetryButton"
+            Text="Retry"
+            Style="{StaticResource GreenMainButton}"
+            Clicked="OnTestBackSettingsMenu"
+            Margin="0,8,0,0" />
 
     </VerticalStackLayout>
 

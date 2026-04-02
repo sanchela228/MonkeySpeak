@@ -9,6 +9,7 @@ using Core.Public.Configurations;
 using Core.Public.Services;
 using Microsoft.Maui.LifecycleEvents;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Controls.PlatformConfiguration;
 using NewAppMaui.Configurations;
 #if WINDOWS
 using Microsoft.Maui.Platform;
@@ -97,6 +98,8 @@ public static class MauiProgram
         {
             fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
             fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+            fonts.AddFont("Midami-Normal.ttf", "Midami");
+            fonts.AddFont("JetBrainsMonoNL-Regular.ttf", "JetBrainsMono");
         })
         .ConfigureMauiHandlers(handlers =>
         {
