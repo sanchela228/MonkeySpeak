@@ -1,3 +1,5 @@
+using NewAppMaui.View.Layout;
+
 namespace NewAppMaui.View.Pages.Content;
 
 public partial class P2PCallTestPage : ContentView
@@ -6,10 +8,26 @@ public partial class P2PCallTestPage : ContentView
     {
         InitializeComponent();
     }
-    
-    private async void OnTestBackSettingsMenu(object sender, EventArgs e)
+
+    private void OnCreateRoomClicked(object? sender, EventArgs e)
     {
-        var page = ((App)Application.Current!).Services.GetRequiredService<ConnectionProfileSelectPage>();
-        await Navigation.PushModalAsync(page);
+        GetMainLayout()?.ShowCreateRoom();
+    }
+
+    private void OnJoinRoomClicked(object? sender, EventArgs e)
+    {
+        GetMainLayout()?.ShowJoinRoom();
+    }
+
+    private MainLayout? GetMainLayout()
+    {
+        var element = this.Parent;
+        while (element is not null)
+        {
+            if (element is MainLayout layout)
+                return layout;
+            element = (element as Element)?.Parent;
+        }
+        return null;
     }
 }

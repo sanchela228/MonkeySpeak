@@ -8,14 +8,13 @@
         VerticalOptions="Center"
         HorizontalOptions="Center"
         Spacing="8">
-        
+
         <Image
             WidthRequest="180"
             HeightRequest="180"
             Aspect="AspectFit"
             VerticalOptions="Center"
-            Source="main_mks.png"
-        />
+            Source="main_mks.png" />
 
         <Label
             Text="Create your p2p voice chat right now!"
@@ -28,20 +27,20 @@
             FontSize="14"
             TextColor="{StaticResource TextSecondary}"
             HorizontalOptions="Center" />
-        
+
         <Button
             Text="Create a Room"
             MaximumWidthRequest="450"
             Style="{StaticResource GreenMainButton}"
-            Clicked="OnTestBackSettingsMenu"
+            Clicked="OnCreateRoomClicked"
             HorizontalOptions="Fill"
             Margin="0,38,0,0" />
-        
+
         <Button
             Text="Connect"
             MaximumWidthRequest="450"
             Style="{StaticResource GrayMainButton}"
-            Clicked="OnTestBackSettingsMenu"
+            Clicked="OnJoinRoomClicked"
             HorizontalOptions="Fill"
             Margin="0,8,0,0" />
 

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Pages.Content.CreateRoomContent"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Grid RowDefinitions="*,Auto" Padding="24">
+
+        <VerticalStackLayout
+            VerticalOptions="Center"
+            HorizontalOptions="Center"
+            Spacing="12"
+            MaximumWidthRequest="400">
+            
+            <!-- Room code -->
+            <Label
+                x:Name="CodeLabel"
+                Text=""
+                FontFamily="JetBrainsMono"
+                FontSize="42"
+                TextColor="#ef4444"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"
+                CharacterSpacing="6"
+                IsVisible="False" />
+            
+            <!-- Loading -->
+            <ActivityIndicator
+                x:Name="Spinner"
+                IsRunning="True"
+                Color="{StaticResource AccentGreen}"
+                WidthRequest="36"
+                HeightRequest="36"
+                HorizontalOptions="Center" />
+
+            <Label
+                x:Name="StatusLabel"
+                Text="Creating room..."
+                FontSize="14"
+                TextColor="{StaticResource TextSecondary}"
+                HorizontalOptions="Center" />
+
+            <Label
+                x:Name="CopiedLabel"
+                Text="Copied to clipboard"
+                FontSize="12"
+                TextColor="{StaticResource TextMuted}"
+                HorizontalOptions="Center"
+                IsVisible="False" />
+
+            <!-- Error -->
+            <Label
+                x:Name="ErrorLabel"
+                Text=""
+                FontSize="14"
+                TextColor="#ef4444"
+                HorizontalOptions="Center"
+                HorizontalTextAlignment="Center"
+                LineBreakMode="WordWrap"
+                IsVisible="False" />
+            
+            <Button
+                Text="Back"
+                Style="{StaticResource GrayMainButton}"
+                Clicked="OnBackClicked"
+                MaximumWidthRequest="250"
+                Margin="0,48,0,16" />
+
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentView>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Pages.Content.JoinRoomContent"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Grid RowDefinitions="*,Auto,*" Padding="24">
+
+        <VerticalStackLayout
+            Grid.Row="1"
+            VerticalOptions="Center"
+            HorizontalOptions="Center"
+            Spacing="16">
+            
+            <!-- Code input boxes -->
+            <HorizontalStackLayout
+                x:Name="CodeInputRow"
+                Spacing="12"
+                HorizontalOptions="Center"
+                Margin="0,8,0,0">
+
+                <Entry x:Name="C0" Style="{StaticResource CodeCharEntry}" TextChanged="OnCharTextChanged" Focused="OnCharFocused" />
+                <Entry x:Name="C1" Style="{StaticResource CodeCharEntry}" TextChanged="OnCharTextChanged" Focused="OnCharFocused" />
+                <Entry x:Name="C2" Style="{StaticResource CodeCharEntry}" TextChanged="OnCharTextChanged" Focused="OnCharFocused" />
+                <Entry x:Name="C3" Style="{StaticResource CodeCharEntry}" TextChanged="OnCharTextChanged" Focused="OnCharFocused" />
+                <Entry x:Name="C4" Style="{StaticResource CodeCharEntry}" TextChanged="OnCharTextChanged" Focused="OnCharFocused" />
+                <Entry x:Name="C5" Style="{StaticResource CodeCharEntry}" TextChanged="OnCharTextChanged" Focused="OnCharFocused" />
+
+            </HorizontalStackLayout>
+            
+            <Label
+                Text="Enter the code to connect to the room"
+                FontSize="14"
+                MaximumWidthRequest="180"
+                HorizontalTextAlignment="Center"
+                TextColor="{StaticResource TextSecondary}"
+                HorizontalOptions="Center" />
+
+            <!-- Loading -->
+            <ActivityIndicator
+                x:Name="Spinner"
+                IsRunning="False"
+                IsVisible="False"
+                Color="{StaticResource AccentGreen}"
+                WidthRequest="32"
+                HeightRequest="32"
+                HorizontalOptions="Center" />
+
+            <Button
+                x:Name="ConnectButton"
+                Text="Connect"
+                Style="{StaticResource GreenMainButton}"
+                Clicked="OnConnectClicked"
+                MaximumWidthRequest="250"
+                HorizontalOptions="Fill"
+                Margin="0,48,0,0" />
+            
+            <Button
+                Text="Back"
+                Style="{StaticResource GrayMainButton}"
+                Clicked="OnBackClicked"
+                MaximumWidthRequest="250"
+                HorizontalOptions="Fill"/>
+
+        </VerticalStackLayout>
+    </Grid>
+
+</ContentView>

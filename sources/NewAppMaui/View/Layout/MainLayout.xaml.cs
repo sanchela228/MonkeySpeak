@@ -1,23 +1,26 @@
 using Core.Public.Services;
+using NewAppMaui.View.Pages.Content;
 
 namespace NewAppMaui.View.Layout;
 
 public partial class MainLayout : ContentPage
 {
     private readonly IAuthService _auth;
+    private readonly IServiceProvider _services;
     private readonly Dictionary<string, Func<Microsoft.Maui.Controls.View>> _contentFactories;
     private bool _sidebarCollapsed;
 
-    public MainLayout(IAuthService auth)
+    public MainLayout(IAuthService auth, IServiceProvider services)
     {
         _auth = auth;
+        _services = services;
 
         InitializeComponent();
 
         _contentFactories = new()
         {
-            ["menu1"] = () => new Pages.Content.P2PCallTestPage(),
-            ["menu2"] = () => new Pages.Content.P2PCallTestPage2(),
+            ["menu1"] = () => new P2PCallTestPage(),
+            ["menu2"] = () => new P2PCallTestPage2(),
         };
 
         SidebarView.MenuItemSelected += OnMenuItemSelected;
@@ -41,6 +44,30 @@ public partial class MainLayout : ContentPage
             ContentArea.Content = factory();
             SidebarView.SetActiveItem(key);
         }
+    }
+
+    public void ShowCreateRoom()
+    {
+        var view = new CreateRoomContent();
+        view.BackRequested += () => NavigateTo("menu1");
+        view.RoomConnected += OnRoomConnected;
+        ContentArea.Content = view;
+    }
+
+    public void ShowJoinRoom()
+    {
+        var view = new JoinRoomContent();
+        view.BackRequested += () => NavigateTo("menu1");
+        view.RoomConnected += OnRoomConnected;
+        ContentArea.Content = view;
+    }
+
+    private void OnRoomConnected(string roomCode, Core.Websockets.Messages.NoAuthCall.InterlocutorJoined[] initial)
+    {
+        // пока открываем CallRoomPage как модал (старое поведение)
+        var page = _services.GetRequiredService<CallRoomPage>();
+        page.InitializeRoom(roomCode, initial);
+        _ = Navigation.PushModalAsync(new NavigationPage(page));
     }
 
     private void SetSidebarCollapsed(bool collapsed)

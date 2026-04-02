@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Pages.Content.CallRoomContent"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="24">
+
+        <!-- Header -->
+        <VerticalStackLayout Spacing="4">
+            <Label
+                x:Name="RoomCodeLabel"
+                Text="-"
+                FontFamily="JetBrainsMono"
+                FontSize="28"
+                TextColor="{StaticResource AccentGreen}"
+                CharacterSpacing="4" />
+            <Label
+                x:Name="StatusLabel"
+                Text="Connected"
+                FontSize="13"
+                TextColor="{StaticResource TextSecondary}" />
+        </VerticalStackLayout>
+
+        <!-- Info -->
+        <ScrollView Grid.Row="1" Margin="0,16,0,0">
+            <VerticalStackLayout Spacing="12">
+
+                <!-- Participants -->
+                <Label Text="PARTICIPANTS"
+                       FontSize="11"
+                       TextColor="{StaticResource TextMuted}"
+                       CharacterSpacing="1" />
+
+                <VerticalStackLayout x:Name="ParticipantsPanel" Spacing="4" />
+
+                <Label x:Name="NoParticipantsLabel"
+                       Text="Waiting for participants..."
+                       FontSize="13"
+                       TextColor="{StaticResource TextSecondary}" />
+
+                <!-- Audio devices -->
+                <Label Text="AUDIO DEVICES"
+                       FontSize="11"
+                       TextColor="{StaticResource TextMuted}"
+                       CharacterSpacing="1"
+                       Margin="0,12,0,0" />
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Microphone" FontSize="12" TextColor="{StaticResource TextSecondary}" />
+                        <Picker x:Name="CapturePicker"
+                                Title="Select"
+                                ItemDisplayBinding="{Binding Name}"
+                                SelectedIndexChanged="OnCapturePickerChanged" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="4">
+                        <Label Text="Speakers" FontSize="12" TextColor="{StaticResource TextSecondary}" />
+                        <Picker x:Name="PlaybackPicker"
+                                Title="Select"
+                                ItemDisplayBinding="{Binding Name}"
+                                SelectedIndexChanged="OnPlaybackPickerChanged" />
+                    </VerticalStackLayout>
+                </Grid>
+
+                <!-- Debug -->
+                <Label Text="LAST MESSAGE"
+                       FontSize="11"
+                       TextColor="{StaticResource TextMuted}"
+                       CharacterSpacing="1"
+                       Margin="0,12,0,0" />
+
+                <Label x:Name="LastMessageLabel"
+                       Text="-"
+                       FontFamily="JetBrainsMono"
+                       FontSize="11"
+                       TextColor="{StaticResource TextSecondary}"
+                       LineBreakMode="CharacterWrap"
+                       MaxLines="4" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Controls -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*,*" ColumnSpacing="8" Margin="0,12,0,0">
+            <Button x:Name="MicButton"
+                    Text="Mic: ON"
+                    Style="{StaticResource GrayMainButton}"
+                    Clicked="OnMicToggleClicked" />
+            <Button x:Name="PlaybackButton"
+                    Grid.Column="1"
+                    Text="Sound: ON"
+                    Style="{StaticResource GrayMainButton}"
+                    Clicked="OnPlaybackToggleClicked" />
+            <Button Grid.Column="2"
+                    Text="Hang up"
+                    BackgroundColor="#ef4444"
+                    TextColor="White"
+                    CornerRadius="10"
+                    FontFamily="JetBrainsMono"
+                    Clicked="OnHangupClicked" />
+        </Grid>
+
+    </Grid>
+
+</ContentView>
