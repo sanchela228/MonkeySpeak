@@ -6,26 +6,47 @@
     xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors">
 
     <Grid RowDefinitions="Auto,*,Auto"
-          BackgroundColor="#0a0a0a"
+          BackgroundColor="#111111"
           Padding="12">
 
         <!-- Menu items -->
         <VerticalStackLayout Grid.Row="0" Spacing="4">
             
-            <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="10">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" Margin="0,0,0,8">
                 <Image
-                    WidthRequest="48"
-                    HeightRequest="48"
+                    WidthRequest="30"
+                    HeightRequest="32"
                     Aspect="AspectFit"
+                    Margin="0,4,0,0"
                     VerticalOptions="Center"
-                    Source="logo_mini.png"
-                />
+                    Source="logo_mini.png" />
+
                 <Label
+                    Grid.Column="1"
                     Text="MonkeySpeak"
                     FontFamily="Midami"
                     FontSize="18"
                     TextColor="{StaticResource TextPrimary}"
-                    HorizontalOptions="Center" />
+                    VerticalOptions="Center" />
+
+                <Border
+                    Grid.Column="2"
+                    WidthRequest="32" HeightRequest="32"
+                    StrokeThickness="0"
+                    BackgroundColor="Transparent"
+                    StrokeShape="RoundRectangle 16"
+                    VerticalOptions="Center">
+                    <Border.Behaviors>
+                        <behaviors:HandCursorBehavior />
+                    </Border.Behaviors>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCollapseTapped" />
+                    </Border.GestureRecognizers>
+                    <Image Source="angle_right.png"
+                           WidthRequest="16" HeightRequest="16"
+                           Rotation="180"
+                           Opacity="0.4" />
+                </Border>
             </Grid>
 
             <Border

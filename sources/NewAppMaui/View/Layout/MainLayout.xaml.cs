@@ -6,6 +6,7 @@ public partial class MainLayout : ContentPage
 {
     private readonly IAuthService _auth;
     private readonly Dictionary<string, Func<Microsoft.Maui.Controls.View>> _contentFactories;
+    private bool _sidebarCollapsed;
 
     public MainLayout(IAuthService auth)
     {
@@ -20,6 +21,7 @@ public partial class MainLayout : ContentPage
         };
 
         SidebarView.MenuItemSelected += OnMenuItemSelected;
+        SidebarView.CollapseRequested += () => SetSidebarCollapsed(true);
 
         NavigateTo("menu1");
     }
@@ -39,6 +41,24 @@ public partial class MainLayout : ContentPage
             ContentArea.Content = factory();
             SidebarView.SetActiveItem(key);
         }
+    }
+
+    private void SetSidebarCollapsed(bool collapsed)
+    {
+        _sidebarCollapsed = collapsed;
+
+        SidebarView.IsVisible = !collapsed;
+        SidebarSeparator.IsVisible = !collapsed;
+        ExpandButton.IsVisible = collapsed;
+
+        RootGrid.ColumnDefinitions[0].Width = collapsed
+            ? new GridLength(0)
+            : new GridLength(260);
+    }
+
+    private void OnExpandTapped(object? sender, TappedEventArgs e)
+    {
+        SetSidebarCollapsed(false);
     }
 
     private void OnMenuItemSelected(string key)

@@ -3,6 +3,7 @@ namespace NewAppMaui.View.Layout;
 public partial class Sidebar : ContentView
 {
     public event Action<string>? MenuItemSelected;
+    public event Action? CollapseRequested;
 
     public Sidebar()
     {
@@ -41,5 +42,10 @@ public partial class Sidebar : ContentView
     private void OnSettingsTapped(object? sender, TappedEventArgs e)
     {
         MenuItemSelected?.Invoke("settings");
+    }
+
+    private void OnCollapseTapped(object? sender, TappedEventArgs e)
+    {
+        CollapseRequested?.Invoke();
     }
 }
