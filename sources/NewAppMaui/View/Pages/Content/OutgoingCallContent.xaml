@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Pages.Content.OutgoingCallContent"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <VerticalStackLayout
+        VerticalOptions="Center"
+        HorizontalOptions="Center"
+        Spacing="12"
+        MaximumWidthRequest="350">
+
+        <!-- Avatar -->
+        <Border
+            WidthRequest="80" HeightRequest="80"
+            StrokeThickness="0"
+            BackgroundColor="{StaticResource CardBorder}"
+            StrokeShape="RoundRectangle 40"
+            HorizontalOptions="Center">
+            <Label
+                x:Name="AvatarLabel"
+                Text="UN"
+                FontSize="28"
+                FontAttributes="Bold"
+                TextColor="{StaticResource TextPrimary}"
+                HorizontalOptions="Center"
+                VerticalOptions="Center" />
+        </Border>
+
+        <Label
+            x:Name="NameLabel"
+            Text="Calling..."
+            FontSize="20"
+            TextColor="{StaticResource TextPrimary}"
+            HorizontalOptions="Center" />
+
+        <Label
+            x:Name="StatusLabel"
+            Text="Ringing..."
+            FontSize="14"
+            TextColor="{StaticResource TextSecondary}"
+            HorizontalOptions="Center" />
+
+        <ActivityIndicator
+            x:Name="Spinner"
+            IsRunning="True"
+            Color="{StaticResource AccentGreen}"
+            WidthRequest="32"
+            HeightRequest="32"
+            HorizontalOptions="Center" />
+
+        <Label
+            x:Name="ErrorLabel"
+            Text=""
+            FontSize="14"
+            TextColor="#ef4444"
+            HorizontalOptions="Center"
+            HorizontalTextAlignment="Center"
+            IsVisible="False" />
+
+        <Button
+            x:Name="CancelButton"
+            Text="Cancel"
+            Style="{StaticResource GrayMainButton}"
+            Clicked="OnCancelClicked"
+            HorizontalOptions="Center"
+            WidthRequest="200"
+            Margin="0,16,0,0" />
+
+    </VerticalStackLayout>
+
+</ContentView>

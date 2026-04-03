@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Components.FriendsPanel"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Header with border -->
+        <VerticalStackLayout Spacing="0">
+            <BoxView HeightRequest="1" BackgroundColor="#242426" Margin="-12,0" />
+
+            <Grid ColumnDefinitions="*,Auto" Padding="12,10,12,4">
+                <Label
+                    Text="Friends"
+                    FontSize="15"
+                    TextColor="{StaticResource TextPrimary}" />
+
+                <Border
+                    Grid.Column="1"
+                    WidthRequest="26" HeightRequest="26"
+                    StrokeThickness="0"
+                    BackgroundColor="Transparent"
+                    StrokeShape="RoundRectangle 13">
+                    <Border.Behaviors>
+                        <behaviors:HandCursorBehavior />
+                    </Border.Behaviors>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAddFriendTapped" />
+                    </Border.GestureRecognizers>
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroupList>
+                            <VisualStateGroup Name="CommonStates">
+                                <VisualState Name="Normal" />
+                                <VisualState Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="#1a1a1a" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateGroupList>
+                    </VisualStateManager.VisualStateGroups>
+                    <Label Text="+"
+                           FontSize="18"
+                           TextColor="{StaticResource TextSecondary}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+                </Border>
+            </Grid>
+        </VerticalStackLayout>
+
+        <!-- Scrollable lists -->
+        <ScrollView Grid.Row="1" Margin="0,4,0,0">
+            <VerticalStackLayout Spacing="4" Padding="4,0">
+
+                <!-- Pending requests section -->
+                <VerticalStackLayout x:Name="PendingSection" IsVisible="False" Spacing="4">
+                    <Label Text="REQUESTS"
+                           FontSize="10"
+                           TextColor="{StaticResource TextMuted}"
+                           CharacterSpacing="1"
+                           Padding="8,4,0,2" />
+                    <VerticalStackLayout x:Name="PendingList" Spacing="4" />
+                </VerticalStackLayout>
+
+                <!-- Online friends section -->
+                <VerticalStackLayout x:Name="OnlineSection" IsVisible="False" Spacing="2">
+                    <Label Text="ONLINE"
+                           FontSize="10"
+                           TextColor="{StaticResource AccentGreen}"
+                           CharacterSpacing="1"
+                           Padding="8,6,0,2" />
+                    <VerticalStackLayout x:Name="OnlineList" Spacing="0" />
+                </VerticalStackLayout>
+
+                <!-- Offline friends section -->
+                <VerticalStackLayout x:Name="OfflineSection" IsVisible="False" Spacing="2">
+                    <Label Text="OFFLINE"
+                           FontSize="10"
+                           TextColor="{StaticResource TextMuted}"
+                           CharacterSpacing="1"
+                           Padding="8,6,0,2" />
+                    <VerticalStackLayout x:Name="OfflineList" Spacing="0" />
+                </VerticalStackLayout>
+
+                <!-- Empty state -->
+                <Label x:Name="EmptyLabel"
+                       Text="No friends yet"
+                       FontSize="13"
+                       TextColor="{StaticResource TextSecondary}"
+                       Padding="8,12"
+                       HorizontalOptions="Center" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+
+</ContentView>

@@ -885,6 +885,43 @@ public static class MessageDispatcherAuthExtensions
                 author.Send(new Messages.AuthCall.ErrorRegistration { Value = ex.Message, ErrorCode = "CANCEL_CALL_INVITE_FAILED" });
             }
         });
+        dispatcher.On<Messages.AuthCall.ChangeUsername>(async (msg, author) =>
+        {
+            try
+            {
+                using var scope = serviceProvider.CreateScope();
+                var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                var friendshipService = scope.ServiceProvider.GetRequiredService<FriendshipService>();
+
+                var user = await userService.UpdateUsernameAsync(author.UserId!.Value, msg.NewUsername);
+
+                author.Send(new Messages.AuthCall.UsernameChanged
+                {
+                    NewUsername = user.Username,
+                    Value = "Username changed successfully"
+                });
+
+                var friends = await friendshipService.GetFriendsAsync(author.UserId.Value);
+                foreach (var friend in friends)
+                {
+                    var friendConn = connections.Values.FirstOrDefault(c => c.UserId == friend.Id && c.IsAuthenticated);
+                    friendConn?.Send(new Messages.AuthCall.FriendUsernameChanged
+                    {
+                        FriendId = author.UserId.Value.ToString(),
+                        NewUsername = user.Username,
+                        Value = "Friend changed username"
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                author.Send(new Messages.AuthCall.ErrorRegistration
+                {
+                    Value = ex.Message,
+                    ErrorCode = "CHANGE_USERNAME_FAILED"
+                });
+            }
+        });
     }
 
     public static async Task NotifyFriendsPresenceChange(

@@ -1,3 +1,4 @@
+using Core.Domain.Friends;
 using Core.Public.Services;
 using Core.Websockets.Messages.NoAuthCall;
 using NewAppMaui.View.Pages.Content;
@@ -7,19 +8,24 @@ namespace NewAppMaui.View.Layout;
 public partial class MainLayout : ContentPage
 {
     private readonly IAuthService _auth;
-    private readonly IAudioService _audio;
+    private readonly IFriendsService _friends;
+    private readonly IUserSettingsService _settings;
     private readonly CallUiController _callController;
     private readonly Dictionary<string, Func<Microsoft.Maui.Controls.View>> _contentFactories;
     private CallRoomContent? _callRoomContent;
     private bool _sidebarCollapsed;
-    private bool _showingCall;
 
-    public MainLayout(IAuthService auth, IAudioService audio, CallUiController callController)
+    public event Action? IncomingCallAcceptRequested;
+    public event Action? IncomingCallRejectRequested;
+
+    public MainLayout(IAuthService auth, IFriendsService friends, IUserSettingsService settings, CallUiController callController, FriendCallsUiCoordinator friendCallsCoordinator)
     {
         _auth = auth;
-        _audio = audio;
+        _friends = friends;
+        _settings = settings;
         _callController = callController;
         _callController.AttachLayout(this);
+        friendCallsCoordinator.AttachLayout(this);
 
         InitializeComponent();
 
@@ -31,9 +37,18 @@ public partial class MainLayout : ContentPage
 
         SidebarView.MenuItemSelected += OnMenuItemSelected;
         SidebarView.CollapseRequested += () => SetSidebarCollapsed(true);
-        SidebarView.CallHangupRequested += () => _ = _callController.EndCallAsync("UserHangup");
-        SidebarView.CallMicToggled += OnSidebarMicToggled;
-        SidebarView.CallVolumeToggled += OnSidebarVolumeToggled;
+        SidebarView.CallHangupRequested += async () => await _callController.EndCallAsync("UserHangup");
+        SidebarView.CallMicToggled += () => _callController.ToggleMic();
+        SidebarView.CallVolumeToggled += () => _callController.ToggleVolume();
+        SidebarView.FriendSelected += OnFriendSelected;
+        SidebarView.AddFriendRequested += (_, _) => ShowAddFriend();
+        SidebarView.AcceptFriendRequested += OnAcceptFriend;
+        SidebarView.RejectFriendRequested += OnRejectFriend;
+        SidebarView.IncomingCallAccepted += (_, _) => IncomingCallAcceptRequested?.Invoke();
+        SidebarView.IncomingCallRejected += (_, _) => IncomingCallRejectRequested?.Invoke();
+
+        if (_settings.SidebarCollapsed)
+            SetSidebarCollapsed(true);
 
         NavigateTo("menu1");
     }
@@ -44,6 +59,9 @@ public partial class MainLayout : ContentPage
 
         if (_auth.IsAuthenticated && _auth.Username is not null)
             SidebarView.SetUsername(_auth.Username);
+
+        SidebarView.InitializeFriends(_friends);
+        SidebarView.SubscribeToProfileChanges(_auth, _settings);
     }
 
     public void NavigateTo(string key)
@@ -62,10 +80,10 @@ public partial class MainLayout : ContentPage
         }
     }
 
-    public void ShowCreateRoom()
+    public async void ShowCreateRoom()
     {
         if (_callController.IsInCall)
-            _ = _callController.EndCallAsync("NewRoom");
+            await _callController.EndCallAsync("NewRoom");
 
         var view = new CreateRoomContent();
         view.BackRequested += () => NavigateTo("menu1");
@@ -74,16 +92,84 @@ public partial class MainLayout : ContentPage
         ContentArea.Content = view;
     }
 
-    public void ShowJoinRoom()
+    public async void ShowJoinRoom()
     {
         if (_callController.IsInCall)
-            _ = _callController.EndCallAsync("NewRoom");
+            await _callController.EndCallAsync("NewRoom");
 
         var view = new JoinRoomContent();
         view.BackRequested += () => NavigateTo("menu1");
         view.RoomConnected += OnRoomConnected;
         SwitchToContentView();
         ContentArea.Content = view;
+    }
+
+    private void ShowAddFriend()
+    {
+        var view = new AddFriendContent();
+        view.BackRequested += () => NavigateTo("menu1");
+        SwitchToContentView();
+        ContentArea.Content = view;
+        SidebarView.SetActiveItem("");
+    }
+
+    private void OnFriendSelected(object? sender, Friend friend)
+    {
+        var view = new FriendProfileContent();
+        view.SetFriend(friend);
+        view.BackRequested += () => NavigateTo("menu1");
+        view.CallRequested += (friendId, friendUsername) => ShowOutgoingCall(friendId, friendUsername);
+        SwitchToContentView();
+        ContentArea.Content = view;
+        SidebarView.SetActiveItem("");
+    }
+
+    private async void OnAcceptFriend(object? sender, FriendRequest request)
+    {
+        try
+        {
+            await _friends.AcceptAsync(request.FriendshipId);
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.Warn($"Accept friend failed: {ex.Message}");
+        }
+    }
+
+    private async void OnRejectFriend(object? sender, FriendRequest request)
+    {
+        try
+        {
+            await _friends.RejectAsync(request.FriendshipId);
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.Warn($"Reject friend failed: {ex.Message}");
+        }
+    }
+
+    public void ShowOutgoingCall(string friendId, string friendUsername)
+    {
+        var view = new OutgoingCallContent(_callController);
+        view.Initialize(friendId, friendUsername);
+        view.BackRequested += () =>
+        {
+            view.Cleanup();
+            NavigateTo("menu1");
+        };
+        SwitchToContentView();
+        ContentArea.Content = view;
+        SidebarView.SetActiveItem("");
+    }
+
+    public void ShowIncomingCall(string callerName)
+    {
+        SidebarView.ShowIncomingCall(callerName);
+    }
+
+    public void HideIncomingCall()
+    {
+        SidebarView.HideIncomingCall();
     }
 
     private void OnRoomConnected(string roomCode, InterlocutorJoined[] initial)
@@ -96,8 +182,7 @@ public partial class MainLayout : ContentPage
         _callRoomContent = new CallRoomContent(_callController);
         _callRoomContent.ParticipantCountChanged += count =>
             SidebarView.UpdateParticipantCount(count);
-        _callRoomContent.MicToggled += OnCallMicToggledFromContent;
-        _callRoomContent.VolumeToggled += OnCallVolumeToggledFromContent;
+        _callRoomContent.AudioStateChanged += SyncAudioStates;
         _callRoomContent.InitializeRoom(roomCode, initialParticipants);
         _callRoomContent.Activate();
 
@@ -122,31 +207,18 @@ public partial class MainLayout : ContentPage
         NavigateTo("menu1");
     }
 
-    private void OnSidebarMicToggled()
+    public void SyncAudioStates()
     {
-        _audio.IsMicrophoneEnabled = !_audio.IsMicrophoneEnabled;
-        _callRoomContent?.RefreshMicButton();
-    }
-
-    private void OnSidebarVolumeToggled()
-    {
-        _audio.IsPlaybackEnabled = !_audio.IsPlaybackEnabled;
-        _callRoomContent?.RefreshPlaybackButton();
-    }
-
-    private void OnCallMicToggledFromContent()
-    {
-        SidebarView.SyncMicState(_audio.IsMicrophoneEnabled);
-    }
-
-    private void OnCallVolumeToggledFromContent()
-    {
-        SidebarView.SyncVolumeState(_audio.IsPlaybackEnabled);
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            SidebarView.SyncMicState(_callController.IsMicEnabled);
+            SidebarView.SyncVolumeState(_callController.IsVolumeEnabled);
+            _callRoomContent?.RefreshAudioButtons();
+        });
     }
 
     private void SwitchToCallView()
     {
-        _showingCall = true;
         ContentArea.IsVisible = false;
         CallViewContainer.IsVisible = true;
         SidebarView.SetActiveItem("");
@@ -154,7 +226,6 @@ public partial class MainLayout : ContentPage
 
     private void SwitchToContentView()
     {
-        _showingCall = false;
         CallViewContainer.IsVisible = false;
         ContentArea.IsVisible = true;
     }
@@ -162,6 +233,8 @@ public partial class MainLayout : ContentPage
     private void SetSidebarCollapsed(bool collapsed)
     {
         _sidebarCollapsed = collapsed;
+        _settings.SidebarCollapsed = collapsed;
+        _ = _settings.SaveAsync();
 
         SidebarView.IsVisible = !collapsed;
         SidebarSeparator.IsVisible = !collapsed;
@@ -177,8 +250,19 @@ public partial class MainLayout : ContentPage
         SetSidebarCollapsed(false);
     }
 
+    private void ShowSettings()
+    {
+        var view = new SettingsContent();
+        SwitchToContentView();
+        ContentArea.Content = view;
+        SidebarView.SetActiveItem("");
+    }
+
     private void OnMenuItemSelected(string key)
     {
-        NavigateTo(key);
+        if (key == "settings")
+            ShowSettings();
+        else
+            NavigateTo(key);
     }
 }

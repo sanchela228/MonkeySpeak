@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Pages.Content.SettingsContent"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors">
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="32"
+            Spacing="24"
+            MaximumWidthRequest="450"
+            HorizontalOptions="Start">
+
+            <Label
+                Text="Settings"
+                FontSize="22"
+                TextColor="{StaticResource TextPrimary}" />
+
+            <!-- Avatar section -->
+            <VerticalStackLayout Spacing="12">
+                <Label Text="AVATAR"
+                       FontSize="11"
+                       TextColor="{StaticResource TextMuted}"
+                       CharacterSpacing="1" />
+
+                <HorizontalStackLayout Spacing="16">
+                    <Grid WidthRequest="72" HeightRequest="72">
+                        <Border
+                            x:Name="AvatarBorder"
+                            WidthRequest="72" HeightRequest="72"
+                            StrokeThickness="0"
+                            BackgroundColor="{StaticResource CardBorder}"
+                            StrokeShape="RoundRectangle 36">
+                            <Label
+                                x:Name="AvatarInitials"
+                                Text="UN"
+                                FontSize="24"
+                                FontAttributes="Bold"
+                                TextColor="{StaticResource TextPrimary}"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center" />
+                        </Border>
+
+                        <Image
+                            x:Name="AvatarImage"
+                            WidthRequest="72" HeightRequest="72"
+                            Aspect="AspectFill"
+                            IsVisible="False">
+                            <Image.Clip>
+                                <EllipseGeometry Center="36,36" RadiusX="36" RadiusY="36" />
+                            </Image.Clip>
+                        </Image>
+                    </Grid>
+
+                    <VerticalStackLayout Spacing="8" VerticalOptions="Center">
+                        <Button
+                            Text="Change avatar"
+                            Style="{StaticResource GrayMainButton}"
+                            FontSize="12"
+                            HeightRequest="36"
+                            Clicked="OnChangeAvatarClicked" />
+
+                        <Button
+                            x:Name="RemoveAvatarBtn"
+                            Text="Remove"
+                            Style="{StaticResource GrayMainButton}"
+                            FontSize="12"
+                            HeightRequest="36"
+                            IsVisible="False"
+                            Clicked="OnRemoveAvatarClicked" />
+                    </VerticalStackLayout>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <!-- Username section -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="USERNAME"
+                       FontSize="11"
+                       TextColor="{StaticResource TextMuted}"
+                       CharacterSpacing="1" />
+
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Entry
+                        x:Name="UsernameEntry"
+                        TextColor="{StaticResource TextPrimary}"
+                        FontSize="15"
+                        BackgroundColor="{StaticResource CardBackgroundHover}"
+                        Placeholder="Username" />
+
+                    <Button
+                        Grid.Column="1"
+                        x:Name="SaveUsernameBtn"
+                        Text="Save"
+                        Style="{StaticResource GreenMainButton}"
+                        FontSize="12"
+                        HeightRequest="40"
+                        WidthRequest="80"
+                        Clicked="OnSaveUsernameClicked" />
+                </Grid>
+
+                <Label
+                    x:Name="UsernameHintLabel"
+                    Text=""
+                    FontSize="12"
+                    TextColor="{StaticResource TextSecondary}" />
+
+                <Label
+                    x:Name="UsernameErrorLabel"
+                    Text=""
+                    FontSize="12"
+                    TextColor="#ef4444"
+                    IsVisible="False" />
+
+                <Label
+                    x:Name="UsernameSuccessLabel"
+                    Text="Username updated!"
+                    FontSize="12"
+                    TextColor="{StaticResource AccentGreen}"
+                    IsVisible="False" />
+            </VerticalStackLayout>
+
+            <!-- User info -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="ACCOUNT INFO"
+                       FontSize="11"
+                       TextColor="{StaticResource TextMuted}"
+                       CharacterSpacing="1" />
+
+                <Label
+                    x:Name="UserIdLabel"
+                    Text=""
+                    FontSize="12"
+                    TextColor="{StaticResource TextSecondary}" />
+
+                <Label
+                    x:Name="UserCodeLabel"
+                    Text=""
+                    FontSize="12"
+                    TextColor="{StaticResource TextSecondary}" />
+
+                <Label
+                    x:Name="ProfilePathLabel"
+                    Text=""
+                    FontSize="11"
+                    TextColor="{StaticResource TextMuted}" />
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentView>

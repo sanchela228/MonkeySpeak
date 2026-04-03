@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Pages.Content.FriendProfileContent"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <VerticalStackLayout
+        VerticalOptions="Center"
+        HorizontalOptions="Center"
+        Spacing="8"
+        MaximumWidthRequest="350">
+
+        <!-- Avatar -->
+        <Grid WidthRequest="80" HeightRequest="80" HorizontalOptions="Center">
+            <Border
+                WidthRequest="80" HeightRequest="80"
+                StrokeThickness="0"
+                BackgroundColor="{StaticResource CardBorder}"
+                StrokeShape="RoundRectangle 40">
+                <Label
+                    x:Name="AvatarLabel"
+                    Text="UN"
+                    FontSize="28"
+                    FontAttributes="Bold"
+                    TextColor="{StaticResource TextPrimary}"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center" />
+            </Border>
+
+            <Border
+                x:Name="OnlineDot"
+                IsVisible="False"
+                WidthRequest="18" HeightRequest="18"
+                StrokeThickness="3"
+                Stroke="#111111"
+                BackgroundColor="{StaticResource AccentGreen}"
+                StrokeShape="RoundRectangle 9"
+                HorizontalOptions="End"
+                VerticalOptions="End" />
+        </Grid>
+
+        <!-- Name -->
+        <Label
+            x:Name="NameLabel"
+            Text="Username"
+            FontSize="20"
+            TextColor="{StaticResource TextPrimary}"
+            HorizontalOptions="Center" />
+
+        <Label
+            x:Name="StatusLabel"
+            Text="Online"
+            FontSize="13"
+            TextColor="{StaticResource AccentGreen}"
+            HorizontalOptions="Center"
+            IsVisible="False" />
+
+        <!-- Actions -->
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="0,24,0,0">
+            <Button
+                x:Name="CallButton"
+                Text="Call"
+                Style="{StaticResource GreenMainButton}"
+                Clicked="OnCallClicked" />
+
+            <Button
+                Grid.Column="1"
+                Style="{StaticResource GrayMainButton}"
+                WidthRequest="48"
+                Clicked="OnDeleteClicked">
+                <Button.ImageSource>
+                    <FileImageSource File="trash.png" />
+                </Button.ImageSource>
+            </Button>
+        </Grid>
+
+    </VerticalStackLayout>
+
+</ContentView>

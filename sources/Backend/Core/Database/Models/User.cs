@@ -14,8 +14,8 @@ public class User
     public string Username { get; set; }
 
     [Required]
-    [StringLength(32)]
-    [Column(TypeName = "varchar(32)")]
+    [StringLength(4)]
+    [Column(TypeName = "varchar(4)")]
     public string UserCode { get; set; } = string.Empty;
     
     [Required]

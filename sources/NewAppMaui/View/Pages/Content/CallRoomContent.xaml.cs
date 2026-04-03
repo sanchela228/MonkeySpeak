@@ -11,6 +11,7 @@ public partial class CallRoomContent : ContentView
     private readonly IConnectionService _connection;
     private readonly ICallsService _calls;
     private readonly IAudioService _audio;
+    private readonly IUserSettingsService _settings;
     private readonly CallUiController _callController;
 
     private readonly List<ParticipantVm> _participants = new();
@@ -19,8 +20,7 @@ public partial class CallRoomContent : ContentView
     private bool _suppressDevicePickerEvents;
 
     public event Action<int>? ParticipantCountChanged;
-    public event Action? MicToggled;
-    public event Action? VolumeToggled;
+    public event Action? AudioStateChanged;
 
     public CallRoomContent(CallUiController callController)
     {
@@ -28,6 +28,7 @@ public partial class CallRoomContent : ContentView
         _connection = services.GetRequiredService<IConnectionService>();
         _calls = services.GetRequiredService<ICallsService>();
         _audio = services.GetRequiredService<IAudioService>();
+        _settings = services.GetRequiredService<IUserSettingsService>();
         _callController = callController;
 
         InitializeComponent();
@@ -93,8 +94,18 @@ public partial class CallRoomContent : ContentView
             CapturePicker.ItemsSource = capList;
             PlaybackPicker.ItemsSource = pbList;
 
-            CapturePicker.SelectedItem = capList.FirstOrDefault(d => d.IsDefault) ?? capList.FirstOrDefault();
-            PlaybackPicker.SelectedItem = pbList.FirstOrDefault(d => d.IsDefault) ?? pbList.FirstOrDefault();
+            var prefCap = _settings.PreferredCaptureDeviceId;
+            var prefPb = _settings.PreferredPlaybackDeviceId;
+
+            CapturePicker.SelectedItem =
+                (prefCap is not null ? capList.FirstOrDefault(d => d.Id == prefCap) : null)
+                ?? capList.FirstOrDefault(d => d.IsDefault)
+                ?? capList.FirstOrDefault();
+
+            PlaybackPicker.SelectedItem =
+                (prefPb is not null ? pbList.FirstOrDefault(d => d.Id == prefPb) : null)
+                ?? pbList.FirstOrDefault(d => d.IsDefault)
+                ?? pbList.FirstOrDefault();
         }
         catch { }
         finally
@@ -109,7 +120,11 @@ public partial class CallRoomContent : ContentView
         try
         {
             if (CapturePicker.SelectedItem is AudioDeviceInfo dev)
+            {
                 _audio.SwitchCaptureDevice(dev.Id);
+                _settings.PreferredCaptureDeviceId = dev.Id;
+                _ = _settings.SaveAsync();
+            }
         }
         catch (Exception ex) { Core.Logger.Warn($"SwitchCaptureDevice failed: {ex.Message}"); }
     }
@@ -120,7 +135,11 @@ public partial class CallRoomContent : ContentView
         try
         {
             if (PlaybackPicker.SelectedItem is AudioDeviceInfo dev)
+            {
                 _audio.SwitchPlaybackDevice(dev.Id);
+                _settings.PreferredPlaybackDeviceId = dev.Id;
+                _ = _settings.SaveAsync();
+            }
         }
         catch (Exception ex) { Core.Logger.Warn($"SwitchPlaybackDevice failed: {ex.Message}"); }
     }
@@ -218,16 +237,13 @@ public partial class CallRoomContent : ContentView
         ParticipantCountChanged?.Invoke(_participants.Count + 1);
     }
 
-    public void RefreshMicButton()
+    public void RefreshAudioButtons()
     {
         MainThread.BeginInvokeOnMainThread(() =>
-            MicButton.Text = _audio.IsMicrophoneEnabled ? "Mic: ON" : "Mic: OFF");
-    }
-
-    public void RefreshPlaybackButton()
-    {
-        MainThread.BeginInvokeOnMainThread(() =>
-            PlaybackButton.Text = _audio.IsPlaybackEnabled ? "Sound: ON" : "Sound: OFF");
+        {
+            MicButton.Text = _audio.IsMicrophoneEnabled ? "Mic: ON" : "Mic: OFF";
+            PlaybackButton.Text = _audio.IsPlaybackEnabled ? "Sound: ON" : "Sound: OFF";
+        });
     }
 
     private async Task MaybeAutoHangupAsync()
@@ -238,16 +254,12 @@ public partial class CallRoomContent : ContentView
 
     private void OnMicToggleClicked(object? sender, EventArgs e)
     {
-        _audio.IsMicrophoneEnabled = !_audio.IsMicrophoneEnabled;
-        MicButton.Text = _audio.IsMicrophoneEnabled ? "Mic: ON" : "Mic: OFF";
-        MicToggled?.Invoke();
+        _callController.ToggleMic();
     }
 
     private void OnPlaybackToggleClicked(object? sender, EventArgs e)
     {
-        _audio.IsPlaybackEnabled = !_audio.IsPlaybackEnabled;
-        PlaybackButton.Text = _audio.IsPlaybackEnabled ? "Sound: ON" : "Sound: OFF";
-        VolumeToggled?.Invoke();
+        _callController.ToggleVolume();
     }
 
     private async void OnHangupClicked(object? sender, EventArgs e)

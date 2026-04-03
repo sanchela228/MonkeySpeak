@@ -211,6 +211,9 @@ public class FriendsService : IFriendsService
                 case "Messages.AuthCall.FriendRemoved":
                     HandleFriendRemoved(ctx);
                     break;
+                case "Messages.AuthCall.FriendUsernameChanged":
+                    HandleFriendUsernameChanged(ctx);
+                    break;
             }
         }
         catch (Exception ex)
@@ -404,6 +407,26 @@ public class FriendsService : IFriendsService
         lock (_sync)
         {
             updated = _friends.RemoveAll(x => x.UserId == (msg.FriendId ?? string.Empty)) > 0;
+        }
+
+        if (updated)
+            FriendsUpdated?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void HandleFriendUsernameChanged(Context ctx)
+    {
+        var msg = ctx.Message.Deserialize<FriendUsernameChanged>(JsonOpts);
+        if (msg is null) return;
+
+        var updated = false;
+        lock (_sync)
+        {
+            var f = _friends.FirstOrDefault(x => x.UserId == (msg.FriendId ?? string.Empty));
+            if (f is not null && f.Username != msg.NewUsername)
+            {
+                f.Username = msg.NewUsername;
+                updated = true;
+            }
         }
 
         if (updated)

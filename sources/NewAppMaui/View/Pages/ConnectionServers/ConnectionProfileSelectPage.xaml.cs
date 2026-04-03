@@ -38,7 +38,7 @@ public partial class ConnectionProfileSelectPage : ContentPage, INotifyPropertyC
         _selectedProfileId = string.Empty;
 
         if (callController.IsInCall)
-            _ = callController.EndCallAsync("ServerChange");
+            callController.EndCallAsync("ServerChange").ConfigureAwait(false);
 
         SelectProfileCommand = new Command<ConnectionProfile>(profile =>
         {

@@ -3,7 +3,9 @@
     x:Class="NewAppMaui.View.Layout.Sidebar"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors">
+    xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors"
+    xmlns:layout="clr-namespace:NewAppMaui.View.Layout"
+    xmlns:components="clr-namespace:NewAppMaui.View.Components">
 
     <Grid RowDefinitions="Auto,*,Auto"
           BackgroundColor="#141416"
@@ -53,6 +55,52 @@
             <BoxView HeightRequest="1"
                      BackgroundColor="#242426"
                      Margin="-12,0,-12,4" />
+
+            <!-- Incoming call widget (hidden by default) -->
+            <Border
+                x:Name="IncomingCallWidget"
+                IsVisible="False"
+                Padding="12,10"
+                StrokeThickness="1"
+                Stroke="{StaticResource AccentGreen}"
+                BackgroundColor="#0d1f11"
+                StrokeShape="RoundRectangle 10">
+
+                <VerticalStackLayout Spacing="8">
+                    <Label
+                        x:Name="IncomingCallerLabel"
+                        Text="Incoming call"
+                        FontSize="13"
+                        TextColor="{StaticResource TextPrimary}" />
+
+                    <Label
+                        Text="is calling you..."
+                        FontSize="11"
+                        TextColor="{StaticResource TextSecondary}" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                        <Button
+                            x:Name="IncomingAcceptBtn"
+                            Text="Accept"
+                            FontSize="12"
+                            HeightRequest="34"
+                            BackgroundColor="{StaticResource AccentGreen}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            Clicked="OnIncomingAcceptClicked" />
+                        <Button
+                            x:Name="IncomingRejectBtn"
+                            Grid.Column="1"
+                            Text="Decline"
+                            FontSize="12"
+                            HeightRequest="34"
+                            BackgroundColor="{StaticResource CardBorder}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            Clicked="OnIncomingRejectClicked" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
 
             <!-- In Call widget (hidden by default) -->
             <Border
@@ -133,7 +181,7 @@
                             x:Name="CallVolumeBtn"
                             Margin="4"
                             StrokeThickness="0"
-                            BackgroundColor="#091a0d"
+                            BackgroundColor="#0E1A14"
                             StrokeShape="RoundRectangle 12">
                             <Border.Behaviors>
                                 <behaviors:HandCursorBehavior />
@@ -165,7 +213,7 @@
                             x:Name="CallMicBtn"
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 12"
-                            BackgroundColor="#091a0d">
+                            BackgroundColor="#0E1A14">
                             <Border.Behaviors>
                                 <behaviors:HandCursorBehavior />
                             </Border.Behaviors>
@@ -195,7 +243,7 @@
                             Margin="4"
                             x:Name="CallHangupBtn"
                             StrokeThickness="0"
-                            BackgroundColor="#091a0d"
+                            BackgroundColor="#0E1A14"
                             StrokeShape="RoundRectangle 12">
                             <Border.Behaviors>
                                 <behaviors:HandCursorBehavior />
@@ -225,91 +273,30 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border
+            <layout:SidebarMenuItem
                 x:Name="MenuItem1"
-                Padding="12,10"
-                StrokeThickness="0"
-                BackgroundColor="Transparent"
-                StrokeShape="RoundRectangle 10">
-                <Border.Behaviors>
-                    <behaviors:HandCursorBehavior />
-                </Border.Behaviors>
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnMenu1Tapped" />
-                </Border.GestureRecognizers>
-                <VisualStateManager.VisualStateGroups>
-                    <VisualStateGroupList>
-                        <VisualStateGroup Name="CommonStates">
-                            <VisualState Name="Normal" />
-                            <VisualState Name="PointerOver">
-                                <VisualState.Setters>
-                                    <Setter Property="BackgroundColor" Value="#1a2e1f" />
-                                </VisualState.Setters>
-                            </VisualState>
-                        </VisualStateGroup>
-                    </VisualStateGroupList>
-                </VisualStateManager.VisualStateGroups>
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                    <Image x:Name="MenuItem1Icon" Source="phone.png"
-                           WidthRequest="20" HeightRequest="20"
-                           VerticalOptions="Center" />
-                    <Label x:Name="MenuItem1Label" Grid.Column="1" Text="P2P Call"
-                           TextColor="{StaticResource TextPrimary}"
-                           FontSize="14"
-                           VerticalOptions="Center" />
-                </Grid>
-            </Border>
+                Text="P2P Call"
+                IconSource="phone.png"
+                IconSourceActive="phone_green.png"
+                TextColorActive="#22c55e"
+                ActiveBackground="#14251d"
+                HoverBackground="#1a2e1f"
+                Clicked="OnMenu1Tapped" />
 
-            <Border
+            <layout:SidebarMenuItem
                 x:Name="MenuItem2"
-                Padding="12,10"
-                StrokeThickness="0"
-                BackgroundColor="Transparent"
-                StrokeShape="RoundRectangle 10">
-                <Border.Behaviors>
-                    <behaviors:HandCursorBehavior />
-                </Border.Behaviors>
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnMenu2Tapped" />
-                </Border.GestureRecognizers>
-                <VisualStateManager.VisualStateGroups>
-                    <VisualStateGroupList>
-                        <VisualStateGroup Name="CommonStates">
-                            <VisualState Name="Normal" />
-                            <VisualState Name="PointerOver">
-                                <VisualState.Setters>
-                                    <Setter Property="BackgroundColor" Value="#1a1a1a" />
-                                </VisualState.Setters>
-                            </VisualState>
-                        </VisualStateGroup>
-                    </VisualStateGroupList>
-                </VisualStateManager.VisualStateGroups>
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                    <Image x:Name="MenuItem2Icon" Source="custom_conn.png"
-                           WidthRequest="20" HeightRequest="20"
-                           VerticalOptions="Center" />
-                    <Label x:Name="MenuItem2Label" Grid.Column="1" Text="Test Page 2"
-                           TextColor="{StaticResource TextPrimary}"
-                           FontSize="14"
-                           VerticalOptions="Center" />
-                </Grid>
-            </Border>
+                Text="Test Page 2"
+                IconSource="custom_conn.png"
+                HoverBackground="#1a1a1a"
+                Clicked="OnMenu2Tapped" />
 
         </VerticalStackLayout>
 
-        <!-- Friends placeholder -->
-        <VerticalStackLayout Grid.Row="1" Spacing="4" Margin="0,16,0,0">
-            <Label Text="FRIENDS"
-                   FontSize="11"
-                   TextColor="{StaticResource TextMuted}"
-                   CharacterSpacing="1"
-                   Padding="12,0" />
-
-            <Label Text="Coming soon..."
-                   FontSize="13"
-                   TextColor="{StaticResource TextSecondary}"
-                   Padding="12,8" />
-        </VerticalStackLayout>
+        <!-- Friends -->
+        <components:FriendsPanel
+            x:Name="FriendsPanelView"
+            Grid.Row="1"
+            Margin="0,8,0,0" />
 
         <!-- User panel -->
         <Border
@@ -318,18 +305,50 @@
             StrokeThickness="0"
             BackgroundColor="{StaticResource CardBackground}"
             StrokeShape="RoundRectangle 10">
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-                <Border
-                    WidthRequest="32" HeightRequest="32"
-                    StrokeThickness="0"
-                    BackgroundColor="{StaticResource CardBorder}"
-                    StrokeShape="RoundRectangle 16">
-                    <Label Text="U"
-                           TextColor="{StaticResource TextPrimary}"
-                           FontSize="14"
-                           HorizontalOptions="Center"
-                           VerticalOptions="Center" />
-                </Border>
+            <Border.Behaviors>
+                <behaviors:HandCursorBehavior />
+            </Border.Behaviors>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnSettingsTapped" />
+            </Border.GestureRecognizers>
+            <VisualStateManager.VisualStateGroups>
+                <VisualStateGroupList>
+                    <VisualStateGroup Name="CommonStates">
+                        <VisualState Name="Normal" />
+                        <VisualState Name="PointerOver">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="#1a1a1a" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </VisualStateManager.VisualStateGroups>
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                <Grid WidthRequest="32" HeightRequest="32">
+                    <Border
+                        x:Name="UserAvatarBorder"
+                        WidthRequest="32" HeightRequest="32"
+                        StrokeThickness="0"
+                        BackgroundColor="{StaticResource CardBorder}"
+                        StrokeShape="RoundRectangle 16">
+                        <Label x:Name="UserInitialsLabel"
+                               Text="U"
+                               TextColor="{StaticResource TextPrimary}"
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Border>
+                    <Image
+                        x:Name="UserAvatarImage"
+                        WidthRequest="32" HeightRequest="32"
+                        Aspect="AspectFill"
+                        IsVisible="False">
+                        <Image.Clip>
+                            <EllipseGeometry Center="16,16" RadiusX="16" RadiusY="16" />
+                        </Image.Clip>
+                    </Image>
+                </Grid>
 
                 <Label
                     Grid.Column="1"
@@ -339,23 +358,6 @@
                     FontSize="13"
                     VerticalOptions="Center"
                     LineBreakMode="TailTruncation" />
-
-                <Border
-                    Grid.Column="2"
-                    WidthRequest="28" HeightRequest="28"
-                    StrokeThickness="0"
-                    BackgroundColor="Transparent"
-                    StrokeShape="RoundRectangle 14">
-                    <Border.Behaviors>
-                        <behaviors:HandCursorBehavior />
-                    </Border.Behaviors>
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnSettingsTapped" />
-                    </Border.GestureRecognizers>
-                    <Image Source="custom_conn.png"
-                           WidthRequest="18" HeightRequest="18"
-                           Opacity="0.5" />
-                </Border>
             </Grid>
         </Border>
 

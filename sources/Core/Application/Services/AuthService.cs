@@ -36,6 +36,9 @@ public class AuthService : IAuthService
     public event EventHandler? Authenticated;
     public event EventHandler<string>? AuthFailed;
     public event EventHandler? LoggedOut;
+    public event EventHandler<string>? UsernameChanged;
+
+    private TaskCompletionSource<string>? _changeUsernameTcs;
 
     // ── Password flow ────────────────────────────────────────────────────────
 
@@ -153,6 +156,21 @@ public class AuthService : IAuthService
         return Task.CompletedTask;
     }
 
+    public async Task ChangeUsernameAsync(string newUsername, CancellationToken ct = default)
+    {
+        if (!IsAuthenticated)
+            throw new InvalidOperationException("Not authenticated");
+
+        _changeUsernameTcs = new TaskCompletionSource<string>();
+
+        var msg = new ChangeUsername { NewUsername = newUsername, Value = "Change username" };
+        await SendAsync(msg, ct);
+
+        using var reg = ct.Register(() => _changeUsernameTcs.TrySetCanceled());
+        var result = await _changeUsernameTcs.Task;
+        Username = result;
+    }
+
     // ── Connection state ─────────────────────────────────────────────────────
 
     private void OnConnectionStateChanged(object? sender, ConnectionState state)
@@ -195,6 +213,7 @@ public class AuthService : IAuthService
                 case "Messages.AuthCall.Authenticated":  HandleAuthenticated(ctx); break;
                 case "Messages.AuthCall.KeyRegistered":  _ = HandleKeyRegisteredAsync(ctx); break;
                 case "Messages.AuthCall.AuthChallenge":  _ = HandleAuthChallengeAsync(ctx); break;
+                case "Messages.AuthCall.UsernameChanged":   HandleUsernameChanged(ctx); break;
                 case "Messages.AuthCall.ErrorRegistration": HandleError(ctx); break;
             }
         }
@@ -281,6 +300,17 @@ public class AuthService : IAuthService
         }
     }
 
+    private void HandleUsernameChanged(Context ctx)
+    {
+        var msg = ctx.Message.Deserialize<UsernameChanged>(JsonOpts);
+        if (msg is null) return;
+
+        Username = msg.NewUsername;
+        Core.Logger.Info($"Username changed to: {msg.NewUsername}");
+        _changeUsernameTcs?.TrySetResult(msg.NewUsername);
+        UsernameChanged?.Invoke(this, msg.NewUsername);
+    }
+
     private void HandleError(Context ctx)
     {
         var msg = ctx.Message.Deserialize<ErrorRegistration>(JsonOpts);
@@ -291,6 +321,7 @@ public class AuthService : IAuthService
 
         _loginTcs?.TrySetException(new InvalidOperationException(error));
         _authTcs?.TrySetException(new InvalidOperationException(error));
+        _changeUsernameTcs?.TrySetException(new InvalidOperationException(error));
         AuthFailed?.Invoke(this, error);
     }
 

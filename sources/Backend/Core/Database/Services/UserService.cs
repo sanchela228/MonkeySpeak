@@ -29,14 +29,15 @@ public class UserService
     public Task<List<User>> GetUsersByUsernameAsync(string username)
     {
         return _context.Users
-            .Where(u => u.Username == username)
+            .Where(u => u.Username.ToLower() == username.ToLower())
             .ToListAsync();
     }
 
     public Task<User?> GetUserByHandleAsync(string username, string userCode)
     {
         return _context.Users
-            .FirstOrDefaultAsync(u => u.Username == username && u.UserCode == userCode);
+            .FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower()
+                                   && u.UserCode.ToLower() == userCode.ToLower());
     }
 
     public Task<User?> GetUserByUserCodeAsync(string userCode)
@@ -158,15 +159,33 @@ public class UserService
 
     private async Task<string> GenerateUniqueUserCodeAsync()
     {
-        // 32 hex chars (128 bits). Effectively collision-free.
+        const string chars = "0123456789abcdef";
+        var rng = new Random();
+
         while (true)
         {
-            var code = Guid.NewGuid().ToString("N").ToLowerInvariant();
-
+            var code = new string(Enumerable.Range(0, 4).Select(_ => chars[rng.Next(chars.Length)]).ToArray());
             var exists = await _context.Users.AnyAsync(u => u.UserCode == code);
             if (!exists)
                 return code;
         }
+    }
+
+    public async Task<User> UpdateUsernameAsync(Guid userId, string newUsername)
+    {
+        if (string.IsNullOrWhiteSpace(newUsername))
+            throw new ArgumentException("Username cannot be empty");
+
+        newUsername = newUsername.Trim();
+        if (newUsername.Length < 2 || newUsername.Length > 50)
+            throw new ArgumentException("Username must be between 2 and 50 characters");
+
+        var user = await _context.Users.FindAsync(userId)
+            ?? throw new InvalidOperationException("User not found");
+
+        user.Username = newUsername;
+        await _context.SaveChangesAsync();
+        return user;
     }
 
     public async Task<List<User>> SearchUsersAsync(string query, int limit = 20)

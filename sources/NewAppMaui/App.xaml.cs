@@ -1,5 +1,6 @@
 using Core.Application.Abstractions;
 using Core.Public.Configurations;
+using Core.Public.Services;
 using Microsoft.Extensions.DependencyInjection;
 using NewAppMaui.View.Pages;
 
@@ -32,6 +33,8 @@ public partial class App : Application
         }
 
         var store = _services.GetRequiredService<IConnectionSettingsStore>();
+        var settings = _services.GetRequiredService<IUserSettingsService>();
+        settings.LoadAsync().GetAwaiter().GetResult();
         Page rootPage;
 
         if (store.HasExplicitActiveProfileSelection)
@@ -41,6 +44,20 @@ public partial class App : Application
 
         _ = _services.GetRequiredService<FriendCallsUiCoordinator>();
 
-        return new Window(rootPage);
+        var window = new Window(rootPage)
+        {
+            Title = "MonkeySpeak",
+            Width = settings.WindowWidth,
+            Height = settings.WindowHeight
+        };
+
+        window.SizeChanged += (_, _) =>
+        {
+            settings.WindowWidth = (int)window.Width;
+            settings.WindowHeight = (int)window.Height;
+            _ = settings.SaveAsync();
+        };
+
+        return window;
     }
 }

@@ -11,7 +11,7 @@
             VerticalOptions="Center"
             HorizontalOptions="Center"
             Spacing="16">
-            
+
             <!-- Code input boxes -->
             <HorizontalStackLayout
                 x:Name="CodeInputRow"
@@ -27,7 +27,7 @@
                 <Entry x:Name="C5" Style="{StaticResource CodeCharEntry}" TextChanged="OnCharTextChanged" Focused="OnCharFocused" />
 
             </HorizontalStackLayout>
-            
+
             <Label
                 Text="Enter the code to connect to the room"
                 FontSize="14"
@@ -36,7 +36,7 @@
                 TextColor="{StaticResource TextSecondary}"
                 HorizontalOptions="Center" />
 
-            <!-- Loading -->
+            <!-- Loading (shown only after 500ms delay) -->
             <ActivityIndicator
                 x:Name="Spinner"
                 IsRunning="False"
@@ -47,20 +47,12 @@
                 HorizontalOptions="Center" />
 
             <Button
-                x:Name="ConnectButton"
-                Text="Connect"
-                Style="{StaticResource GreenMainButton}"
-                Clicked="OnConnectClicked"
-                MaximumWidthRequest="250"
-                HorizontalOptions="Fill"
-                Margin="0,48,0,0" />
-            
-            <Button
                 Text="Back"
                 Style="{StaticResource GrayMainButton}"
                 Clicked="OnBackClicked"
                 MaximumWidthRequest="250"
-                HorizontalOptions="Fill"/>
+                HorizontalOptions="Fill"
+                Margin="0,48,0,0" />
 
         </VerticalStackLayout>
     </Grid>

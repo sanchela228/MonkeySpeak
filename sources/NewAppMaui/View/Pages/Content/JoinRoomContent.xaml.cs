@@ -8,7 +8,13 @@ public partial class JoinRoomContent : ContentView
     private readonly ICallsService _calls;
     private readonly Entry[] _entries;
     private CancellationTokenSource? _cts;
+    private CancellationTokenSource? _autoConnectCts;
     private bool _suppressTextChanged;
+    private bool _connecting;
+
+    private static readonly Color BorderNormal = Color.FromArgb("#151515");
+    private static readonly Color BorderSuccess = Color.FromArgb("#4B9B58");
+    private static readonly Color BorderError = Color.FromArgb("#ef4444");
 
     public event Action? BackRequested;
     public event Action<string, Core.Websockets.Messages.NoAuthCall.InterlocutorJoined[]>? RoomConnected;
@@ -23,6 +29,8 @@ public partial class JoinRoomContent : ContentView
 
         _entries = [C0, C1, C2, C3, C4, C5];
         _cts = new CancellationTokenSource();
+
+        SetAllBorders(BorderNormal);
 
         foreach (var entry in _entries)
             AttachBackspaceHandler(entry);
@@ -39,6 +47,7 @@ public partial class JoinRoomContent : ContentView
             _cts?.Cancel();
             _cts?.Dispose();
             _cts = null;
+            _autoConnectCts?.Cancel();
         }
     }
 
@@ -76,6 +85,9 @@ public partial class JoinRoomContent : ContentView
         var idx = Array.IndexOf(_entries, entry);
         if (idx < 0) return;
 
+        SetAllBorders(BorderNormal);
+        _autoConnectCts?.Cancel();
+
         if (!string.IsNullOrEmpty(e.NewTextValue))
         {
             _suppressTextChanged = true;
@@ -94,7 +106,7 @@ public partial class JoinRoomContent : ContentView
             }
             else
             {
-                CheckAutoConnect();
+                TryScheduleAutoConnect();
             }
         }
         else
@@ -118,25 +130,32 @@ public partial class JoinRoomContent : ContentView
         return string.Concat(_entries.Select(e => e.Text ?? ""));
     }
 
-    private void CheckAutoConnect()
+    private void TryScheduleAutoConnect()
     {
         var code = GetCode();
-        if (code.Length == _entries.Length)
-            _ = ConnectAsync();
-    }
+        if (code.Length != _entries.Length || _connecting) return;
 
-    private async void OnConnectClicked(object? sender, EventArgs e)
-    {
-        await ConnectAsync();
+        _autoConnectCts?.Cancel();
+        _autoConnectCts = new CancellationTokenSource();
+        var token = _autoConnectCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(300, token);
+            if (!token.IsCancellationRequested)
+                MainThread.BeginInvokeOnMainThread(() => _ = ConnectAsync());
+        }, token);
     }
 
     private async Task ConnectAsync()
     {
+        if (_connecting) return;
+        _connecting = true;
+
         var ct = _cts?.Token ?? CancellationToken.None;
 
-        Spinner.IsVisible = true;
-        Spinner.IsRunning = true;
-        ConnectButton.IsEnabled = false;
+        var spinnerCts = new CancellationTokenSource();
+        _ = ShowSpinnerAfterDelay(500, spinnerCts.Token);
 
         try
         {
@@ -157,34 +176,81 @@ public partial class JoinRoomContent : ContentView
                 })
                 .ToArray();
 
-            MainThread.BeginInvokeOnMainThread(() =>
+            spinnerCts.Cancel();
+
+            await MainThread.InvokeOnMainThreadAsync(async () =>
             {
+                SetAllBorders(BorderSuccess);
+                HideSpinner();
+                await Task.Delay(300);
                 RoomConnected?.Invoke(session.RoomCode, initial);
             });
         }
         catch (OperationCanceledException) { }
-        catch (Exception ex)
+        catch (Exception)
         {
+            spinnerCts.Cancel();
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                // ErrorLabel.Text = ex.Message;
-                // ErrorLabel.IsVisible = true;
+                SetAllBorders(BorderError);
+                HideSpinner();
             });
         }
         finally
         {
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                Spinner.IsRunning = false;
-                Spinner.IsVisible = false;
-                ConnectButton.IsEnabled = true;
-            });
+            _connecting = false;
         }
+    }
+
+    private async Task ShowSpinnerAfterDelay(int ms, CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(ms, ct);
+            if (!ct.IsCancellationRequested)
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    Spinner.IsVisible = true;
+                    Spinner.IsRunning = true;
+                });
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private void HideSpinner()
+    {
+        Spinner.IsRunning = false;
+        Spinner.IsVisible = false;
+    }
+
+    private void SetAllBorders(Color color)
+    {
+#if WINDOWS
+        foreach (var entry in _entries)
+        {
+            if (entry.Handler?.PlatformView is Microsoft.UI.Xaml.Controls.TextBox tb)
+            {
+                var brush = new Microsoft.UI.Xaml.Media.SolidColorBrush(
+                    Windows.UI.Color.FromArgb(color.Alpha.ToByte(), color.Red.ToByte(), color.Green.ToByte(), color.Blue.ToByte()));
+                tb.BorderBrush = brush;
+                tb.BorderThickness = new Microsoft.UI.Xaml.Thickness(1.5);
+                tb.Resources["TextControlBorderBrush"] = brush;
+                tb.Resources["TextControlBorderBrushPointerOver"] = brush;
+                tb.Resources["TextControlBorderBrushFocused"] = brush;
+            }
+        }
+#endif
     }
 
     private void OnBackClicked(object? sender, EventArgs e)
     {
         _cts?.Cancel();
+        _autoConnectCts?.Cancel();
         BackRequested?.Invoke();
     }
+}
+
+static class ColorByteExtensions
+{
+    public static byte ToByte(this float f) => (byte)(f * 255);
 }

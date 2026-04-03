@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Pages.Content.AddFriendContent"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <VerticalStackLayout
+        VerticalOptions="Center"
+        HorizontalOptions="Center"
+        Spacing="12"
+        MaximumWidthRequest="350">
+
+        <Label
+            Text="Add Friend"
+            FontSize="20"
+            TextColor="{StaticResource TextPrimary}"
+            HorizontalOptions="Center" />
+
+        <Label
+            x:Name="MyHandleLabel"
+            Text=""
+            FontSize="13"
+            TextColor="{StaticResource TextSecondary}"
+            HorizontalOptions="Center" />
+
+        <Entry
+            x:Name="HandleEntry"
+            Placeholder="username#code"
+            PlaceholderColor="{StaticResource TextMuted}"
+            TextColor="{StaticResource TextPrimary}"
+            FontSize="15"
+            BackgroundColor="{StaticResource CardBackgroundHover}"
+            Margin="0,8,0,0" />
+
+        <Label
+            Text="Enter username with # and their 4-digit code, e.g. john#a1b2"
+            FontSize="12"
+            TextColor="{StaticResource TextMuted}"
+            HorizontalTextAlignment="Center" />
+
+        <Label
+            x:Name="ErrorLabel"
+            Text=""
+            FontSize="13"
+            TextColor="#ef4444"
+            HorizontalOptions="Center"
+            IsVisible="False" />
+
+        <Label
+            x:Name="SuccessLabel"
+            Text="Friend request sent!"
+            FontSize="13"
+            TextColor="{StaticResource AccentGreen}"
+            HorizontalOptions="Center"
+            IsVisible="False" />
+
+        <Button
+            x:Name="SendButton"
+            Text="Send Request"
+            Style="{StaticResource GreenMainButton}"
+            Clicked="OnSendClicked"
+            Margin="0,8,0,0" />
+
+        <Button
+            Text="Back"
+            Style="{StaticResource GrayMainButton}"
+            Clicked="OnBackClicked" />
+
+    </VerticalStackLayout>
+
+</ContentView>
