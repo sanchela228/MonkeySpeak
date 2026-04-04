@@ -94,10 +94,7 @@
                     Clicked="OnPlaybackToggleClicked" />
             <Button Grid.Column="2"
                     Text="Hang up"
-                    BackgroundColor="#ef4444"
-                    TextColor="White"
-                    CornerRadius="10"
-                    FontFamily="JetBrainsMono"
+                    Style="{StaticResource RedMainButton}"
                     Clicked="OnHangupClicked" />
         </Grid>
 

@@ -15,9 +15,11 @@ public class CallsService : ICallsService
 {
     private readonly IConnectionService _connection;
     private readonly IAudioService _audio;
+    private readonly IAvatarProvider? _avatarProvider;
     private readonly IStunClient _stun;
     private readonly UdpUnifiedManager _udp;
     private readonly UdpControlService _controls;
+    private readonly UdpAvatarExchange _avatarExchange;
     private readonly object _sync = new();
 
     private CancellationTokenSource? _sessionCts;
@@ -27,24 +29,30 @@ public class CallsService : ICallsService
     public event EventHandler<CallSession?>? CurrentChanged;
     public event EventHandler<CallState>? StateChanged;
 
-    public CallsService(IConnectionService connection, IAudioService audio, IStunClient stun, UdpUnifiedManager udp)
+    public event Action<string, byte[]>? AvatarReceived;
+
+    public CallsService(IConnectionService connection, IAudioService audio, IStunClient stun, UdpUnifiedManager udp,
+        IAvatarProvider? avatarProvider = null)
     {
         _connection = connection;
         _audio = audio;
         _stun = stun;
         _udp = udp;
+        _avatarProvider = avatarProvider;
         _controls = new UdpControlService();
+        _avatarExchange = new UdpAvatarExchange();
 
         _connection.MessageReceived += OnWsMessage;
 
-        // Audio → UDP: encoded opus packets go out to all peers
         _audio.OnEncodedAudioReady += OnEncodedAudioReady;
-
-        // UDP → Audio: incoming audio packets routed to playback
         _udp.OnAudioDataByInterlocutor += OnUdpAudioReceived;
 
         _controls.OnRemoteHangupByInterlocutor += OnRemoteHangupByInterlocutor;
         _controls.OnRemoteMuteChangedByInterlocutor += OnRemoteMuteChangedByInterlocutor;
+
+        _avatarExchange.OnRemoteAvatarHash += OnRemoteAvatarHash;
+        _avatarExchange.OnRemoteAvatarRequested += OnRemoteAvatarRequested;
+        _avatarExchange.OnRemoteAvatarReceived += OnRemoteAvatarReceived;
 
         _audio.MicrophoneEnabledChanged += OnLocalMicrophoneEnabledChanged;
     }
@@ -310,12 +318,19 @@ public class CallsService : ICallsService
 
         try
         {
-            // Immediately inform the new peer about our current mic state.
             _controls.SendMuteStateToInterlocutor(_audio.IsMicrophoneEnabled, joined.Id);
         }
-        catch
+        catch { }
+
+        try
         {
+            var hash = _avatarProvider?.GetOwnAvatarHash();
+            if (hash != null)
+                _avatarExchange.SendHash(hash, joined.Id);
+            else
+                _avatarExchange.SendEmptyHash(joined.Id);
         }
+        catch { }
 
         Core.Logger.Info($"InterlocutorJoined: {joined.Id} {remote}");
 
@@ -393,6 +408,7 @@ public class CallsService : ICallsService
             try { _udp.Stop(); } catch { }
 
             try { _controls.Detach(); } catch { }
+            try { _avatarExchange.Detach(); } catch { }
 
             try { _udpClient?.Dispose(); } catch { }
             _udpClient = null;
@@ -423,6 +439,7 @@ public class CallsService : ICallsService
             _udp.Start(_udpClient, _sessionCts!.Token);
 
             _controls.Attach(_udp);
+            _avatarExchange.Attach(_udp);
         }
     }
 
@@ -444,6 +461,46 @@ public class CallsService : ICallsService
         catch
         {
         }
+    }
+
+    private void OnRemoteAvatarHash(string interlocutorId, byte[] remoteHash)
+    {
+        try
+        {
+            if (_avatarProvider == null) return;
+
+            var allZero = true;
+            foreach (var b in remoteHash) { if (b != 0) { allZero = false; break; } }
+            if (allZero) return;
+
+            var cached = _avatarProvider.GetCachedHash(interlocutorId);
+            if (cached != null && cached.AsSpan().SequenceEqual(remoteHash)) return;
+
+            _avatarExchange.SendRequest(interlocutorId);
+        }
+        catch { }
+    }
+
+    private void OnRemoteAvatarRequested(string interlocutorId)
+    {
+        try
+        {
+            var bytes = _avatarProvider?.GetOwnAvatarBytes();
+            if (bytes is { Length: > 0 })
+                _avatarExchange.SendAvatar(bytes, interlocutorId);
+        }
+        catch { }
+    }
+
+    private void OnRemoteAvatarReceived(string interlocutorId, byte[] data)
+    {
+        try
+        {
+            var hash = UdpAvatarExchange.ComputeHash(data);
+            _avatarProvider?.SaveRemoteAvatar(interlocutorId, data, hash);
+            AvatarReceived?.Invoke(interlocutorId, data);
+        }
+        catch { }
     }
 
     private void OnRemoteMuteChangedByInterlocutor(string interlocutorId, bool isMuted)

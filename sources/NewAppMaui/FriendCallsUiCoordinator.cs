@@ -1,4 +1,5 @@
 using Core.Public.Services;
+using NewAppMaui.Services;
 using NewAppMaui.View.Layout;
 
 namespace NewAppMaui;
@@ -8,21 +9,27 @@ public sealed class FriendCallsUiCoordinator
     private readonly IFriendCallsService _friendCalls;
     private readonly ICallsService _calls;
     private readonly CallUiController _callController;
+    private readonly AvatarCacheService _avatarCache;
 
     private MainLayout? _layout;
     private IncomingCallInvite? _activeInvite;
+    private string? _currentFriendUserId;
 
     public FriendCallsUiCoordinator(
         IFriendCallsService friendCalls,
         ICallsService calls,
-        CallUiController callController)
+        CallUiController callController,
+        AvatarCacheService avatarCache)
     {
         _friendCalls = friendCalls;
         _calls = calls;
         _callController = callController;
+        _avatarCache = avatarCache;
 
         _friendCalls.IncomingCall += OnIncomingCall;
         _friendCalls.InviteCancelled += OnInviteCancelled;
+        _calls.AvatarReceived += OnAvatarReceived;
+        _callController.CallEnded += () => _currentFriendUserId = null;
     }
 
     public void AttachLayout(MainLayout layout)
@@ -46,6 +53,7 @@ public sealed class FriendCallsUiCoordinator
             if (_callController.IsInCall)
                 await _callController.EndCallAsync("NewCall");
 
+            _currentFriendUserId = invite.FromUserId;
             await _friendCalls.RespondAsync(invite.FromUserId, invite.RoomCode, accepted: true);
 
             var session = await _calls.JoinAsync(invite.RoomCode);
@@ -82,6 +90,17 @@ public sealed class FriendCallsUiCoordinator
         {
             Core.Logger.Warn($"RejectIncomingCall failed: {ex.Message}");
         }
+    }
+
+    public void SetCurrentFriendUserId(string? userId)
+    {
+        _currentFriendUserId = userId;
+    }
+
+    private void OnAvatarReceived(string interlocutorId, byte[] data)
+    {
+        if (_currentFriendUserId is not null)
+            _avatarCache.SaveAvatarForUser(_currentFriendUserId, data);
     }
 
     private void OnIncomingCall(object? sender, IncomingCallInvite invite)

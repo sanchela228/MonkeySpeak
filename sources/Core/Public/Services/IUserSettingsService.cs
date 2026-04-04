@@ -9,11 +9,13 @@ public interface IUserSettingsService
     float MicrophoneVolume { get; set; }
     bool MicrophoneEnabled { get; set; }
     bool PlaybackEnabled { get; set; }
+    bool NoiseSuppressionEnabled { get; set; }
 
     // UI
     int WindowWidth { get; set; }
     int WindowHeight { get; set; }
     bool SidebarCollapsed { get; set; }
+    float InterfaceSoundVolume { get; set; }
 
     // Profile
     string? DisplayName { get; set; }

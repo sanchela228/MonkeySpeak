@@ -2,6 +2,7 @@ using Core.Domain.Media;
 using Core.Public.Services;
 using Core.Websockets;
 using Core.Websockets.Messages.NoAuthCall;
+using NewAppMaui.View.Components;
 using NewAppMaui.View.Layout;
 
 namespace NewAppMaui.View.Pages.Content;
@@ -56,6 +57,7 @@ public partial class CallRoomContent : ContentView
         _connection.MessageReceived += OnMessageReceived;
         _connection.StateChanged += OnStateChanged;
         _calls.StateChanged += OnCallStateChanged;
+        _calls.AvatarReceived += OnAvatarReceived;
         TryInitializeAudioAndPickers();
     }
 
@@ -64,6 +66,7 @@ public partial class CallRoomContent : ContentView
         _connection.MessageReceived -= OnMessageReceived;
         _connection.StateChanged -= OnStateChanged;
         _calls.StateChanged -= OnCallStateChanged;
+        _calls.AvatarReceived -= OnAvatarReceived;
     }
 
     private void TryInitializeAudioAndPickers()
@@ -225,16 +228,34 @@ public partial class CallRoomContent : ContentView
 
         foreach (var p in _participants)
         {
+            var row = new HorizontalStackLayout { Spacing = 8 };
+
+            var avatar = new AvatarView();
+            avatar.SetupInterlocutor(28, p.Id, p.Id);
+            row.Children.Add(avatar);
+
             var label = new Label
             {
                 Text = $"{p.Id}  •  {p.IpEndPoint}",
                 FontSize = 13,
-                TextColor = Color.FromArgb("#9ca3af")
+                TextColor = Color.FromArgb("#9ca3af"),
+                VerticalOptions = LayoutOptions.Center
             };
-            ParticipantsPanel.Children.Add(label);
+            row.Children.Add(label);
+
+            ParticipantsPanel.Children.Add(row);
         }
 
         ParticipantCountChanged?.Invoke(_participants.Count + 1);
+    }
+
+    private void OnAvatarReceived(string interlocutorId, byte[] data)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (_participants.Any(p => p.Id == interlocutorId))
+                RefreshParticipantsUi();
+        });
     }
 
     public void RefreshAudioButtons()

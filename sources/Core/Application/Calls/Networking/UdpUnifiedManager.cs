@@ -11,7 +11,8 @@ public sealed class UdpUnifiedManager : IDisposable
         HolePunch = 0,
         Audio = 1,
         Control = 2,
-        Ping = 3
+        Ping = 3,
+        Avatar = 4
     }
 
     public event Action<IPEndPoint, IPEndPoint>? OnConnected;
@@ -25,6 +26,9 @@ public sealed class UdpUnifiedManager : IDisposable
     public event Action<string, byte[]>? OnControlDataByInterlocutor;
     public event Action<string, byte[]>? OnHolePunchDataByInterlocutor;
     public event Action<string, byte[]>? OnPingDataByInterlocutor;
+
+    public event Action<byte[]>? OnAvatarData;
+    public event Action<string, byte[]>? OnAvatarDataByInterlocutor;
 
     private UdpClient? _client;
     private IPEndPoint? _remote;
@@ -109,6 +113,15 @@ public sealed class UdpUnifiedManager : IDisposable
 
     public Task SendAudioAsync(ReadOnlyMemory<byte> payload) => SendAsync(MessageType.Audio, payload);
     public Task SendControlAsync(ReadOnlyMemory<byte> payload) => SendAsync(MessageType.Control, payload);
+    public Task SendAvatarAsync(ReadOnlyMemory<byte> payload) => SendAsync(MessageType.Avatar, payload);
+
+    public Task SendAvatarToInterlocutorAsync(string interlocutorId, ReadOnlyMemory<byte> payload)
+    {
+        if (!_interlocutorToRemote.TryGetValue(interlocutorId, out var ep))
+            throw new InvalidOperationException("Unknown interlocutor");
+
+        return SendToRemoteAsync(MessageType.Avatar, payload, ep);
+    }
 
     public Task SendPingAsync() => SendAsync(MessageType.Ping, Encoding.UTF8.GetBytes("PING"));
 
@@ -327,6 +340,12 @@ public sealed class UdpUnifiedManager : IDisposable
                         OnControlData?.Invoke(payload);
                         if (_remoteToInterlocutor.TryGetValue(result.RemoteEndPoint, out var ilIdC))
                             OnControlDataByInterlocutor?.Invoke(ilIdC, payload);
+                        break;
+
+                    case MessageType.Avatar:
+                        OnAvatarData?.Invoke(payload);
+                        if (_remoteToInterlocutor.TryGetValue(result.RemoteEndPoint, out var ilIdAv))
+                            OnAvatarDataByInterlocutor?.Invoke(ilIdAv, payload);
                         break;
 
                     case MessageType.Ping:

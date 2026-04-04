@@ -9,8 +9,10 @@ public partial class MainLayout : ContentPage
 {
     private readonly IAuthService _auth;
     private readonly IFriendsService _friends;
+    private readonly IAudioService _audio;
     private readonly IUserSettingsService _settings;
     private readonly CallUiController _callController;
+    private readonly FriendCallsUiCoordinator _friendCallsCoordinator;
     private readonly Dictionary<string, Func<Microsoft.Maui.Controls.View>> _contentFactories;
     private CallRoomContent? _callRoomContent;
     private bool _sidebarCollapsed;
@@ -18,14 +20,16 @@ public partial class MainLayout : ContentPage
     public event Action? IncomingCallAcceptRequested;
     public event Action? IncomingCallRejectRequested;
 
-    public MainLayout(IAuthService auth, IFriendsService friends, IUserSettingsService settings, CallUiController callController, FriendCallsUiCoordinator friendCallsCoordinator)
+    public MainLayout(IAuthService auth, IFriendsService friends, IAudioService audio, IUserSettingsService settings, CallUiController callController, FriendCallsUiCoordinator friendCallsCoordinator)
     {
         _auth = auth;
         _friends = friends;
+        _audio = audio;
         _settings = settings;
         _callController = callController;
+        _friendCallsCoordinator = friendCallsCoordinator;
         _callController.AttachLayout(this);
-        friendCallsCoordinator.AttachLayout(this);
+        _friendCallsCoordinator.AttachLayout(this);
 
         InitializeComponent();
 
@@ -62,6 +66,7 @@ public partial class MainLayout : ContentPage
 
         SidebarView.InitializeFriends(_friends);
         SidebarView.SubscribeToProfileChanges(_auth, _settings);
+        ApplySavedAudioSettings();
     }
 
     public void NavigateTo(string key)
@@ -150,6 +155,7 @@ public partial class MainLayout : ContentPage
 
     public void ShowOutgoingCall(string friendId, string friendUsername)
     {
+        _friendCallsCoordinator.SetCurrentFriendUserId(friendId);
         var view = new OutgoingCallContent(_callController);
         view.Initialize(friendId, friendUsername);
         view.BackRequested += () =>
@@ -243,6 +249,32 @@ public partial class MainLayout : ContentPage
         RootGrid.ColumnDefinitions[0].Width = collapsed
             ? new GridLength(0)
             : new GridLength(260);
+    }
+
+    private void ApplySavedAudioSettings()
+    {
+        try
+        {
+            if (!_audio.IsInitialized)
+                _audio.Initialize();
+
+            _audio.MicrophoneVolume = (int)(_settings.MicrophoneVolume * 100);
+            _audio.PlaybackVolume = (int)(_settings.MasterVolume * 100);
+            _audio.IsNoiseSuppressionEnabled = _settings.NoiseSuppressionEnabled;
+
+            if (_settings.PreferredCaptureDeviceId is not null)
+            {
+                try { _audio.SwitchCaptureDevice(_settings.PreferredCaptureDeviceId); } catch { }
+            }
+            if (_settings.PreferredPlaybackDeviceId is not null)
+            {
+                try { _audio.SwitchPlaybackDevice(_settings.PreferredPlaybackDeviceId); } catch { }
+            }
+        }
+        catch (Exception ex)
+        {
+            Core.Logger.Warn($"ApplySavedAudioSettings failed: {ex.Message}");
+        }
     }
 
     private void OnExpandTapped(object? sender, TappedEventArgs e)

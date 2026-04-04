@@ -1,5 +1,6 @@
 using Core.Domain.Calls;
 using Core.Public.Services;
+using NewAppMaui.Services;
 
 namespace NewAppMaui.View.Layout;
 
@@ -7,6 +8,7 @@ public class CallUiController
 {
     private readonly ICallsService _calls;
     private readonly IAudioService _audio;
+    private readonly UiSoundService _uiSound;
     private MainLayout? _layout;
     private bool _ending;
 
@@ -16,10 +18,11 @@ public class CallUiController
     public event Action? CallStarted;
     public event Action? CallEnded;
 
-    public CallUiController(ICallsService calls, IAudioService audio)
+    public CallUiController(ICallsService calls, IAudioService audio, UiSoundService uiSound)
     {
         _calls = calls;
         _audio = audio;
+        _uiSound = uiSound;
 
         _calls.StateChanged += OnCallStateChanged;
     }
@@ -36,9 +39,15 @@ public class CallUiController
         _ending = false;
         IsInCall = true;
         RoomCode = roomCode;
+
+        _audio.IsMicrophoneEnabled = true;
+        _audio.IsPlaybackEnabled = true;
+
         CallStarted?.Invoke();
+        _uiSound.PlayConnect();
 
         _layout?.ShowCallView(roomCode, initialParticipants);
+        _layout?.SyncAudioStates();
     }
 
     public async Task EndCallAsync(string reason = "UserHangup")
@@ -60,6 +69,7 @@ public class CallUiController
 
         _ending = false;
 
+        _uiSound.PlayDisconnect();
         CallEnded?.Invoke();
         MainThread.BeginInvokeOnMainThread(() => _layout?.HideCallView());
     }
@@ -67,6 +77,12 @@ public class CallUiController
     public void ToggleMic()
     {
         _audio.IsMicrophoneEnabled = !_audio.IsMicrophoneEnabled;
+
+        if (_audio.IsMicrophoneEnabled)
+            _uiSound.PlayMicOn();
+        else
+            _uiSound.PlayMicOff();
+
         _layout?.SyncAudioStates();
     }
 

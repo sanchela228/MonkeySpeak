@@ -58,6 +58,18 @@ public partial class AddFriendContent : ContentView
         SuccessLabel.IsVisible = false;
     }
 
+    private async void OnMyHandleTapped(object? sender, TappedEventArgs e)
+    {
+        if (_auth.Username is null || _auth.UserCode is null) return;
+
+        var handle = $"{_auth.Username}#{_auth.UserCode}";
+        await Clipboard.Default.SetTextAsync(handle);
+
+        MyHandleLabel.Text = "Copied!";
+        await Task.Delay(1500);
+        MyHandleLabel.Text = $"Your handle: {handle}";
+    }
+
     private void OnBackClicked(object? sender, EventArgs e)
     {
         BackRequested?.Invoke();

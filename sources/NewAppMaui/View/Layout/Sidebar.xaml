@@ -56,222 +56,11 @@
                      BackgroundColor="#242426"
                      Margin="-12,0,-12,4" />
 
-            <!-- Incoming call widget (hidden by default) -->
-            <Border
-                x:Name="IncomingCallWidget"
-                IsVisible="False"
-                Padding="12,10"
-                StrokeThickness="1"
-                Stroke="{StaticResource AccentGreen}"
-                BackgroundColor="#0d1f11"
-                StrokeShape="RoundRectangle 10">
+            <layout:SidebarIncomingCallWidget
+                x:Name="IncomingCallView" />
 
-                <VerticalStackLayout Spacing="8">
-                    <Label
-                        x:Name="IncomingCallerLabel"
-                        Text="Incoming call"
-                        FontSize="13"
-                        TextColor="{StaticResource TextPrimary}" />
-
-                    <Label
-                        Text="is calling you..."
-                        FontSize="11"
-                        TextColor="{StaticResource TextSecondary}" />
-
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                        <Button
-                            x:Name="IncomingAcceptBtn"
-                            Text="Accept"
-                            FontSize="12"
-                            HeightRequest="34"
-                            BackgroundColor="{StaticResource AccentGreen}"
-                            TextColor="White"
-                            CornerRadius="8"
-                            Clicked="OnIncomingAcceptClicked" />
-                        <Button
-                            x:Name="IncomingRejectBtn"
-                            Grid.Column="1"
-                            Text="Decline"
-                            FontSize="12"
-                            HeightRequest="34"
-                            BackgroundColor="{StaticResource CardBorder}"
-                            TextColor="White"
-                            CornerRadius="8"
-                            Clicked="OnIncomingRejectClicked" />
-                    </Grid>
-                </VerticalStackLayout>
-            </Border>
-
-            <!-- In Call widget (hidden by default) -->
-            <Border
-                x:Name="CallMenuItem"
-                IsVisible="False"
-                Padding="0"
-                StrokeThickness="0"
-                Margin="0,6,0,6"
-                BackgroundColor="#14251d"
-                StrokeShape="RoundRectangle 12">
-
-                <VerticalStackLayout Spacing="0">
-
-                    <!-- Top: room code + timer + count (clickable) -->
-                    <Border
-                        Padding="12, 10, 12, 8"
-                        StrokeThickness="0"
-                        Margin="4"
-                        BackgroundColor="Transparent"
-                        StrokeShape="RoundRectangle 12">
-                        <Border.Behaviors>
-                            <behaviors:HandCursorBehavior />
-                        </Border.Behaviors>
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnCallTapped" />
-                        </Border.GestureRecognizers>
-                        <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroupList>
-                                <VisualStateGroup Name="CommonStates">
-                                    <VisualState Name="Normal" />
-                                    <VisualState Name="PointerOver">
-                                        <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="#132b17" />
-                                        </VisualState.Setters>
-                                    </VisualState>
-                                </VisualStateGroup>
-                            </VisualStateGroupList>
-                        </VisualStateManager.VisualStateGroups>
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Label
-                                x:Name="CallRoomCodeLabel"
-                                Text="------"
-                                FontFamily="JetBrainsMono"
-                                FontSize="18"
-                                TextColor="{StaticResource TextPrimary}"
-                                CharacterSpacing="3"
-                                VerticalOptions="Center" />
-
-                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
-                                <HorizontalStackLayout Spacing="6" HorizontalOptions="End">
-                                    <Border
-                                        WidthRequest="8" HeightRequest="8"
-                                        StrokeThickness="0"
-                                        BackgroundColor="{StaticResource AccentGreen}"
-                                        StrokeShape="RoundRectangle 4"
-                                        VerticalOptions="Center" />
-                                    <Label
-                                        x:Name="CallTimerLabel"
-                                        Text="00:00"
-                                        FontFamily="JetBrainsMono"
-                                        FontSize="14"
-                                        TextColor="{StaticResource AccentGreen}" />
-                                </HorizontalStackLayout>
-                                <Label
-                                    x:Name="CallParticipantsLabel"
-                                    Text="1 in call"
-                                    FontSize="12"
-                                    TextColor="{StaticResource TextSecondary}"
-                                    HorizontalOptions="End" />
-                            </VerticalStackLayout>
-                        </Grid>
-                    </Border>
-                    
-                    <!-- Bottom: audio controls -->
-                    <Grid ColumnDefinitions="*,*,*" HeightRequest="44">
-
-                        <Border
-                            x:Name="CallVolumeBtn"
-                            Margin="4"
-                            StrokeThickness="0"
-                            BackgroundColor="#0E1A14"
-                            StrokeShape="RoundRectangle 12">
-                            <Border.Behaviors>
-                                <behaviors:HandCursorBehavior />
-                            </Border.Behaviors>
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnCallVolumeTapped" />
-                            </Border.GestureRecognizers>
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroupList>
-                                    <VisualStateGroup Name="CommonStates">
-                                        <VisualState Name="Normal" />
-                                        <VisualState Name="PointerOver">
-                                            <VisualState.Setters>
-                                                <Setter Property="BackgroundColor" Value="#132b17" />
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                    </VisualStateGroup>
-                                </VisualStateGroupList>
-                            </VisualStateManager.VisualStateGroups>
-                            <Image x:Name="CallVolumeIcon"
-                                   Source="volume.png"
-                                   WidthRequest="20" HeightRequest="20"
-                                   HorizontalOptions="Center" VerticalOptions="Center" />
-                        </Border>
-
-                        <Border
-                            Grid.Column="1"
-                            Margin="4"
-                            x:Name="CallMicBtn"
-                            StrokeThickness="0"
-                            StrokeShape="RoundRectangle 12"
-                            BackgroundColor="#0E1A14">
-                            <Border.Behaviors>
-                                <behaviors:HandCursorBehavior />
-                            </Border.Behaviors>
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnCallMicTapped" />
-                            </Border.GestureRecognizers>
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroupList>
-                                    <VisualStateGroup Name="CommonStates">
-                                        <VisualState Name="Normal" />
-                                        <VisualState Name="PointerOver">
-                                            <VisualState.Setters>
-                                                <Setter Property="BackgroundColor" Value="#132b17" />
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                    </VisualStateGroup>
-                                </VisualStateGroupList>
-                            </VisualStateManager.VisualStateGroups>
-                            <Image x:Name="CallMicIcon"
-                                   Source="micro.png"
-                                   WidthRequest="20" HeightRequest="20"
-                                   HorizontalOptions="Center" VerticalOptions="Center" />
-                        </Border>
-
-                        <Border
-                            Grid.Column="2"
-                            Margin="4"
-                            x:Name="CallHangupBtn"
-                            StrokeThickness="0"
-                            BackgroundColor="#0E1A14"
-                            StrokeShape="RoundRectangle 12">
-                            <Border.Behaviors>
-                                <behaviors:HandCursorBehavior />
-                            </Border.Behaviors>
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnCallHangupTapped" />
-                            </Border.GestureRecognizers>
-                            <VisualStateManager.VisualStateGroups>
-                                <VisualStateGroupList>
-                                    <VisualStateGroup Name="CommonStates">
-                                        <VisualState Name="Normal" />
-                                        <VisualState Name="PointerOver">
-                                            <VisualState.Setters>
-                                                <Setter Property="BackgroundColor" Value="#2a1515" />
-                                            </VisualState.Setters>
-                                        </VisualState>
-                                    </VisualStateGroup>
-                                </VisualStateGroupList>
-                            </VisualStateManager.VisualStateGroups>
-                            <Image Source="drop_call.png"
-                                   WidthRequest="20" HeightRequest="20"
-                                   HorizontalOptions="Center" VerticalOptions="Center" />
-                        </Border>
-                        
-                    </Grid>
-
-                </VerticalStackLayout>
-            </Border>
+            <layout:SidebarActiveCallWidget
+                x:Name="ActiveCallView" />
 
             <layout:SidebarMenuItem
                 x:Name="MenuItem1"
@@ -285,9 +74,12 @@
 
             <layout:SidebarMenuItem
                 x:Name="MenuItem2"
-                Text="Test Page 2"
-                IconSource="custom_conn.png"
-                HoverBackground="#1a1a1a"
+                Text="P2P File Transfer"
+                IconSource="repeat.png"
+                IconSourceActive="repeat_green.png"
+                TextColorActive="#22c55e"
+                ActiveBackground="#14251d"
+                HoverBackground="#1a2e1f"
                 Clicked="OnMenu2Tapped" />
 
         </VerticalStackLayout>

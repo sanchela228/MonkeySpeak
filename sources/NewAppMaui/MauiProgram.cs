@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Controls.PlatformConfiguration;
 using NewAppMaui.Configurations;
 using NewAppMaui.Services;
+using Plugin.Maui.Audio;
 
 namespace NewAppMaui;
 
@@ -49,6 +50,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<FriendCallsUiCoordinator>();
         builder.Services.AddSingleton<ICallsService, CallsService>();
         builder.Services.AddSingleton<IAudioService, AudioService>();
+        builder.Services.AddSingleton<IAvatarProvider, AvatarCacheService>();
+        builder.Services.AddSingleton<AvatarCacheService>(sp => (AvatarCacheService)sp.GetRequiredService<IAvatarProvider>());
+        builder.Services.AddSingleton(AudioManager.Current);
+        builder.Services.AddSingleton<UiSoundService>();
         
         builder.Services.AddSingleton<IStunClient, MainServerStunClient>();
         builder.Services.AddSingleton<UdpUnifiedManager>();

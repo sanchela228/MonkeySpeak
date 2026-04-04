@@ -8,6 +8,8 @@ public interface ICallsService
     event EventHandler<CallSession?>? CurrentChanged;
     event EventHandler<CallState>? StateChanged;
 
+    event Action<string, byte[]>? AvatarReceived;
+
     Task<CallSession> CreateAsync(CancellationToken ct = default);
     Task<CallSession> JoinAsync(string code, CancellationToken ct = default);
     Task HangupAsync(CancellationToken ct = default);

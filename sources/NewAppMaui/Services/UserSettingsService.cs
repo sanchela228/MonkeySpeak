@@ -72,6 +72,12 @@ public sealed class UserSettingsService : IUserSettingsService
         set { _data.PlaybackEnabled = value; _dirty = true; }
     }
 
+    public bool NoiseSuppressionEnabled
+    {
+        get => _data.NoiseSuppressionEnabled;
+        set { _data.NoiseSuppressionEnabled = value; _dirty = true; }
+    }
+
     // UI
     public int WindowWidth
     {
@@ -89,6 +95,12 @@ public sealed class UserSettingsService : IUserSettingsService
     {
         get => _data.SidebarCollapsed;
         set { _data.SidebarCollapsed = value; _dirty = true; }
+    }
+
+    public float InterfaceSoundVolume
+    {
+        get => _data.InterfaceSoundVolume;
+        set { _data.InterfaceSoundVolume = Math.Clamp(value, 0f, 1f); _dirty = true; }
     }
 
     // Profile
@@ -155,9 +167,11 @@ public sealed class UserSettingsService : IUserSettingsService
         public float MicrophoneVolume { get; set; } = 1.0f;
         public bool MicrophoneEnabled { get; set; } = true;
         public bool PlaybackEnabled { get; set; } = true;
+        public bool NoiseSuppressionEnabled { get; set; } = true;
         public int WindowWidth { get; set; } = 800;
         public int WindowHeight { get; set; } = 600;
         public bool SidebarCollapsed { get; set; }
+        public float InterfaceSoundVolume { get; set; } = 0.5f;
         public string? DisplayName { get; set; }
         public string? AvatarPath { get; set; }
     }

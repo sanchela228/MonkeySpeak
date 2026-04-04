@@ -3,7 +3,8 @@
     x:Class="NewAppMaui.View.Components.FriendCard"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors">
+    xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors"
+    xmlns:components="clr-namespace:NewAppMaui.View.Components">
 
     <Border
         x:Name="Container"
@@ -32,24 +33,9 @@
 
         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
 
-            <!-- Avatar with online indicator -->
             <Grid WidthRequest="36" HeightRequest="36">
-                <Border
-                    WidthRequest="36" HeightRequest="36"
-                    StrokeThickness="0"
-                    BackgroundColor="{StaticResource CardBorder}"
-                    StrokeShape="RoundRectangle 18">
-                    <Label
-                        x:Name="AvatarLabel"
-                        Text="UN"
-                        FontSize="13"
-                        FontAttributes="Bold"
-                        TextColor="{StaticResource TextPrimary}"
-                        HorizontalOptions="Center"
-                        VerticalOptions="Center" />
-                </Border>
+                <components:AvatarView x:Name="Avatar" />
 
-                <!-- Online indicator dot -->
                 <Border
                     x:Name="OnlineDot"
                     IsVisible="False"
@@ -62,7 +48,6 @@
                     VerticalOptions="End" />
             </Grid>
 
-            <!-- Name + status -->
             <VerticalStackLayout Grid.Column="1" Spacing="0" VerticalOptions="Center">
                 <Label
                     x:Name="NameLabel"

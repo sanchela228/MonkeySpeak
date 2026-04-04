@@ -37,7 +37,6 @@ public partial class FriendsPanel : ContentView
         OnlineList.Children.Clear();
         OfflineList.Children.Clear();
 
-        // Pending requests
         PendingSection.IsVisible = pending.Count > 0;
         foreach (var req in pending)
         {
@@ -48,7 +47,6 @@ public partial class FriendsPanel : ContentView
             PendingList.Children.Add(card);
         }
 
-        // Split friends
         var online = friends.Where(f => f.IsOnline).ToList();
         var offline = friends.Where(f => !f.IsOnline).ToList();
 

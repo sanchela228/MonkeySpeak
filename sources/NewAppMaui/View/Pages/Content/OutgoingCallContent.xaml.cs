@@ -31,9 +31,7 @@ public partial class OutgoingCallContent : ContentView
     {
         _friendId = friendId;
         NameLabel.Text = friendUsername;
-        AvatarLabel.Text = friendUsername.Length >= 2
-            ? friendUsername[..2].ToUpperInvariant()
-            : friendUsername.ToUpperInvariant();
+        Avatar.Setup(80, friendUsername, friendId);
 
         _cts = new CancellationTokenSource();
         _friendCalls.InviteResponse += OnInviteResponse;

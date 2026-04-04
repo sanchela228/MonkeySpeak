@@ -17,7 +17,7 @@ public partial class FriendCard : ContentView
     {
         FriendData = friend;
         NameLabel.Text = friend.Username ?? "Unknown";
-        AvatarLabel.Text = GetInitials(friend.Username);
+        Avatar.Setup(36, friend.Username, friend.UserId);
 
         if (friend.IsOnline)
         {
@@ -30,14 +30,6 @@ public partial class FriendCard : ContentView
             OnlineDot.IsVisible = false;
             StatusLabel.IsVisible = false;
         }
-    }
-
-    private static string GetInitials(string? name)
-    {
-        if (string.IsNullOrWhiteSpace(name)) return "??";
-        return name.Length >= 2
-            ? name[..2].ToUpperInvariant()
-            : name.ToUpperInvariant();
     }
 
     private void OnTapped(object? sender, TappedEventArgs e)

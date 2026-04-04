@@ -2,7 +2,8 @@
 <ContentView
     x:Class="NewAppMaui.View.Pages.Content.OutgoingCallContent"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:components="clr-namespace:NewAppMaui.View.Components">
 
     <VerticalStackLayout
         VerticalOptions="Center"
@@ -11,21 +12,11 @@
         MaximumWidthRequest="350">
 
         <!-- Avatar -->
-        <Border
-            WidthRequest="80" HeightRequest="80"
-            StrokeThickness="0"
-            BackgroundColor="{StaticResource CardBorder}"
-            StrokeShape="RoundRectangle 40"
-            HorizontalOptions="Center">
-            <Label
-                x:Name="AvatarLabel"
-                Text="UN"
-                FontSize="28"
-                FontAttributes="Bold"
-                TextColor="{StaticResource TextPrimary}"
-                HorizontalOptions="Center"
-                VerticalOptions="Center" />
-        </Border>
+        <components:AvatarView
+            x:Name="Avatar"
+            HorizontalOptions="Center"
+            WidthRequest="80"
+            HeightRequest="80" />
 
         <Label
             x:Name="NameLabel"

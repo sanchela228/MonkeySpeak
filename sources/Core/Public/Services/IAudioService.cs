@@ -29,6 +29,7 @@ public interface IAudioService : IDisposable
     bool IsPlaybackEnabled { get; set; }
     int MicrophoneVolume { get; set; }   // 0–200 %
     int PlaybackVolume { get; set; }     // 0–200 %
+    bool IsNoiseSuppressionEnabled { get; set; }
 
     float SelfAudioLevel { get; }
     float GetInterlocutorAudioLevel(string interlocutorId);

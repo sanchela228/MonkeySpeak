@@ -21,7 +21,12 @@
             Text=""
             FontSize="13"
             TextColor="{StaticResource TextSecondary}"
-            HorizontalOptions="Center" />
+            TextDecorations="Underline"
+            HorizontalOptions="Center">
+            <Label.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnMyHandleTapped" />
+            </Label.GestureRecognizers>
+        </Label>
 
         <Entry
             x:Name="HandleEntry"

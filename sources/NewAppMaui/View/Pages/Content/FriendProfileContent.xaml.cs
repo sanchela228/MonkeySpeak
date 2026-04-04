@@ -24,7 +24,7 @@ public partial class FriendProfileContent : ContentView
 
         var name = friend.Username ?? "Unknown";
         NameLabel.Text = name;
-        AvatarLabel.Text = name.Length >= 2 ? name[..2].ToUpperInvariant() : name.ToUpperInvariant();
+        Avatar.Setup(80, name, friend.UserId);
 
         if (friend.IsOnline)
         {

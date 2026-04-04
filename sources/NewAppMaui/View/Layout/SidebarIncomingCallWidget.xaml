@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Layout.SidebarIncomingCallWidget"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:behaviors="clr-namespace:NewAppMaui.Behaviors"
+    IsVisible="False">
+
+    <Border
+        Padding="10,8"
+        StrokeThickness="0"
+        Margin="0,6,0,6"
+        BackgroundColor="{StaticResource AccentGreenBackground}"
+        StrokeShape="RoundRectangle 10">
+
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+
+            <VerticalStackLayout VerticalOptions="Center" Spacing="1">
+                <Label
+                    x:Name="IncomingCallerLabel"
+                    Text="Incoming call"
+                    FontSize="13"
+                    LineBreakMode="TailTruncation"
+                    TextColor="{StaticResource TextPrimary}" />
+                <Label
+                    Text="is calling you..."
+                    FontSize="11"
+                    TextColor="{StaticResource TextSecondary}" />
+            </VerticalStackLayout>
+
+            <Border
+                Grid.Column="1"
+                WidthRequest="36" HeightRequest="36"
+                StrokeThickness="0"
+                BackgroundColor="{StaticResource CardBackground}"
+                StrokeShape="RoundRectangle 18">
+                <Border.Behaviors>
+                    <behaviors:HandCursorBehavior />
+                </Border.Behaviors>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAcceptClicked" />
+                </Border.GestureRecognizers>
+                <Image Source="phone.png"
+                       WidthRequest="18" HeightRequest="18"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+
+            <Border
+                Grid.Column="2"
+                WidthRequest="36" HeightRequest="36"
+                StrokeThickness="0"
+                BackgroundColor="{StaticResource CardBackground}"
+                StrokeShape="RoundRectangle 18">
+                <Border.Behaviors>
+                    <behaviors:HandCursorBehavior />
+                </Border.Behaviors>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnRejectClicked" />
+                </Border.GestureRecognizers>
+                <Image Source="drop_call.png"
+                       WidthRequest="18" HeightRequest="18"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+
+        </Grid>
+    </Border>
+
+</ContentView>

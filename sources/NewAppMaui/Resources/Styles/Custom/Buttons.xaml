@@ -63,6 +63,33 @@
         </Setter>
     </Style>
     
+    <Style x:Key="RedMainButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="JetBrainsMono" />
+        <Setter Property="BackgroundColor" Value="{StaticResource AccentRed}" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="BorderColor" Value="{StaticResource AccentRedHover}" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="behaviors:HandCursor.Enabled" Value="True" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup Name="CommonStates">
+                    <VisualState Name="Normal" />
+                    <VisualState Name="Pressed">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource AccentRedPressed}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState Name="PointerOver">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{StaticResource AccentRedHover}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+    
     <Style x:Key="GrayOutBorderButton" TargetType="Button">
         <Setter Property="FontFamily" Value="JetBrainsMono" />
         <Setter Property="BackgroundColor" Value="Transparent" />

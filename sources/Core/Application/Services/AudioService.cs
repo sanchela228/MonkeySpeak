@@ -41,6 +41,7 @@ public sealed class AudioService : IAudioService
     private readonly List<float> _opusBuffer = new(FrameSizePerChannel);
     private readonly byte[] _opusPacket = new byte[MaxOpusPacketBytes];
 
+    private bool _noiseSuppressionEnabled = true;
     private readonly ConcurrentDictionary<string, InterlocutorAudioChannel> _channels = new();
 
     private readonly ConcurrentQueue<Action> _mixerActions = new();
@@ -113,6 +114,12 @@ public sealed class AudioService : IAudioService
     {
         get => _playbackVolume;
         set => _playbackVolume = Math.Clamp(value, 0, 200);
+    }
+
+    public bool IsNoiseSuppressionEnabled
+    {
+        get => _noiseSuppressionEnabled;
+        set => _noiseSuppressionEnabled = value;
     }
 
     public float SelfAudioLevel
@@ -454,8 +461,11 @@ public sealed class AudioService : IAudioService
                 float[] frame = _rnnoiseBuffer.GetRange(0, FrameSizePerChannel).ToArray();
                 _rnnoiseBuffer.RemoveRange(0, FrameSizePerChannel);
 
-                Span<float> span = frame.AsSpan();
-                _denoiser!.Denoise(span, finish: false);
+                if (_noiseSuppressionEnabled && _denoiser is not null)
+                {
+                    Span<float> span = frame.AsSpan();
+                    _denoiser.Denoise(span, finish: false);
+                }
 
                 lock (_opusBuffer)
                 {

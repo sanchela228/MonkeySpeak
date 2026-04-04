@@ -31,6 +31,12 @@
     <Color x:Key="AccentGreen">#4B9B58</Color>
     <Color x:Key="AccentGreenHover">#60c571</Color>
     <Color x:Key="AccentGreenPressed">#4a8B58</Color>
+    <Color x:Key="AccentGreenBackground">#14251d</Color>
+    
+    <!-- App accent red -->
+    <Color x:Key="AccentRed">#9B4B4B</Color>
+    <Color x:Key="AccentRedHover">#c56060</Color>
+    <Color x:Key="AccentRedPressed">#8B4A4A</Color>
 
     <!-- Surfaces -->
     <Color x:Key="CardBackground">#121212</Color>

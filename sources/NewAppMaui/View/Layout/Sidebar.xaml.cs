@@ -17,13 +17,18 @@ public partial class Sidebar : ContentView
     public event EventHandler? IncomingCallRejected;
     public event EventHandler<FriendRequest>? RejectFriendRequested;
 
-    private IDispatcherTimer? _callTimer;
-    private DateTime _callStartTime;
-
     public Sidebar()
     {
         InitializeComponent();
         SetActiveItem("menu1");
+
+        IncomingCallView.Accepted += (_, _) => IncomingCallAccepted?.Invoke(this, EventArgs.Empty);
+        IncomingCallView.Rejected += (_, _) => IncomingCallRejected?.Invoke(this, EventArgs.Empty);
+
+        ActiveCallView.CallTapped += () => MenuItemSelected?.Invoke("call");
+        ActiveCallView.MicToggled += () => CallMicToggled?.Invoke();
+        ActiveCallView.VolumeToggled += () => CallVolumeToggled?.Invoke();
+        ActiveCallView.HangupRequested += () => CallHangupRequested?.Invoke();
 
         FriendsPanelView.FriendSelected += (_, f) => FriendSelected?.Invoke(this, f);
         FriendsPanelView.AddFriendRequested += (_, _) => AddFriendRequested?.Invoke(this, EventArgs.Empty);
@@ -70,67 +75,28 @@ public partial class Sidebar : ContentView
         UserAvatarBorder.IsVisible = true;
     }
 
-    public void SetCallActive(bool active, string roomCode = "")
-    {
-        CallMenuItem.IsVisible = active;
+    public void SetCallActive(bool active, string roomCode = "") =>
+        ActiveCallView.SetActive(active, roomCode);
 
-        if (active)
-        {
-            CallRoomCodeLabel.Text = roomCode.ToUpperInvariant();
-            CallParticipantsLabel.Text = "1 in call";
-            _callStartTime = DateTime.Now;
-            StartCallTimer();
-        }
-        else
-        {
-            StopCallTimer();
-        }
-    }
+    public void UpdateParticipantCount(int count) =>
+        ActiveCallView.UpdateParticipantCount(count);
 
-    public void UpdateParticipantCount(int count)
-    {
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            CallParticipantsLabel.Text = count == 1 ? "1 in call" : $"{count} in call";
-        });
-    }
+    public void SyncMicState(bool enabled) =>
+        ActiveCallView.SyncMicState(enabled);
 
-    public void SyncMicState(bool enabled)
-    {
-        CallMicIcon.Source = enabled ? "micro.png" : "micro_muted.png";
-    }
+    public void SyncVolumeState(bool enabled) =>
+        ActiveCallView.SyncVolumeState(enabled);
 
-    public void SyncVolumeState(bool enabled)
-    {
-        CallVolumeIcon.Source = enabled ? "volume.png" : "volume_muted.png";
-    }
+    public void ShowIncomingCall(string callerName) =>
+        IncomingCallView.Show(callerName);
+
+    public void HideIncomingCall() =>
+        IncomingCallView.Hide();
 
     public void SetActiveItem(string itemKey)
     {
         MenuItem1.IsActive = itemKey == "menu1";
         MenuItem2.IsActive = itemKey == "menu2";
-    }
-
-    private void StartCallTimer()
-    {
-        StopCallTimer();
-        _callTimer = Dispatcher.CreateTimer();
-        _callTimer.Interval = TimeSpan.FromSeconds(1);
-        _callTimer.Tick += (_, _) =>
-        {
-            var elapsed = DateTime.Now - _callStartTime;
-            CallTimerLabel.Text = elapsed.Hours > 0
-                ? elapsed.ToString(@"hh\:mm\:ss")
-                : elapsed.ToString(@"mm\:ss");
-        };
-        _callTimer.Start();
-    }
-
-    private void StopCallTimer()
-    {
-        _callTimer?.Stop();
-        _callTimer = null;
-        CallTimerLabel.Text = "00:00";
     }
 
     private void OnMenu1Tapped(object? sender, EventArgs e)
@@ -143,53 +109,6 @@ public partial class Sidebar : ContentView
     {
         SetActiveItem("menu2");
         MenuItemSelected?.Invoke("menu2");
-    }
-
-    private void OnCallTapped(object? sender, TappedEventArgs e)
-    {
-        MenuItemSelected?.Invoke("call");
-    }
-
-    private void OnCallMicTapped(object? sender, TappedEventArgs e)
-    {
-        CallMicToggled?.Invoke();
-    }
-
-    private void OnCallVolumeTapped(object? sender, TappedEventArgs e)
-    {
-        CallVolumeToggled?.Invoke();
-    }
-
-    private void OnCallHangupTapped(object? sender, TappedEventArgs e)
-    {
-        CallHangupRequested?.Invoke();
-    }
-
-    public void ShowIncomingCall(string callerName)
-    {
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            IncomingCallerLabel.Text = $"{callerName}";
-            IncomingCallWidget.IsVisible = true;
-        });
-    }
-
-    public void HideIncomingCall()
-    {
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            IncomingCallWidget.IsVisible = false;
-        });
-    }
-
-    private void OnIncomingAcceptClicked(object? sender, EventArgs e)
-    {
-        IncomingCallAccepted?.Invoke(this, EventArgs.Empty);
-    }
-
-    private void OnIncomingRejectClicked(object? sender, EventArgs e)
-    {
-        IncomingCallRejected?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnSettingsTapped(object? sender, TappedEventArgs e)

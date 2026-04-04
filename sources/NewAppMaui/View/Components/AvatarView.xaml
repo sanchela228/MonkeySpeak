@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Components.AvatarView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Grid x:Name="Root">
+        <Border
+            x:Name="InitialsBorder"
+            StrokeThickness="0"
+            BackgroundColor="{StaticResource CardBorder}"
+            HorizontalOptions="Center"
+            VerticalOptions="Center">
+            <Label
+                x:Name="InitialsLabel"
+                Text="??"
+                FontAttributes="Bold"
+                TextColor="{StaticResource TextPrimary}"
+                HorizontalOptions="Center"
+                VerticalOptions="Center" />
+        </Border>
+
+        <Image
+            x:Name="AvatarImage"
+            Aspect="AspectFill"
+            IsVisible="False"
+            HorizontalOptions="Center"
+            VerticalOptions="Center" />
+    </Grid>
+
+</ContentView>
