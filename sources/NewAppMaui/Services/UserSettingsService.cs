@@ -104,14 +104,14 @@ public sealed class UserSettingsService : IUserSettingsService
         set { _data.AvatarPath = value; _dirty = true; AvatarChanged?.Invoke(this, value); }
     }
 
-    public async Task LoadAsync()
+    public void Load()
     {
         try
         {
             if (!File.Exists(_settingsPath))
                 return;
 
-            var json = await File.ReadAllTextAsync(_settingsPath);
+            var json = File.ReadAllText(_settingsPath);
             var data = JsonSerializer.Deserialize<SettingsData>(json, JsonOpts);
             if (data is not null)
                 _data = data;
@@ -122,6 +122,12 @@ public sealed class UserSettingsService : IUserSettingsService
         }
 
         _dirty = false;
+    }
+
+    public Task LoadAsync()
+    {
+        Load();
+        return Task.CompletedTask;
     }
 
     public async Task SaveAsync()

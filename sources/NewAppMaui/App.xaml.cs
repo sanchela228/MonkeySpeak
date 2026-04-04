@@ -34,7 +34,8 @@ public partial class App : Application
 
         var store = _services.GetRequiredService<IConnectionSettingsStore>();
         var settings = _services.GetRequiredService<IUserSettingsService>();
-        settings.LoadAsync().GetAwaiter().GetResult();
+        if (settings is NewAppMaui.Services.UserSettingsService impl)
+            impl.Load();
         Page rootPage;
 
         if (store.HasExplicitActiveProfileSelection)
