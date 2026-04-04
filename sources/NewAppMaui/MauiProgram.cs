@@ -68,6 +68,43 @@ public static class MauiProgram
             fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             fonts.AddFont("Midami-Normal.ttf", "Midami");
             fonts.AddFont("JetBrainsMonoNL-Regular.ttf", "JetBrainsMono");
+        }).ConfigureMauiHandlers(handlers =>
+        {
+#if WINDOWS
+            Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("BorderlessEntry", (handler, view) =>
+            {
+                if (view is not Microsoft.Maui.Controls.Entry entry)
+                    return;
+
+                var hasCustomBg = entry.BackgroundColor != null
+                    && entry.BackgroundColor != Colors.Transparent
+                    && entry.BackgroundColor != KnownColor.Default;
+
+                var textBox = handler.PlatformView;
+
+                if (hasCustomBg)
+                {
+                    textBox.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+                    textBox.CornerRadius = new Microsoft.UI.Xaml.CornerRadius(10);
+                    textBox.Resources["TextControlBorderBrush"] = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
+                    textBox.Resources["TextControlBorderBrushPointerOver"] = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
+                    textBox.Resources["TextControlBorderBrushFocused"] = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
+                    textBox.Resources["TextControlBorderThemeThicknessFocused"] = new Microsoft.UI.Xaml.Thickness(0);
+                }
+                else
+                {
+                    textBox.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+                    textBox.Padding = new Microsoft.UI.Xaml.Thickness(0, 4, 0, 4);
+                    var transparent = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
+                    textBox.Background = transparent;
+                    textBox.Resources["TextControlBorderBrush"] = transparent;
+                    textBox.Resources["TextControlBorderBrushPointerOver"] = transparent;
+                    textBox.Resources["TextControlBorderBrushFocused"] = transparent;
+                    textBox.Resources["TextControlBorderBrushDisabled"] = transparent;
+                    textBox.Resources["TextControlBorderThemeThicknessFocused"] = new Microsoft.UI.Xaml.Thickness(0);
+                }
+            });
+#endif
         });
 #if DEBUG
         builder.Logging.AddDebug();
