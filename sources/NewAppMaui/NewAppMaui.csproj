@@ -107,6 +107,21 @@
       <MauiXaml Update="View\Pages\Modules\Authorization\LoginPage.xaml">
         <SubType>Designer</SubType>
       </MauiXaml>
+      <MauiXaml Update="View\Pages\Content\Firends\AddFriendContent.xaml">
+        <SubType>Designer</SubType>
+      </MauiXaml>
+      <MauiXaml Update="View\Pages\Content\Firends\FriendProfileContent.xaml">
+        <SubType>Designer</SubType>
+      </MauiXaml>
+      <MauiXaml Update="View\Pages\Content\Room\CallRoomContent.xaml">
+        <SubType>Designer</SubType>
+      </MauiXaml>
+      <MauiXaml Update="View\Pages\Content\Room\CreateRoomContent.xaml">
+        <SubType>Designer</SubType>
+      </MauiXaml>
+      <MauiXaml Update="View\Pages\Content\Room\JoinRoomContent.xaml">
+        <SubType>Designer</SubType>
+      </MauiXaml>
     </ItemGroup>
 
     <ItemGroup>
@@ -120,6 +135,26 @@
       </Compile>
       <Compile Update="View\Pages\Modules\Authorization\LoginPage.xaml.cs">
         <DependentUpon>LoginPage.xaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="View\Pages\Content\Firends\AddFriendContent.xaml.cs">
+        <DependentUpon>AddFriendContent.xaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="View\Pages\Content\Firends\FriendProfileContent.xaml.cs">
+        <DependentUpon>FriendProfileContent.xaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="View\Pages\Content\Room\CallRoomContent.xaml.cs">
+        <DependentUpon>CallRoomContent.xaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="View\Pages\Content\Room\CreateRoomContent.xaml.cs">
+        <DependentUpon>CreateRoomContent.xaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="View\Pages\Content\Room\JoinRoomContent.xaml.cs">
+        <DependentUpon>JoinRoomContent.xaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>
