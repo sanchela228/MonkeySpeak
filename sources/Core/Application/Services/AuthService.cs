@@ -319,10 +319,35 @@ public class AuthService : IAuthService
         var error = $"{msg.ErrorCode}: {msg.Value}";
         Core.Logger.Warn($"Auth error: {error}");
 
+        if (msg.ErrorCode == "USER_NOT_FOUND")
+        {
+            _ = ReRegisterAsync();
+            return;
+        }
+
         _loginTcs?.TrySetException(new InvalidOperationException(error));
         _authTcs?.TrySetException(new InvalidOperationException(error));
         _changeUsernameTcs?.TrySetException(new InvalidOperationException(error));
         AuthFailed?.Invoke(this, error);
+    }
+
+    private async Task ReRegisterAsync()
+    {
+        Core.Logger.Info("User not found on server, re-registering...");
+        await _keyStore.ClearRegistrationAsync();
+        _authInProgress = false;
+
+        try
+        {
+            await RegisterIfNeededAsync();
+        }
+        catch (Exception ex)
+        {
+            var error = $"RE_REGISTER_FAILED: {ex.Message}";
+            Core.Logger.Warn(error);
+            _authTcs?.TrySetException(new InvalidOperationException(error));
+            AuthFailed?.Invoke(this, error);
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
