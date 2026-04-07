@@ -1,87 +1,111 @@
-name: Build Installer & Release
+name: Release
 
 on:
   push:
     branches: [ "master" ]
 
 jobs:
-  build-release:
-    runs-on: windows-latest
 
+  read-version:
+    runs-on: ubuntu-latest
+    outputs:
+      appVersion: ${{ steps.ver.outputs.appVersion }}
+      backendVersion: ${{ steps.ver.outputs.backendVersion }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      
-      # =============================
-      # READ VERSION FROM XML
-      # =============================
-      - name: Read version from AppConfig.xml
-        shell: powershell
+      - uses: actions/checkout@v4
+      - id: ver
         run: |
-          [xml]$xml = Get-Content sources/App/AppConfig.xml
-          $versionName = $xml.AppConfig.VersionName
-          $version = $xml.AppConfig.Version
-          
-          echo "APP_VERSION_NAME=$versionName" >> $env:GITHUB_ENV
-          echo "APP_VERSION=$version" >> $env:GITHUB_ENV
-          
-          echo "VersionName: $versionName"
-          echo "Version: $version"
-      
-      # =============================
-      # BUILD APP
-      # =============================
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+          echo "appVersion=$(jq -r .appVersion version.json)" >> $GITHUB_OUTPUT
+          echo "backendVersion=$(jq -r .backendVersion version.json)" >> $GITHUB_OUTPUT
+
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
+      - run: dotnet test sources/Backend.Tests/Backend.Tests.csproj
 
-      - name: Publish app
+  build-backend-image:
+    needs: [read-version, test-backend]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Backend.Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/monkeyspeak-backend:latest
+            ghcr.io/${{ github.repository_owner }}/monkeyspeak-backend:v${{ needs.read-version.outputs.backendVersion }}
+
+  build-maui-windows:
+    needs: [read-version, test-backend]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui-windows
+
+      - name: Publish MAUI app
         run: |
-          dotnet restore sources/App/App.csproj
-          dotnet publish sources/App/App.csproj `
+          dotnet publish sources/NewAppMaui/NewAppMaui.csproj `
             -c Release `
+            -f net10.0-windows10.0.19041.0 `
             -r win-x64 `
             --self-contained true `
-            -o build/win
-      
-      # =============================
-      # BUILD INSTALLER
-      # =============================
-      - name: Install Inno Setup
-        run: choco install innosetup -y
+            -p:ApplicationDisplayVersion=${{ needs.read-version.outputs.appVersion }} `
+            -o build/publish
 
-      - name: Build installer
+      - name: Install Velopack CLI
+        run: dotnet tool install -g vpk
+
+      - name: Pack with Velopack
         run: |
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\installer.iss
-          
-           # =============================
-      # PACKAGE SOURCE ZIP (FROM BUILD)
-      # =============================
-      - name: Create source.zip from build
-        shell: powershell
-        run: |
-          if (Test-Path build/source.zip) {
-            Remove-Item build/source.zip
-          }
+          vpk pack `
+            --packId MonkeySpeak `
+            --packVersion ${{ needs.read-version.outputs.appVersion }} `
+            --packDir build/publish `
+            --outputDir build/releases
 
-          Compress-Archive `
-            -Path build/win/* `
-            -DestinationPath build/source.zip
-
-          Write-Host "source.zip created:"
-          Get-Item build/source.zip
-      
-      # =============================
-      # CREATE GITHUB RELEASE
-      # =============================
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - uses: actions/upload-artifact@v4
         with:
-          tag_name: v${{ env.APP_VERSION_NAME }}
-          name: MonkeySpeak v${{ env.APP_VERSION_NAME }}
-          files: |
-            installer/Output/MonkeySpeakSetup.exe
-            build/source.zip
+          name: velopack-releases
+          path: build/releases/
+
+  create-release:
+    needs: [read-version, build-backend-image, build-maui-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: velopack-releases
+          path: releases/
+
+      - name: List release files
+        run: ls -la releases/
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.read-version.outputs.appVersion }}
+          name: MonkeySpeak v${{ needs.read-version.outputs.appVersion }}
+          files: releases/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

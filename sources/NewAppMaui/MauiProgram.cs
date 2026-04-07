@@ -20,6 +20,10 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+#if WINDOWS
+        Velopack.VelopackApp.Build().Run();
+#endif
+
         var builder = MauiApp.CreateBuilder();
 
         // Window size will be set in App.CreateWindow via userSettings

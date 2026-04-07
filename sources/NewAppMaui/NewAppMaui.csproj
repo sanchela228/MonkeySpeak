@@ -28,7 +28,8 @@
         <MauiXamlInflator>SourceGen</MauiXamlInflator>
 
         <!-- Display name -->
-        <ApplicationTitle>NewAppMaui</ApplicationTitle>
+        <ApplicationTitle>MonkeySpeak</ApplicationTitle>
+        <AssemblyName>MonkeySpeak</AssemblyName>
 
         <!-- App Identifier -->
         <ApplicationId>com.companyname.newappmaui</ApplicationId>
@@ -49,6 +50,10 @@
     
     <ItemGroup>
         <ProjectReference Include="..\Core\Core.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+        <PackageReference Include="Velopack" Version="0.*" />
     </ItemGroup>
 
     <ItemGroup>
