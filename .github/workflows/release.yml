@@ -65,7 +65,7 @@ jobs:
       - name: Restore projects
         run: |
           dotnet restore sources/Core/Core.csproj
-          dotnet restore sources/NewAppMaui/NewAppMaui.csproj -p:TargetFrameworks=net10.0-windows10.0.19041.0
+          dotnet restore sources/NewAppMaui/NewAppMaui.csproj -p:TargetFrameworks=net10.0-windows10.0.19041.0 -r win-x64
 
       - name: Publish MAUI app
         run: |
