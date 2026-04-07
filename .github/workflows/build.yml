@@ -25,4 +25,4 @@ jobs:
           dotnet-quality: preview
       - run: dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json -n dotnet10
       - run: dotnet workload install maui
-      - run: dotnet build sources/NewAppMaui/NewAppMaui.csproj -f net10.0-windows10.0.19041.0
+      - run: dotnet build sources/NewAppMaui/NewAppMaui.csproj -f net10.0-windows10.0.19041.0 -p:WindowsOnly=true
