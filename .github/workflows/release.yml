@@ -58,6 +58,10 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
+          dotnet-quality: preview
+
+      - name: Add dotnet10 NuGet source
+        run: dotnet nuget add source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json -n dotnet10
 
       - name: Install MAUI workloads
         run: dotnet workload install maui
