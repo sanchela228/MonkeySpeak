@@ -22,7 +22,5 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-      - run: dotnet workload install maui-windows
-      - run: dotnet restore sources/Core/Core.csproj
-      - run: dotnet restore sources/NewAppMaui/NewAppMaui.csproj -p:TargetFrameworks=net10.0-windows10.0.19041.0
-      - run: dotnet build sources/NewAppMaui/NewAppMaui.csproj -f net10.0-windows10.0.19041.0 --no-restore
+      - run: dotnet workload install maui
+      - run: dotnet build sources/NewAppMaui/NewAppMaui.csproj -f net10.0-windows10.0.19041.0

@@ -59,13 +59,8 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      - name: Install MAUI workload
-        run: dotnet workload install maui-windows
-
-      - name: Restore projects
-        run: |
-          dotnet restore sources/Core/Core.csproj
-          dotnet restore sources/NewAppMaui/NewAppMaui.csproj -p:TargetFrameworks=net10.0-windows10.0.19041.0 -r win-x64
+      - name: Install MAUI workloads
+        run: dotnet workload install maui
 
       - name: Publish MAUI app
         run: |
@@ -74,7 +69,6 @@ jobs:
             -f net10.0-windows10.0.19041.0 `
             -r win-x64 `
             --self-contained true `
-            --no-restore `
             -p:ApplicationDisplayVersion=${{ needs.read-version.outputs.appVersion }} `
             -o build/publish
 
