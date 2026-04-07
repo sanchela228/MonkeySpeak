@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="NewAppMaui.View.Pages.Content.ChatContent"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <!-- Messages -->
+        <ScrollView x:Name="MessagesScroll">
+            <VerticalStackLayout x:Name="MessagesPanel" Spacing="12" Padding="16,8" />
+        </ScrollView>
+
+        <!-- Input -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Padding="16,8,16,16" ColumnSpacing="8">
+            <Entry
+                x:Name="MessageEntry"
+                Placeholder="Message ..."
+                BackgroundColor="{StaticResource CardBackgroundHover}"
+                TextColor="{StaticResource TextPrimary}"
+                PlaceholderColor="{StaticResource TextMuted}"
+                FontSize="14"
+                
+                ReturnType="Send"
+                Completed="OnSendClicked" />
+            <Border
+                Grid.Column="1"
+                WidthRequest="44"
+                HeightRequest="44"
+                StrokeThickness="0"
+                BackgroundColor="{StaticResource AccentGreen}"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="22" />
+                </Border.StrokeShape>
+                <Image
+                    Source="angle_right.png"
+                    WidthRequest="20"
+                    HeightRequest="20"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSendClicked" />
+                </Border.GestureRecognizers>
+            </Border>
+        </Grid>
+
+    </Grid>
+
+</ContentView>

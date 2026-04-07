@@ -13,12 +13,16 @@ public partial class CallRoomContent : ContentView
     private readonly ICallsService _calls;
     private readonly IAudioService _audio;
     private readonly IUserSettingsService _settings;
+    private readonly IFriendsService _friends;
     private readonly CallUiController _callController;
 
     private readonly List<ParticipantVm> _participants = new();
     private string _roomCode = string.Empty;
     private bool _hasEverHadRemote;
     private bool _suppressDevicePickerEvents;
+    private ChatContent? _chatContent;
+    private bool _chatVisible;
+    private int _unreadCount;
 
     public event Action<int>? ParticipantCountChanged;
     public event Action? AudioStateChanged;
@@ -30,6 +34,7 @@ public partial class CallRoomContent : ContentView
         _calls = services.GetRequiredService<ICallsService>();
         _audio = services.GetRequiredService<IAudioService>();
         _settings = services.GetRequiredService<IUserSettingsService>();
+        _friends = services.GetRequiredService<IFriendsService>();
         _callController = callController;
 
         InitializeComponent();
@@ -58,15 +63,31 @@ public partial class CallRoomContent : ContentView
         _connection.StateChanged += OnStateChanged;
         _calls.StateChanged += OnCallStateChanged;
         _calls.AvatarReceived += OnAvatarReceived;
+        _calls.MuteStateChanged += OnRemoteMuteStateChanged;
+        _calls.DisplayNameReceived += OnDisplayNameReceived;
+        _calls.ChatMessageReceived += OnChatMessageWhileClosed;
+
+        _chatContent = new ChatContent();
+        _chatContent.Activate();
+        ChatContainer.Content = _chatContent;
+
         TryInitializeAudioAndPickers();
     }
 
     public void Deactivate()
     {
+        _chatContent?.Deactivate();
+        _chatContent = null;
+        _chatVisible = false;
+        _unreadCount = 0;
+
         _connection.MessageReceived -= OnMessageReceived;
         _connection.StateChanged -= OnStateChanged;
         _calls.StateChanged -= OnCallStateChanged;
         _calls.AvatarReceived -= OnAvatarReceived;
+        _calls.MuteStateChanged -= OnRemoteMuteStateChanged;
+        _calls.DisplayNameReceived -= OnDisplayNameReceived;
+        _calls.ChatMessageReceived -= OnChatMessageWhileClosed;
     }
 
     private void TryInitializeAudioAndPickers()
@@ -185,8 +206,6 @@ public partial class CallRoomContent : ContentView
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            LastMessageLabel.Text = raw;
-
             switch (msg)
             {
                 case InterlocutorJoined joined:
@@ -221,32 +240,110 @@ public partial class CallRoomContent : ContentView
             _participants.Remove(existing);
     }
 
+    private string? ResolveParticipantName(string id)
+    {
+        var it = _calls.Current?.Interlocutors?.FirstOrDefault(x => x.Id == id);
+        if (!string.IsNullOrEmpty(it?.DisplayName))
+            return it.DisplayName;
+
+        var friend = _friends.Friends?.FirstOrDefault(f => f.UserId == id);
+        if (friend is not null)
+            return friend.Username;
+
+        return null;
+    }
+
     private void RefreshParticipantsUi()
     {
+        foreach (var p in _participants)
+        {
+            if (string.IsNullOrEmpty(p.Name))
+                p.Name = ResolveParticipantName(p.Id);
+        }
+
         ParticipantsPanel.Children.Clear();
         NoParticipantsLabel.IsVisible = _participants.Count == 0;
 
-        foreach (var p in _participants)
+        const int cols = 2;
+        var items = _participants.ToList();
+
+        for (var i = 0; i < items.Count; i += cols)
         {
-            var row = new HorizontalStackLayout { Spacing = 8 };
+            var chunk = items.Skip(i).Take(cols).ToList();
 
-            var avatar = new AvatarView();
-            avatar.SetupInterlocutor(28, p.Id, p.Id);
-            row.Children.Add(avatar);
-
-            var label = new Label
+            var row = new HorizontalStackLayout
             {
-                Text = $"{p.Id}  •  {p.IpEndPoint}",
-                FontSize = 13,
-                TextColor = Color.FromArgb("#9ca3af"),
-                VerticalOptions = LayoutOptions.Center
+                Spacing = 24,
+                HorizontalOptions = LayoutOptions.Center
             };
-            row.Children.Add(label);
+
+            foreach (var p in chunk)
+                row.Children.Add(CreateParticipantCard(p));
 
             ParticipantsPanel.Children.Add(row);
         }
 
         ParticipantCountChanged?.Invoke(_participants.Count + 1);
+    }
+
+    private static Microsoft.Maui.Controls.View CreateParticipantCard(ParticipantVm p)
+    {
+        var card = new VerticalStackLayout
+        {
+            Spacing = 10,
+            WidthRequest = 160,
+            Padding = new Thickness(4, 8)
+        };
+
+        var avatar = new AvatarView();
+        avatar.SetupInterlocutor(144, p.DisplayLabel, p.Id);
+        avatar.HorizontalOptions = LayoutOptions.Center;
+
+        var avatarContainer = new Grid
+        {
+            WidthRequest = 144,
+            HeightRequest = 144,
+            HorizontalOptions = LayoutOptions.Center
+        };
+        avatarContainer.Children.Add(avatar);
+
+        if (p.IsMuted)
+        {
+            var muteBadge = new Border
+            {
+                WidthRequest = 36,
+                HeightRequest = 36,
+                StrokeThickness = 0,
+                BackgroundColor = Color.FromArgb("#CC000000"),
+                HorizontalOptions = LayoutOptions.End,
+                VerticalOptions = LayoutOptions.End,
+                Margin = new Thickness(0, 0, 4, 4),
+                Content = new Image
+                {
+                    Source = "micro_muted.png",
+                    WidthRequest = 18,
+                    HeightRequest = 18,
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions = LayoutOptions.Center
+                }
+            };
+            muteBadge.StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 18 };
+            avatarContainer.Children.Add(muteBadge);
+        }
+
+        card.Children.Add(avatarContainer);
+
+        card.Children.Add(new Label
+        {
+            Text = p.DisplayLabel,
+            FontSize = 14,
+            TextColor = Colors.White,
+            HorizontalTextAlignment = TextAlignment.Center,
+            MaxLines = 1,
+            LineBreakMode = LineBreakMode.TailTruncation
+        });
+
+        return card;
     }
 
     private void OnAvatarReceived(string interlocutorId, byte[] data)
@@ -258,12 +355,45 @@ public partial class CallRoomContent : ContentView
         });
     }
 
+    private void OnRemoteMuteStateChanged(string interlocutorId, bool isMuted)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            var p = _participants.FirstOrDefault(x => x.Id == interlocutorId);
+            if (p is null) return;
+            p.IsMuted = isMuted;
+            RefreshParticipantsUi();
+        });
+    }
+
+    private void OnDisplayNameReceived(string interlocutorId, string name)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            var p = _participants.FirstOrDefault(x => x.Id == interlocutorId);
+            if (p is null) return;
+            p.Name = name;
+            RefreshParticipantsUi();
+        });
+    }
+
     public void RefreshAudioButtons()
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            MicButton.Text = _audio.IsMicrophoneEnabled ? "Mic: ON" : "Mic: OFF";
-            PlaybackButton.Text = _audio.IsPlaybackEnabled ? "Sound: ON" : "Sound: OFF";
+            var micOn = _audio.IsMicrophoneEnabled;
+            MicIcon.Source = micOn ? "micro.png" : "micro_muted.png";
+            MicBorder.BackgroundColor = micOn
+                ? Color.FromArgb("#333333")
+                : Color.FromArgb("#555555");
+            MicLabel.Text = micOn ? "Microphone" : "Mic off";
+
+            var soundOn = _audio.IsPlaybackEnabled;
+            SoundIcon.Source = soundOn ? "volume.png" : "volume_muted.png";
+            SoundBorder.BackgroundColor = soundOn
+                ? Color.FromArgb("#333333")
+                : Color.FromArgb("#555555");
+            SoundLabel.Text = soundOn ? "Sound" : "No sound";
         });
     }
 
@@ -283,6 +413,57 @@ public partial class CallRoomContent : ContentView
         _callController.ToggleVolume();
     }
 
+    private void OnChatToggleClicked(object? sender, EventArgs e)
+    {
+        ToggleChat(!_chatVisible);
+    }
+
+    private void ToggleChat(bool show)
+    {
+        _chatVisible = show;
+
+        if (_chatVisible)
+        {
+            ParticipantsScroll.IsVisible = false;
+            NoParticipantsLabel.IsVisible = false;
+
+            Grid.SetRow(ControlsLayout, 1);
+            ControlsLayout.Padding = new Thickness(0, 12, 0, 12);
+            MainGrid.RowDefinitions[1] = new RowDefinition(GridLength.Auto);
+            MainGrid.RowDefinitions[2] = new RowDefinition(GridLength.Star);
+
+            ChatContainer.IsVisible = true;
+            ChatBorder.BackgroundColor = Color.FromArgb("#555555");
+
+            _unreadCount = 0;
+            UnreadBadge.IsVisible = false;
+        }
+        else
+        {
+            ChatContainer.IsVisible = false;
+
+            Grid.SetRow(ControlsLayout, 2);
+            ControlsLayout.Padding = new Thickness(0, 16, 0, 28);
+            MainGrid.RowDefinitions[1] = new RowDefinition(GridLength.Star);
+            MainGrid.RowDefinitions[2] = new RowDefinition(GridLength.Auto);
+
+            ParticipantsScroll.IsVisible = true;
+            RefreshParticipantsUi();
+            ChatBorder.BackgroundColor = Color.FromArgb("#333333");
+        }
+    }
+
+    private void OnChatMessageWhileClosed(string interlocutorId, Core.Application.Calls.Networking.ChatMessage msg)
+    {
+        if (_chatVisible) return;
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            _unreadCount++;
+            UnreadCountLabel.Text = _unreadCount > 9 ? "9+" : _unreadCount.ToString();
+            UnreadBadge.IsVisible = true;
+        });
+    }
+
     private async void OnHangupClicked(object? sender, EventArgs e)
     {
         await _callController.EndCallAsync("UserHangup");
@@ -292,5 +473,8 @@ public partial class CallRoomContent : ContentView
     {
         public string Id { get; set; } = string.Empty;
         public string IpEndPoint { get; set; } = string.Empty;
+        public bool IsMuted { get; set; }
+        public string? Name { get; set; }
+        public string DisplayLabel => !string.IsNullOrEmpty(Name) ? Name : Id;
     }
 }

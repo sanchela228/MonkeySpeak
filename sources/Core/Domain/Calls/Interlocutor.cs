@@ -8,4 +8,5 @@ public class Interlocutor(string id, IPEndPoint remoteIp, CallState state)
     public IPEndPoint RemoteIp = remoteIp;
     public CallState State = state;
     public bool IsMuted = false;
+    public string? DisplayName;
 }

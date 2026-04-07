@@ -4,99 +4,208 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="24">
+    <Grid x:Name="MainGrid" RowDefinitions="Auto,*,Auto">
 
         <!-- Header -->
-        <VerticalStackLayout Spacing="4">
+        <VerticalStackLayout Padding="24,20,24,0" Spacing="4">
             <Label
                 x:Name="RoomCodeLabel"
                 Text="-"
                 FontFamily="JetBrainsMono"
-                FontSize="28"
+                FontSize="24"
                 TextColor="{StaticResource AccentGreen}"
-                CharacterSpacing="4" />
+                CharacterSpacing="4"
+                HorizontalTextAlignment="Center" />
             <Label
                 x:Name="StatusLabel"
                 Text="Connected"
-                FontSize="13"
-                TextColor="{StaticResource TextSecondary}" />
+                FontSize="12"
+                TextColor="{StaticResource TextSecondary}"
+                HorizontalTextAlignment="Center" />
         </VerticalStackLayout>
 
-        <!-- Info -->
-        <ScrollView Grid.Row="1" Margin="0,16,0,0">
-            <VerticalStackLayout Spacing="12">
-
-                <!-- Participants -->
-                <Label Text="PARTICIPANTS"
-                       FontSize="11"
-                       TextColor="{StaticResource TextMuted}"
-                       CharacterSpacing="1" />
-
-                <VerticalStackLayout x:Name="ParticipantsPanel" Spacing="4" />
-
-                <Label x:Name="NoParticipantsLabel"
-                       Text="Waiting for participants..."
-                       FontSize="13"
-                       TextColor="{StaticResource TextSecondary}" />
-
-                <!-- Audio devices -->
-                <Label Text="AUDIO DEVICES"
-                       FontSize="11"
-                       TextColor="{StaticResource TextMuted}"
-                       CharacterSpacing="1"
-                       Margin="0,12,0,0" />
-
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Microphone" FontSize="12" TextColor="{StaticResource TextSecondary}" />
-                        <Picker x:Name="CapturePicker"
-                                Title="Select"
-                                ItemDisplayBinding="{Binding Name}"
-                                SelectedIndexChanged="OnCapturePickerChanged" />
-                    </VerticalStackLayout>
-                    <VerticalStackLayout Grid.Column="1" Spacing="4">
-                        <Label Text="Speakers" FontSize="12" TextColor="{StaticResource TextSecondary}" />
-                        <Picker x:Name="PlaybackPicker"
-                                Title="Select"
-                                ItemDisplayBinding="{Binding Name}"
-                                SelectedIndexChanged="OnPlaybackPickerChanged" />
-                    </VerticalStackLayout>
-                </Grid>
-
-                <!-- Debug -->
-                <Label Text="LAST MESSAGE"
-                       FontSize="11"
-                       TextColor="{StaticResource TextMuted}"
-                       CharacterSpacing="1"
-                       Margin="0,12,0,0" />
-
-                <Label x:Name="LastMessageLabel"
-                       Text="-"
-                       FontFamily="JetBrainsMono"
-                       FontSize="11"
-                       TextColor="{StaticResource TextSecondary}"
-                       LineBreakMode="CharacterWrap"
-                       MaxLines="4" />
-
-            </VerticalStackLayout>
+        <!-- Participants -->
+        <ScrollView Grid.Row="1" x:Name="ParticipantsScroll" VerticalOptions="Fill">
+            <VerticalStackLayout
+                x:Name="ParticipantsPanel"
+                VerticalOptions="Center"
+                Spacing="12"
+                Padding="16,0" />
         </ScrollView>
 
+        <Label
+            Grid.Row="1"
+            x:Name="NoParticipantsLabel"
+            Text="Ожидание участников..."
+            FontSize="14"
+            TextColor="{StaticResource TextSecondary}"
+            HorizontalTextAlignment="Center"
+            VerticalTextAlignment="Center" />
+
+        <!-- Chat (hidden by default) -->
+        <ContentView Grid.Row="2" x:Name="ChatContainer" IsVisible="False" />
+
         <!-- Controls -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,*,*" ColumnSpacing="8" Margin="0,12,0,0">
-            <Button x:Name="MicButton"
-                    Text="Mic: ON"
-                    Style="{StaticResource GrayMainButton}"
-                    Clicked="OnMicToggleClicked" />
-            <Button x:Name="PlaybackButton"
-                    Grid.Column="1"
-                    Text="Sound: ON"
-                    Style="{StaticResource GrayMainButton}"
-                    Clicked="OnPlaybackToggleClicked" />
-            <Button Grid.Column="2"
+        <HorizontalStackLayout
+            x:Name="ControlsLayout"
+            Grid.Row="2"
+            HorizontalOptions="Center"
+            Spacing="28"
+            Padding="0,16,0,28">
+
+            <!-- Mic -->
+            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                <Border
+                    x:Name="MicBorder"
+                    WidthRequest="56"
+                    HeightRequest="56"
+                    StrokeThickness="0"
+                    BackgroundColor="{StaticResource CardBorder}"
+                    HorizontalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="28" />
+                    </Border.StrokeShape>
+                    <Image
+                        x:Name="MicIcon"
+                        Source="micro.png"
+                        WidthRequest="24"
+                        HeightRequest="24"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMicToggleClicked" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Label
+                    x:Name="MicLabel"
+                    Text="Microphone"
+                    FontSize="11"
+                    TextColor="{StaticResource TextSecondary}"
+                    HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <!-- Sound -->
+            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                <Border
+                    x:Name="SoundBorder"
+                    WidthRequest="56"
+                    HeightRequest="56"
+                    StrokeThickness="0"
+                    BackgroundColor="{StaticResource CardBorder}"
+                    HorizontalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="28" />
+                    </Border.StrokeShape>
+                    <Image
+                        x:Name="SoundIcon"
+                        Source="volume.png"
+                        WidthRequest="24"
+                        HeightRequest="24"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPlaybackToggleClicked" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Label
+                    x:Name="SoundLabel"
+                    Text="Sound"
+                    FontSize="11"
+                    TextColor="{StaticResource TextSecondary}"
+                    HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <!-- Chat -->
+            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                <Grid WidthRequest="56" HeightRequest="56" HorizontalOptions="Center">
+                    <Border
+                        x:Name="ChatBorder"
+                        WidthRequest="56"
+                        HeightRequest="56"
+                        StrokeThickness="0"
+                        BackgroundColor="{StaticResource CardBorder}">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="28" />
+                        </Border.StrokeShape>
+                        <Image
+                            Source="chat.png"
+                            WidthRequest="24"
+                            HeightRequest="24"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center" />
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnChatToggleClicked" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                    <Border
+                        x:Name="UnreadBadge"
+                        IsVisible="False"
+                        WidthRequest="18"
+                        HeightRequest="18"
+                        StrokeThickness="0"
+                        BackgroundColor="{StaticResource AccentRed}"
+                        HorizontalOptions="End"
+                        VerticalOptions="Start"
+                        Margin="0,2,2,0">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="9" />
+                        </Border.StrokeShape>
+                        <Label
+                            x:Name="UnreadCountLabel"
+                            Text=""
+                            FontSize="9"
+                            TextColor="White"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center" />
+                    </Border>
+                </Grid>
+                <Label
+                    x:Name="ChatLabel"
+                    Text="Chat"
+                    FontSize="11"
+                    TextColor="{StaticResource TextSecondary}"
+                    HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <!-- Hang up -->
+            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                <Border
+                    WidthRequest="56"
+                    HeightRequest="56"
+                    StrokeThickness="0"
+                    BackgroundColor="{StaticResource AccentRed}"
+                    HorizontalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="28" />
+                    </Border.StrokeShape>
+                    <Image
+                        Source="drop_call.png"
+                        WidthRequest="24"
+                        HeightRequest="24"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnHangupClicked" />
+                    </Border.GestureRecognizers>
+                </Border>
+                <Label
                     Text="Hang up"
-                    Style="{StaticResource RedMainButton}"
-                    Clicked="OnHangupClicked" />
-        </Grid>
+                    FontSize="11"
+                    TextColor="{StaticResource AccentRed}"
+                    HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+        </HorizontalStackLayout>
+
+        <!-- Hidden pickers for programmatic audio device selection -->
+        <Picker x:Name="CapturePicker"
+                IsVisible="False"
+                ItemDisplayBinding="{Binding Name}"
+                SelectedIndexChanged="OnCapturePickerChanged" />
+        <Picker x:Name="PlaybackPicker"
+                IsVisible="False"
+                ItemDisplayBinding="{Binding Name}"
+                SelectedIndexChanged="OnPlaybackPickerChanged" />
 
     </Grid>
 

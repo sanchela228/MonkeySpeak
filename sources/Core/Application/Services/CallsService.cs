@@ -16,10 +16,13 @@ public class CallsService : ICallsService
     private readonly IConnectionService _connection;
     private readonly IAudioService _audio;
     private readonly IAvatarProvider? _avatarProvider;
+    private readonly IUserSettingsService? _userSettings;
+    private readonly IAuthService? _auth;
     private readonly IStunClient _stun;
     private readonly UdpUnifiedManager _udp;
     private readonly UdpControlService _controls;
     private readonly UdpAvatarExchange _avatarExchange;
+    private readonly UdpChatService _chat;
     private readonly object _sync = new();
 
     private CancellationTokenSource? _sessionCts;
@@ -30,17 +33,23 @@ public class CallsService : ICallsService
     public event EventHandler<CallState>? StateChanged;
 
     public event Action<string, byte[]>? AvatarReceived;
+    public event Action<string, bool>? MuteStateChanged;
+    public event Action<string, string>? DisplayNameReceived;
+    public event Action<string, ChatMessage>? ChatMessageReceived;
 
     public CallsService(IConnectionService connection, IAudioService audio, IStunClient stun, UdpUnifiedManager udp,
-        IAvatarProvider? avatarProvider = null)
+        IAvatarProvider? avatarProvider = null, IUserSettingsService? userSettings = null, IAuthService? auth = null)
     {
         _connection = connection;
         _audio = audio;
         _stun = stun;
         _udp = udp;
         _avatarProvider = avatarProvider;
+        _userSettings = userSettings;
+        _auth = auth;
         _controls = new UdpControlService();
         _avatarExchange = new UdpAvatarExchange();
+        _chat = new UdpChatService();
 
         _connection.MessageReceived += OnWsMessage;
 
@@ -49,12 +58,33 @@ public class CallsService : ICallsService
 
         _controls.OnRemoteHangupByInterlocutor += OnRemoteHangupByInterlocutor;
         _controls.OnRemoteMuteChangedByInterlocutor += OnRemoteMuteChangedByInterlocutor;
+        _controls.OnRemoteDisplayNameReceived += OnRemoteDisplayNameReceived;
+
+        _chat.OnChatMessageReceived += (id, msg) => ChatMessageReceived?.Invoke(id, msg);
 
         _avatarExchange.OnRemoteAvatarHash += OnRemoteAvatarHash;
         _avatarExchange.OnRemoteAvatarRequested += OnRemoteAvatarRequested;
         _avatarExchange.OnRemoteAvatarReceived += OnRemoteAvatarReceived;
 
         _audio.MicrophoneEnabledChanged += OnLocalMicrophoneEnabledChanged;
+        _udp.OnInterlocutorConnected += OnInterlocutorUdpConnected;
+    }
+
+    private void OnInterlocutorUdpConnected(string interlocutorId, IPEndPoint local, IPEndPoint remote)
+    {
+        try
+        {
+            _controls.SendMuteStateToInterlocutor(_audio.IsMicrophoneEnabled, interlocutorId);
+        }
+        catch { }
+
+        try
+        {
+            var name = GetLocalDisplayName();
+            if (!string.IsNullOrEmpty(name))
+                _controls.SendDisplayName(name, interlocutorId);
+        }
+        catch { }
     }
 
     private void OnLocalMicrophoneEnabledChanged(bool enabled)
@@ -324,6 +354,14 @@ public class CallsService : ICallsService
 
         try
         {
+            var name = GetLocalDisplayName();
+            if (!string.IsNullOrEmpty(name))
+                _controls.SendDisplayName(name, joined.Id);
+        }
+        catch { }
+
+        try
+        {
             var hash = _avatarProvider?.GetOwnAvatarHash();
             if (hash != null)
                 _avatarExchange.SendHash(hash, joined.Id);
@@ -409,6 +447,7 @@ public class CallsService : ICallsService
 
             try { _controls.Detach(); } catch { }
             try { _avatarExchange.Detach(); } catch { }
+            try { _chat.Detach(); } catch { }
 
             try { _udpClient?.Dispose(); } catch { }
             _udpClient = null;
@@ -440,6 +479,7 @@ public class CallsService : ICallsService
 
             _controls.Attach(_udp);
             _avatarExchange.Attach(_udp);
+            _chat.Attach(_udp);
         }
     }
 
@@ -519,10 +559,43 @@ public class CallsService : ICallsService
             }
 
             Core.Logger.Info($"Remote mute changed: {interlocutorId} muted={isMuted}");
+            MuteStateChanged?.Invoke(interlocutorId, isMuted);
         }
         catch
         {
         }
+    }
+
+    public void SendChatMessage(string text)
+    {
+        _chat.SendMessage(GetLocalDisplayName(), text);
+    }
+
+    private string GetLocalDisplayName()
+    {
+        return _userSettings?.DisplayName
+            ?? _auth?.Username
+            ?? "";
+    }
+
+    private void OnRemoteDisplayNameReceived(string interlocutorId, string name)
+    {
+        try
+        {
+            var session = Current;
+            if (session is null) return;
+
+            lock (_sync)
+            {
+                var it = session.Interlocutors.FirstOrDefault(x => x.Id == interlocutorId);
+                if (it is not null)
+                    it.DisplayName = name;
+            }
+
+            Core.Logger.Info($"DisplayName received: {interlocutorId} = {name}");
+            DisplayNameReceived?.Invoke(interlocutorId, name);
+        }
+        catch { }
     }
 
     private async Task<T> AwaitMessageAsync<T>(Func<Task> send, Func<T, bool> predicate, CancellationToken ct) where T : class

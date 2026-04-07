@@ -12,7 +12,8 @@ public sealed class UdpUnifiedManager : IDisposable
         Audio = 1,
         Control = 2,
         Ping = 3,
-        Avatar = 4
+        Avatar = 4,
+        Chat = 5
     }
 
     public event Action<IPEndPoint, IPEndPoint>? OnConnected;
@@ -29,6 +30,9 @@ public sealed class UdpUnifiedManager : IDisposable
 
     public event Action<byte[]>? OnAvatarData;
     public event Action<string, byte[]>? OnAvatarDataByInterlocutor;
+
+    public event Action<byte[]>? OnChatData;
+    public event Action<string, byte[]>? OnChatDataByInterlocutor;
 
     private UdpClient? _client;
     private IPEndPoint? _remote;
@@ -114,6 +118,7 @@ public sealed class UdpUnifiedManager : IDisposable
     public Task SendAudioAsync(ReadOnlyMemory<byte> payload) => SendAsync(MessageType.Audio, payload);
     public Task SendControlAsync(ReadOnlyMemory<byte> payload) => SendAsync(MessageType.Control, payload);
     public Task SendAvatarAsync(ReadOnlyMemory<byte> payload) => SendAsync(MessageType.Avatar, payload);
+    public Task SendChatAsync(ReadOnlyMemory<byte> payload) => SendAsync(MessageType.Chat, payload);
 
     public Task SendAvatarToInterlocutorAsync(string interlocutorId, ReadOnlyMemory<byte> payload)
     {
@@ -346,6 +351,12 @@ public sealed class UdpUnifiedManager : IDisposable
                         OnAvatarData?.Invoke(payload);
                         if (_remoteToInterlocutor.TryGetValue(result.RemoteEndPoint, out var ilIdAv))
                             OnAvatarDataByInterlocutor?.Invoke(ilIdAv, payload);
+                        break;
+
+                    case MessageType.Chat:
+                        OnChatData?.Invoke(payload);
+                        if (_remoteToInterlocutor.TryGetValue(result.RemoteEndPoint, out var ilIdChat))
+                            OnChatDataByInterlocutor?.Invoke(ilIdChat, payload);
                         break;
 
                     case MessageType.Ping:

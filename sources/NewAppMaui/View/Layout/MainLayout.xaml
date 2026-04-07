@@ -41,8 +41,8 @@
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnExpandTapped" />
                 </Border.GestureRecognizers>
-                <Image Source="close_sidebar.png" Opacity="0.3"
-                       WidthRequest="30" HeightRequest="30" />
+                <Image Source="angle_right.png" Opacity="0.3"
+                       WidthRequest="26" HeightRequest="26" />
             </Border>
 
             <!-- Actual content -->

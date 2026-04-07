@@ -228,13 +228,18 @@ public partial class MainLayout : ContentPage
         ContentArea.IsVisible = false;
         CallViewContainer.IsVisible = true;
         SidebarView.SetActiveItem("");
+        AutoCollapseSidebarIfSmall();
     }
 
     private void SwitchToContentView()
     {
         CallViewContainer.IsVisible = false;
         ContentArea.IsVisible = true;
+        AutoCollapseSidebarIfSmall();
     }
+
+    private const double SmallScreenThreshold = 640;
+    private bool IsSmallScreen => Width > 0 && Width < SmallScreenThreshold;
 
     private void SetSidebarCollapsed(bool collapsed)
     {
@@ -246,9 +251,28 @@ public partial class MainLayout : ContentPage
         SidebarSeparator.IsVisible = !collapsed;
         ExpandButton.IsVisible = collapsed;
 
-        RootGrid.ColumnDefinitions[0].Width = collapsed
-            ? new GridLength(0)
-            : new GridLength(260);
+        if (collapsed)
+        {
+            RootGrid.ColumnDefinitions[0].Width = new GridLength(0);
+            RootGrid.ColumnDefinitions[2].Width = GridLength.Star;
+        }
+        else if (IsSmallScreen)
+        {
+            RootGrid.ColumnDefinitions[0].Width = GridLength.Star;
+            RootGrid.ColumnDefinitions[2].Width = new GridLength(0);
+            SidebarSeparator.IsVisible = false;
+        }
+        else
+        {
+            RootGrid.ColumnDefinitions[0].Width = new GridLength(260);
+            RootGrid.ColumnDefinitions[2].Width = GridLength.Star;
+        }
+    }
+
+    private void AutoCollapseSidebarIfSmall()
+    {
+        if (!IsSmallScreen || _sidebarCollapsed) return;
+        SetSidebarCollapsed(true);
     }
 
     private void ApplySavedAudioSettings()

@@ -53,7 +53,7 @@ public sealed class AudioService : IAudioService
     private string? _selectedCaptureDeviceId;
     private string? _selectedPlaybackDeviceId;
 
-    private volatile bool _micEnabled = true;
+    private volatile bool _micEnabled;
     private volatile bool _playbackEnabled = true;
     private volatile int _micVolume = 100;
     private volatile int _playbackVolume = 100;

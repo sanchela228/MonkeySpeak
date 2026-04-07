@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace Core.Application.Calls.Networking;
 
@@ -6,6 +7,7 @@ public enum ControlCode : byte
 {
     Hangup = 0x00,
     MuteState = 0x01,
+    DisplayName = 0x02,
 }
 
 public class UdpControlService
@@ -20,6 +22,7 @@ public class UdpControlService
     public event Action<string, ControlCode, ReadOnlyMemory<byte>>? OnControlByInterlocutor;
     public event Action<string, bool>? OnRemoteMuteChangedByInterlocutor;
     public event Action<string>? OnRemoteHangupByInterlocutor;
+    public event Action<string, string>? OnRemoteDisplayNameReceived;
 
     public void Attach(UdpUnifiedManager udp)
     {
@@ -101,6 +104,20 @@ public class UdpControlService
         Send(ControlCode.Hangup, ReadOnlySpan<byte>.Empty);
     }
 
+    public void SendDisplayName(string name, string interlocutorId)
+    {
+        if (string.IsNullOrEmpty(name)) return;
+        var payload = Encoding.UTF8.GetBytes(name);
+        Send(ControlCode.DisplayName, payload, interlocutorId);
+    }
+
+    public void SendDisplayNameToAll(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return;
+        var payload = Encoding.UTF8.GetBytes(name);
+        Send(ControlCode.DisplayName, payload);
+    }
+
     private void HandleControlData(byte[] data)
     {
         try
@@ -150,6 +167,13 @@ public class UdpControlService
                     {
                         bool remoteMicEnabled = payload.Span[0] == 1;
                         OnRemoteMuteChangedByInterlocutor?.Invoke(interlocutorId, !remoteMicEnabled);
+                    }
+                    break;
+                case ControlCode.DisplayName:
+                    if (payload.Length > 0)
+                    {
+                        var name = Encoding.UTF8.GetString(payload.Span);
+                        OnRemoteDisplayNameReceived?.Invoke(interlocutorId, name);
                     }
                     break;
             }
